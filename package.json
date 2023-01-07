@@ -6,5 +6,11 @@
   "repository": "git@github.com:bebverse/dimension.git",
   "author": "Beb, Inc. <gm@beb.xyz>",
   "main": "README.md",
-  "scripts": {}
+  "scripts": {
+    "flatc": "flatc -o interface/generated --ts --ts-flat-files interface/*.fbs && ./node_modules/typescript/bin/tsc --lib es2020 interface/generated/*.ts"
+  },
+  "dependencies": {
+    "flatbuffers": "^23.1.4",
+    "typescript": "^4.9.4"
+  }
 }
