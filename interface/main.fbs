@@ -14,13 +14,6 @@ table Channel {
   members: [string];
 }
 
-table Subscription {
-  id: string;
-  user: string;
-  dimension: string;
-  channel: string;
-}
-
 table SendMessageRequest {
   recipient: string;
   dimension: string;
@@ -32,16 +25,6 @@ table SendMessageRequest {
 
 table SendMessageResponse {
   message: Message;
-}
-
-table SubscribeRequest {
-  user: string;
-  dimension: string;
-  channel: string;
-}
-
-table SubscribeResponse {
-  subscription: Subscription;
 }
 
 table MessagesRequest {
