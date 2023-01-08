@@ -1,12 +1,275 @@
-# This "Book" type defines the queryable fields for every book in our data source.
-type Book {
+type Link {
+  _id: ID
+  url: String
+  image: String
   title: String
-  author: String
+  description: String
+  logo: String
+  iframe: String
 }
 
-# The "Query" type is special: it lists all of the available queries that
-# clients can execute, along with the return type for each. In this
-# case, the "books" query returns an array of zero or more Books (defined above).
+type Chain {
+  chainId: Int
+  name: String
+}
+
+type AccountAddress {
+  _id: ID
+  address: String!
+  chain: Chain
+  account: Account
+}
+type Address {
+  _id: ID
+  address: String!
+  chain: Chain
+}
+
+type SectionEntry {
+  content: Content
+  link: String
+  image: Image
+  title: String
+  _id: ID
+}
+
+type AccountNonce {
+  _id: ID
+  nonce: String
+  transactionNonce: String
+}
+
+type AccountSection {
+  _id: ID
+  title: String
+  isVisible: Boolean
+  entries: [SectionEntry]
+}
+
+type MessageCurrentAccountPermissions {
+  _id: ID
+  canHide: Boolean
+  canRead(channelId: String): Boolean
+}
+
+type FarcasterIdentity {
+  _id: ID
+  directoryUrl: String
+  avatarUrl: String
+  username: String
+  displayName: String
+  account: Account
+  farcasterAddress: String
+}
+type ENSIdentity {
+  _id: ID
+  account: Account
+  ens: String
+  avatarUrl: String
+  twitter: String
+}
+type AccountIdentity {
+  _id: ID
+  farcaster: FarcasterIdentity
+  ens: ENSIdentity
+}
+
+type RentPrice {
+  base: String
+  premium: String
+}
+
+type Commitment {
+  hash: String
+  secret: String
+}
+
+type KeyValueFields {
+  _id: ID
+  key: String
+  value: String
+}
+
+type RichEmbed {
+  _id: ID
+  title: String
+  description: Content
+  timestamp: String
+  image: Image
+  thumbnail: Image
+  color: String
+  url: String
+  fields: KeyValueFields
+}
+
+type ImageUnion {
+  _id: ID
+  image: Image
+  type: String
+}
+type LinkUnion {
+  _id: ID
+  link: Link
+  type: String
+}
+type RichEmbedUnion {
+  _id: ID
+  richEmbed: RichEmbed
+  type: String
+}
+
+union RichBlock = ImageUnion | LinkUnion | RichEmbedUnion
+
+type RichContentBlock {
+  id: ID
+  blockType: String
+  # can include multiple different blocks. use graphql union
+  block: RichBlock
+}
+
+type RichContent {
+  _id: ID
+  content: Content
+  blocks: [RichContentBlock]
+}
+
+type Content {
+  raw: String
+  json: String
+  html: String
+}
+
+type Image {
+  _id: ID
+  src: String
+  name: String
+  isVerified: Boolean
+  verificationOrigin: String
+  verificationExternalUrl: String
+}
+
+type AccountDimension {
+  _id: ID
+  account: Account
+  community: Dimension
+  joined: Boolean
+  canRead(channelId: String): Boolean
+  canWrite(channelId: String): Boolean
+  validPermission(
+    permissionIdentifier: String
+    permissionId: String
+    channelId: String
+  ): Boolean
+  unseenPostsCount: Int
+  lastSeen: String
+  tokenCount: Int # @TODO deprecate
+}
+
+type AccountDimensionRole {
+  _id: ID
+  accountDimension: AccountDimension
+  role: Role
+  isManagedByIndexer: Boolean
+  isValid: Boolean
+}
+type Role {
+  _id: ID
+  name: String
+  description: Content
+  dimension: Dimension
+  slug: String
+  position: Int
+  editable: Boolean
+  icon: Image
+  isManagedByIndexer: Boolean
+  permissionString: String
+  membersCount: Int
+  members(limit: Int, offset: Int, sort: String): [AccountDimensionRole]
+  AccountDimensionRole: AccountDimensionRole # the current account associated with role. require auth
+}
+type Account {
+  _id: ID
+  email: String
+  username: String
+  location: String
+  bio: Content
+  profileImage: Image
+  address: AccountAddress
+  nonces: AccountNonce
+  sections: [AccountSection]
+  accountDimensions(limit: Int, offset: Int): [AccountDimension]
+  identities: AccountIdentity
+  hasPremiumRole: Boolean # true if account is a beb domain holder AND claimed the role
+}
+type Dimension {
+  _id: ID
+  description: String # @Todo remove this fields
+  bio: Content
+  name: String
+  host: String
+  image: Image
+  bannerImage: Image
+  membersCount: Int
+  bebdomain: String
+  AccountDimension: AccountDimension # the current account associated with dimension, require auth
+  members(limit: Int, offset: Int, sort: String): [AccountDimension]
+  owner: Account
+  tokenOwnerAddress: String
+  permissions: [Permission]
+  roles(limit: Int, offset: Int, sort: String): [Role]
+  channels: [Channel]
+  tokenId: ID
+  tld: String
+  available: Boolean
+  expiresAt: String
+  rentPrice(duration: String): RentPrice
+  commitment(address: String, duration: String): Commitment
+  # admin
+}
+type Message {
+  _id: ID
+  richContent: RichContent
+  channel: Channel
+  account: Account
+  parent: Message
+  replies(limit: Int, offset: Int): [Message]
+  createdAt: String
+  reactionCount: Int
+  commentCount: Int
+  rootCommentCount: Int
+  dimension: Dimension
+  isHidden: Boolean
+  # admin
+  currentAccountPermissions: MessageCurrentAccountPermissions
+}
+type Channel {
+  _id: ID
+  name: String
+  slug: String
+  dimension: Dimension
+  description: Content
+  position: Int
+  color: String
+  icon: Image
+  permissionOverwrites: [PermissionOverwrite]
+}
+type Permission {
+  _id: ID
+  dimension: Dimension
+  description: Content
+  name: String
+  editable: Boolean
+  bitwiseFlag: String
+  bitwisePosition: Int
+}
+union PermissionOverwriteObject = Role | Account
+type PermissionOverwrite {
+  _id: ID
+  object: PermissionOverwriteObject
+  allowedPermissionString: String
+  objectType: Int
+}
+
 type Query {
-  books: [Book]
+  dimensions: [Dimension]
 }

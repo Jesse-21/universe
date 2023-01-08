@@ -7,20 +7,18 @@ const typeDefs = await loadSchema("./schema/*.gql", {
   loaders: [new GraphQLFileLoader()],
 });
 
-const books = [
+const dimensions = [
   {
-    title: "The Awakening",
-    author: "Kate Chopin",
+    name: "The Awakening",
   },
   {
-    title: "City of Glass",
-    author: "Paul Auster",
+    name: "City of Glass",
   },
 ];
 
 const resolvers = {
   Query: {
-    books: () => books,
+    dimensions: () => dimensions,
   },
 };
 
