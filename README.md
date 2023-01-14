@@ -12,6 +12,14 @@ When opening a Pull Request and you are not already a core contributor to @bebve
 
 Welcome to the setup guide for a BEBverse dimension! To start, you'll need [node.js](https://github.com/nvm-sh/nvm), [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable), and [mongodb](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) configured locally.
 
+Then, you'll need to fill the following environment variables to have a fully operational BEBverse instance on localhost:
+
+### .env file setup
+
+```
+MONGO_URL=mongodb+srv://...
+```
+
 Once your environment is configured, run `yarn dev` to have a running instance, and play around with graphql commands at `localhost:8080/graphql`!
 
 ## Useful Links
