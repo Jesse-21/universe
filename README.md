@@ -2,7 +2,7 @@
 
 Blockchain-Enabled Broadcast (BEB) Dimensions are open-source, self-hosted nodes for the BEB protocol.
 
-<img src="https://i.imgur.com/4GgGyWY.png" width="300" />
+<img src="./.misc/files/header.png" width="300" />
 
 ## Contribution Guidelines
 
