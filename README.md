@@ -12,7 +12,7 @@ When opening a Pull Request and you are not already a core contributor to [@bebv
 
 ## Setting up the bebverse/dimension repo
 
-Welcome to the setup guide for a BEB Dimension! To start, you'll need [node.js](https://github.com/nvm-sh/nvm), [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable), and [mongodb](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) configured locally. The previous links are for macOS, if you are using linux/windows please find appropriate instructions (and add them here maybe :) ).
+Welcome to the setup guide for a BEB Dimension! To start, you'll need [node.js](https://github.com/nvm-sh/nvm), [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable), and [mongodb](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) configured locally.
 
 Once you have node.js, yarn and mongodb, you'll need to fill the following environment variables to have a fully operational BEBverse instance on localhost:
 
