@@ -1,6 +1,6 @@
-# Blockchain Enabled Broadcast (BEB) Dimension
+# Blockchain-Enabled Broadcast (BEB) Dimension
 
-Blockchain Enabled Broadcast (BEB) dimensions are self-hosted nodes for the BEB protocol.
+Blockchain Enabled Broadcast (BEB) Dimensions are open-source, self-hosted nodes for the BEB protocol.
 
 <img src="https://i.imgur.com/4GgGyWY.png" width="300" />
 
