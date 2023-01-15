@@ -26,14 +26,6 @@ type Address {
   nonce: AddressNonce
 }
 
-type SectionEntry {
-  content: Content
-  link: String
-  image: Image
-  title: String
-  _id: ID
-}
-
 type MessageCurrentAddressPermissions {
   _id: ID
   canHide: Boolean
