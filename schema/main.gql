@@ -13,16 +13,17 @@ type Chain {
   name: String
 }
 
-type AccountAddress {
+type AddressNonce {
   _id: ID
-  address: String!
-  chain: Chain
-  account: Account
+  nonce: String
+  transactionNonce: String
 }
+
 type Address {
   _id: ID
   address: String!
   chain: Chain
+  nonce: AddressNonce
 }
 
 type SectionEntry {
@@ -33,20 +34,7 @@ type SectionEntry {
   _id: ID
 }
 
-type AccountNonce {
-  _id: ID
-  nonce: String
-  transactionNonce: String
-}
-
-type AccountSection {
-  _id: ID
-  title: String
-  isVisible: Boolean
-  entries: [SectionEntry]
-}
-
-type MessageCurrentAccountPermissions {
+type MessageCurrentAddressPermissions {
   _id: ID
   canHide: Boolean
   canRead(channelId: String): Boolean
@@ -58,20 +46,8 @@ type FarcasterIdentity {
   avatarUrl: String
   username: String
   displayName: String
-  account: Account
+  address: Address
   farcasterAddress: String
-}
-type ENSIdentity {
-  _id: ID
-  account: Account
-  ens: String
-  avatarUrl: String
-  twitter: String
-}
-type AccountIdentity {
-  _id: ID
-  farcaster: FarcasterIdentity
-  ens: ENSIdentity
 }
 
 type RentPrice {
@@ -148,9 +124,9 @@ type Image {
   verificationExternalUrl: String
 }
 
-type AccountDimension {
+type AddressDimension {
   _id: ID
-  account: Account
+  address: Address
   community: Dimension
   joined: Boolean
   canRead(channelId: String): Boolean
@@ -165,9 +141,9 @@ type AccountDimension {
   tokenCount: Int # @TODO deprecate
 }
 
-type AccountDimensionRole {
+type AddressDimensionRole {
   _id: ID
-  accountDimension: AccountDimension
+  addressDimension: AddressDimension
   role: Role
   isManagedByIndexer: Boolean
   isValid: Boolean
@@ -184,23 +160,10 @@ type Role {
   isManagedByIndexer: Boolean
   permissionString: String
   membersCount: Int
-  members(limit: Int, offset: Int, sort: String): [AccountDimensionRole]
-  AccountDimensionRole: AccountDimensionRole # the current account associated with role. require auth
+  members(limit: Int, offset: Int, sort: String): [AddressDimensionRole]
+  AddressDimensionRole: AddressDimensionRole # the current address associated with role. require auth
 }
-type Account {
-  _id: ID
-  email: String
-  username: String
-  location: String
-  bio: Content
-  profileImage: Image
-  address: AccountAddress
-  nonces: AccountNonce
-  sections: [AccountSection]
-  accountDimensions(limit: Int, offset: Int): [AccountDimension]
-  identities: AccountIdentity
-  hasPremiumRole: Boolean # true if account is a beb domain holder AND claimed the role
-}
+
 type Dimension {
   _id: ID
   description: String # @Todo remove this fields
@@ -211,9 +174,9 @@ type Dimension {
   bannerImage: Image
   membersCount: Int
   bebdomain: String
-  AccountDimension: AccountDimension # the current account associated with dimension, require auth
-  members(limit: Int, offset: Int, sort: String): [AccountDimension]
-  owner: Account
+  AddressDimension: AddressDimension # the current address associated with dimension, require auth
+  members(limit: Int, offset: Int, sort: String): [AddressDimension]
+  owner: Address
   tokenOwnerAddress: String
   permissions: [Permission]
   roles(limit: Int, offset: Int, sort: String): [Role]
@@ -230,7 +193,7 @@ type Message {
   _id: ID
   richContent: RichContent
   channel: Channel
-  account: Account
+  address: Address
   parent: Message
   replies(limit: Int, offset: Int): [Message]
   createdAt: String
@@ -240,7 +203,7 @@ type Message {
   dimension: Dimension
   isHidden: Boolean
   # admin
-  currentAccountPermissions: MessageCurrentAccountPermissions
+  currentAddressPermissions: MessageCurrentAddressPermissions
 }
 type Channel {
   _id: ID
@@ -262,7 +225,7 @@ type Permission {
   bitwiseFlag: String
   bitwisePosition: Int
 }
-union PermissionOverwriteObject = Role | Account
+union PermissionOverwriteObject = Role | Address
 type PermissionOverwrite {
   _id: ID
   object: PermissionOverwriteObject
