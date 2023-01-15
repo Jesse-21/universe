@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
-  "license": "unlicensed",
+  "license": "MIT",
   "repository": "git@github.com:bebverse/dimension.git",
   "author": "Beb, Inc. <gm@beb.xyz>",
   "main": "README.md",
