@@ -37,3 +37,8 @@ export const AddressSchema = mongoose.Schema({
   chain: ChainSchema,
   nonce: AddressNonceSchema,
 });
+
+export const KeyValueFieldsSchema = mongoose.Schema({
+  key: { type: String, required: true, index: true },
+  value: { type: String },
+});
