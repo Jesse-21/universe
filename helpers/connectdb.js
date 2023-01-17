@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 export const connectDB = () => {
   return new Promise((resolve, reject) => {
     if (mongoose.connection.readyState == mongoose.ConnectionStates.connected) {
-      // Use current db connection
       return resolve();
     }
     mongoose.set("strictQuery", true);
