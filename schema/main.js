@@ -93,3 +93,8 @@ const RichContentBlockSchema = mongoose.Schema({
     index: true,
   },
 });
+
+const RichContentSchema = mongoose.Schema({
+  content: ContentSchema,
+  blocks: [RichContentBlockSchema],
+});
