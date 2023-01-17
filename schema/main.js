@@ -42,3 +42,9 @@ export const KeyValueFieldsSchema = mongoose.Schema({
   key: { type: String, required: true, index: true },
   value: { type: String },
 });
+
+export const ContentSchema = mongoose.Schema({
+  raw: { type: String },
+  json: { type: String },
+  html: { type: String },
+});

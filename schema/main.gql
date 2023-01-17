@@ -32,6 +32,12 @@ type KeyValueFields {
   value: String
 }
 
+type Content {
+  raw: String
+  json: String
+  html: String
+}
+
 type RichEmbed {
   _id: ID
   title: String
@@ -72,12 +78,6 @@ type RichContent {
   _id: ID
   content: Content
   blocks: [RichContentBlock]
-}
-
-type Content {
-  raw: String
-  json: String
-  html: String
 }
 
 type Image {
