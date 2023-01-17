@@ -158,7 +158,7 @@ type Dimension {
   bannerImage: Image
   membersCount: Int
   bebdomain: String
-  AddressDimension: AddressDimension
+  addressDimension: AddressDimension
   members(limit: Int, offset: Int, sort: String): [AddressDimension]
   owner: Address
   tokenOwnerAddress: String
