@@ -26,12 +26,6 @@ type Address {
   nonce: AddressNonce
 }
 
-type MessageCurrentAddressPermissions {
-  _id: ID
-  canHide: Boolean
-  canRead(channelId: String): Boolean
-}
-
 type FarcasterIdentity {
   _id: ID
   directoryUrl: String
@@ -140,6 +134,7 @@ type AddressDimensionRole {
   isManagedByIndexer: Boolean
   isValid: Boolean
 }
+
 type Role {
   _id: ID
   name: String
@@ -154,6 +149,25 @@ type Role {
   membersCount: Int
   members(limit: Int, offset: Int, sort: String): [AddressDimensionRole]
   AddressDimensionRole: AddressDimensionRole # the current address associated with role. require auth
+}
+
+type Permission {
+  _id: ID
+  dimension: Dimension
+  description: Content
+  name: String
+  editable: Boolean
+  bitwiseFlag: String
+  bitwisePosition: Int
+}
+
+union PermissionOverwriteObject = Role | Address
+
+type PermissionOverwrite {
+  _id: ID
+  object: PermissionOverwriteObject
+  allowedPermissionString: String
+  objectType: Int
 }
 
 type Dimension {
@@ -181,6 +195,25 @@ type Dimension {
   commitment(address: String, duration: String): Commitment
   # admin
 }
+
+type Channel {
+  _id: ID
+  name: String
+  slug: String
+  dimension: Dimension
+  description: Content
+  position: Int
+  color: String
+  icon: Image
+  permissionOverwrites: [PermissionOverwrite]
+}
+
+type MessageCurrentAddressPermissions {
+  _id: ID
+  canHide: Boolean
+  canRead(channelId: String): Boolean
+}
+
 type Message {
   _id: ID
   richContent: RichContent
@@ -196,33 +229,6 @@ type Message {
   isHidden: Boolean
   # admin
   currentAddressPermissions: MessageCurrentAddressPermissions
-}
-type Channel {
-  _id: ID
-  name: String
-  slug: String
-  dimension: Dimension
-  description: Content
-  position: Int
-  color: String
-  icon: Image
-  permissionOverwrites: [PermissionOverwrite]
-}
-type Permission {
-  _id: ID
-  dimension: Dimension
-  description: Content
-  name: String
-  editable: Boolean
-  bitwiseFlag: String
-  bitwisePosition: Int
-}
-union PermissionOverwriteObject = Role | Address
-type PermissionOverwrite {
-  _id: ID
-  object: PermissionOverwriteObject
-  allowedPermissionString: String
-  objectType: Int
 }
 
 type Query {
