@@ -77,7 +77,7 @@ export const RichEmbedSchema = mongoose.Schema(
     },
     color: { type: String },
     url: { type: String },
-    fields: [keyValueFieldsSchema],
+    fields: [KeyValueFieldsSchema],
   },
   { timestamps: true }
 );
