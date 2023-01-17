@@ -26,16 +26,6 @@ type Address {
   nonce: AddressNonce
 }
 
-type FarcasterIdentity {
-  _id: ID
-  directoryUrl: String
-  avatarUrl: String
-  username: String
-  displayName: String
-  address: Address
-  farcasterAddress: String
-}
-
 type RentPrice {
   base: String
   premium: String
