@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { DimensionSchema } from "../schema/main.js";
 
 class DimensionClass {

@@ -175,7 +175,7 @@ export const DimensionSchema = mongoose.Schema(
       index: true,
     },
     bio: {
-      type: contentSchema,
+      type: ContentSchema,
     },
     image: {
       type: mongoose.Schema.Types.ObjectId,
