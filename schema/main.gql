@@ -26,16 +26,6 @@ type Address {
   nonce: AddressNonce
 }
 
-type RentPrice {
-  base: String
-  premium: String
-}
-
-type Commitment {
-  hash: String
-  secret: String
-}
-
 type KeyValueFields {
   _id: ID
   key: String
@@ -162,7 +152,6 @@ type Dimension {
   _id: ID
   bio: Content
   name: String
-  host: String
   image: Image
   bannerImage: Image
   membersCount: Int
@@ -174,12 +163,6 @@ type Dimension {
   permissions: [Permission]
   roles(limit: Int, offset: Int, sort: String): [Role]
   channels: [Channel]
-  tokenId: ID
-  tld: String
-  available: Boolean
-  expiresAt: String
-  rentPrice(duration: String): RentPrice
-  commitment(address: String, duration: String): Commitment
 }
 
 type Channel {
