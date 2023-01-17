@@ -85,7 +85,6 @@ union RichBlock = ImageUnion | LinkUnion | RichEmbedUnion
 type RichContentBlock {
   id: ID
   blockType: String
-  # can include multiple different blocks. use graphql union
   block: RichBlock
 }
 
@@ -124,7 +123,6 @@ type AddressDimension {
   ): Boolean
   unseenPostsCount: Int
   lastSeen: String
-  tokenCount: Int # @TODO deprecate
 }
 
 type AddressDimensionRole {
@@ -148,7 +146,7 @@ type Role {
   permissionString: String
   membersCount: Int
   members(limit: Int, offset: Int, sort: String): [AddressDimensionRole]
-  AddressDimensionRole: AddressDimensionRole # the current address associated with role. require auth
+  AddressDimensionRole: AddressDimensionRole
 }
 
 type Permission {
@@ -172,7 +170,6 @@ type PermissionOverwrite {
 
 type Dimension {
   _id: ID
-  description: String # @Todo remove this fields
   bio: Content
   name: String
   host: String
@@ -180,7 +177,7 @@ type Dimension {
   bannerImage: Image
   membersCount: Int
   bebdomain: String
-  AddressDimension: AddressDimension # the current address associated with dimension, require auth
+  AddressDimension: AddressDimension
   members(limit: Int, offset: Int, sort: String): [AddressDimension]
   owner: Address
   tokenOwnerAddress: String
@@ -193,7 +190,6 @@ type Dimension {
   expiresAt: String
   rentPrice(duration: String): RentPrice
   commitment(address: String, duration: String): Commitment
-  # admin
 }
 
 type Channel {
@@ -227,7 +223,6 @@ type Message {
   rootCommentCount: Int
   dimension: Dimension
   isHidden: Boolean
-  # admin
   currentAddressPermissions: MessageCurrentAddressPermissions
 }
 
