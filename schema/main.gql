@@ -111,7 +111,6 @@ type AddressDimensionRole {
   _id: ID
   addressDimension: AddressDimension
   role: Role
-  isManagedByIndexer: Boolean
   isValid: Boolean
 }
 
@@ -124,7 +123,6 @@ type Role {
   position: Int
   editable: Boolean
   icon: Image
-  isManagedByIndexer: Boolean
   permissionString: String
   membersCount: Int
   members(limit: Int, offset: Int, sort: String): [AddressDimensionRole]
