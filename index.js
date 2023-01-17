@@ -4,7 +4,7 @@ import { loadSchema } from "@graphql-tools/load";
 import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader";
 import * as dotenv from "dotenv";
 import { connectDB } from "./helpers/connectdb.js";
-import * as _schemas from "./schema/schema.js";
+import * as _schemas from "./schema/main.js";
 
 dotenv.config();
 
