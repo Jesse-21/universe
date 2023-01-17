@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node ./index.js",
     "dev": "NODE_ENV=development nodemon ./index.js",
-    "lint": "npx eslint schema/main.js helpers/* models/* index.js --fix"
+    "lint": "npx eslint schema/*.js helpers/*.js models/*.js *.js --fix"
   },
   "dependencies": {
     "@apollo/server": "^4.3.0",
