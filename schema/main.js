@@ -81,3 +81,15 @@ export const RichEmbedSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+const RichContentBlockSchema = mongoose.Schema({
+  blockType: {
+    type: String,
+    enum: ["IMAGE", "LINK", "RICH_EMBED", "COLLECTION", "QUEST", "POST"],
+    index: true,
+  },
+  blockId: {
+    type: mongoose.Schema.Types.ObjectId,
+    index: true,
+  },
+});

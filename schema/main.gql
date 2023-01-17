@@ -64,11 +64,13 @@ type ImageUnion {
   image: Image
   type: String
 }
+
 type LinkUnion {
   _id: ID
   link: Link
   type: String
 }
+
 type RichEmbedUnion {
   _id: ID
   richEmbed: RichEmbed
