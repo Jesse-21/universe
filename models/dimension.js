@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import { DimensionSchema } from "../schema/main.js";
 
-class DimensionClass {
-  constructor() {
-    console.log("DimensionClass constructor");
-  }
-}
+class DimensionClass {}
 
 DimensionSchema.loadClass(DimensionClass);
 

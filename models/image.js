@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import { ImageSchema } from "../schema/main.js";
 
-class ImageClass {
-  constructor() {
-    console.log("ImageClass constructor");
-  }
-}
+class ImageClass {}
 
 ImageSchema.loadClass(ImageClass);
 

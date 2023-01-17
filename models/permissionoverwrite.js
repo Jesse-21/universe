@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import { PermissionOverwriteSchema } from "../schema/main.js";
 
-class PermissionOverwriteClass {
-  constructor() {
-    console.log("PermissionOverwriteClass constructor");
-  }
-}
+class PermissionOverwriteClass {}
 
 PermissionOverwriteSchema.loadClass(PermissionOverwriteClass);
 

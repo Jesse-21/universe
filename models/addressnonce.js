@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import { AddressNonceSchema } from "../schema/main.js";
 
-class AddressNonceClass {
-  constructor() {
-    console.log("AddressNonceClass constructor");
-  }
-}
+class AddressNonceClass {}
 
 AddressNonceSchema.loadClass(AddressNonceClass);
 

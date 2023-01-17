@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import { PermissionSchema } from "../schema/main.js";
 
-class PermissionClass {
-  constructor() {
-    console.log("PermissionClass constructor");
-  }
-}
+class PermissionClass {}
 
 PermissionSchema.loadClass(PermissionClass);
 
