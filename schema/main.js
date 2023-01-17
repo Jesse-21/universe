@@ -85,7 +85,7 @@ export const RichEmbedSchema = mongoose.Schema(
 export const RichContentBlockSchema = mongoose.Schema({
   blockType: {
     type: String,
-    enum: ["IMAGE", "LINK", "RICH_EMBED", "COLLECTION", "POST"],
+    enum: ["IMAGE", "LINK", "RICH_EMBED", "COLLECTION", "MESSAGE"],
     index: true,
   },
   blockId: {
@@ -291,6 +291,52 @@ export const AddressDimensionSchema = mongoose.Schema(
     ],
     lastSeen: { type: Date, default: new Date(), index: true },
     joinedDate: { type: Date, default: new Date(), index: true },
+  },
+  { timestamps: true }
+);
+
+export const MessageSchema = mongoose.Schema(
+  {
+    richContent: RichContentSchema,
+    account: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+      index: true,
+      required: true,
+    },
+    externalId: { type: String, index: true },
+    parent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      index: true,
+    },
+    root: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      index: true,
+    },
+    dimension: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Dimension",
+      index: true,
+    },
+    channel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Channel",
+      index: true,
+    },
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+        index: true,
+      },
+    ],
+    isHidden: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true }
 );
