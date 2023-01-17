@@ -38,6 +38,15 @@ type Content {
   html: String
 }
 
+type Image {
+  _id: ID
+  src: String
+  name: String
+  isVerified: Boolean
+  verificationOrigin: String
+  verificationExternalUrl: String
+}
+
 type RichEmbed {
   _id: ID
   title: String
@@ -78,15 +87,6 @@ type RichContent {
   _id: ID
   content: Content
   blocks: [RichContentBlock]
-}
-
-type Image {
-  _id: ID
-  src: String
-  name: String
-  isVerified: Boolean
-  verificationOrigin: String
-  verificationExternalUrl: String
 }
 
 type AddressDimension {

@@ -48,3 +48,14 @@ export const ContentSchema = mongoose.Schema({
   json: { type: String },
   html: { type: String },
 });
+
+export const ImageSchema = mongoose.Schema({
+  src: { type: String },
+  name: { type: String },
+  isVerified: { type: Boolean, default: false },
+  verificationOrigin: { type: String },
+  verificationTokenId: { type: String },
+  verificationChainId: { type: Number },
+  verificationContractAddress: { type: String },
+  verificationExternalUrl: { type: String },
+});
