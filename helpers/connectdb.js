@@ -11,11 +11,11 @@ export const connectDB = () => {
         useNewUrlParser: true,
       })
       .then(() => {
-        console.log("Mongoose up!");
+        console.log("✅ Mongoose is up!");
         resolve();
       })
       .catch((e) => {
-        console.log("Something went wrong with mongo:", e);
+        console.log("❌ Something went wrong with mongo: ", e);
         reject(e);
       });
   });
