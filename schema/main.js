@@ -59,3 +59,25 @@ export const ImageSchema = mongoose.Schema({
   verificationContractAddress: { type: String },
   verificationExternalUrl: { type: String },
 });
+
+export const RichEmbedSchema = mongoose.Schema(
+  {
+    description: ContentSchema,
+    title: { type: String },
+    timestamp: { type: Date },
+    image: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+      ref: "Image",
+    },
+    thumbnail: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+      ref: "Image",
+    },
+    color: { type: String },
+    url: { type: String },
+    fields: [keyValueFieldsSchema],
+  },
+  { timestamps: true }
+);
