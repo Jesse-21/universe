@@ -4,27 +4,13 @@ import { loadSchema } from "@graphql-tools/load";
 import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader";
 import * as dotenv from "dotenv";
 import { connectDB } from "./helpers/connectdb.js";
+import { resolvers } from "./resolvers/index.js";
 
 dotenv.config();
 
 const typeDefs = await loadSchema("./schema/*.gql", {
   loaders: [new GraphQLFileLoader()],
 });
-
-const dimensions = [
-  {
-    name: "The Awakening",
-  },
-  {
-    name: "City of Glass",
-  },
-];
-
-const resolvers = {
-  Query: {
-    dimensions: () => dimensions,
-  },
-};
 
 await connectDB();
 

@@ -19,6 +19,7 @@
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "graphql": "^16.6.0",
+    "lodash-es": "^4.17.21",
     "mongoose": "^6.8.3",
     "nodemon": "^2.0.20"
   }
