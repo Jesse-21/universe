@@ -4,6 +4,8 @@ Blockchain-Enabled Broadcast (BEB) Dimensions are open-source, self-hosted nodes
 
 This is an early work and will be subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
+**Note: as of January 2023, the easiest way to build a BEBverse client is to use the [`BEBverse GraphQL APIs`](https://hackmd.io/@bebverse/graphql).**
+
 <img src="./.misc/header.png" width="300" />
 
 ## Contribution Guidelines
