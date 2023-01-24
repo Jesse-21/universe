@@ -1,4 +1,4 @@
-const { Address } = require("../models/address");
+import { Address } from "../models/address.js";
 
 export class AddressService {
   static async createAddress(address: string) {
