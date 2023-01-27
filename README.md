@@ -1,6 +1,6 @@
 # BEB (Blockchain-Enabled Broadcast) Dimension
 
-BEB Dimensions are open-source, self-hosted nodes for the [open multi-domain BEB protocol](https://github.com/bebverse/protocol).
+BEB Dimensions are open-source, self-hosted nodes for [BEB, an open messaging protocol](https://github.com/bebverse/protocol).
 
 This is an early work and will be subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
