@@ -189,6 +189,10 @@ export const DimensionSchema = new mongoose.Schema(
       type: String,
       index: true,
     },
+    tld: {
+      type: String,
+      index: true,
+    },
     host: {
       type: String,
       index: true,
