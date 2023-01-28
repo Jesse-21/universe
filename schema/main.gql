@@ -202,6 +202,7 @@ type Channel {
   color: String
   icon: Image
   permissionOverwrites: [PermissionOverwrite]
+  currentAddressChannel: AddressChannel
 }
 
 type MessageCurrentAddressPermissions {
