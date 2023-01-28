@@ -13,6 +13,7 @@ import { resolvers as permissionOverwriteResolvers } from "./permissionoverwrite
 import { resolvers as queryResolvers } from "./query.js";
 import { resolvers as richEmbedResolvers } from "./richembed.js";
 import { resolvers as roleResolvers } from "./role.js";
+import { resolvers as channelRecipientResolvers } from "./channelrecipient.js";
 
 export const resolvers = merge(
   addressResolvers,
@@ -27,5 +28,6 @@ export const resolvers = merge(
   permissionOverwriteResolvers,
   queryResolvers,
   richEmbedResolvers,
-  roleResolvers
+  roleResolvers,
+  channelRecipientResolvers
 );
