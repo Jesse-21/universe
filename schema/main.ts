@@ -141,6 +141,13 @@ export const ChannelSchema = new mongoose.Schema(
       index: true,
       ref: "Dimension",
     },
+    recipients: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        ref: "ChannelRecipient",
+      },
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
@@ -295,6 +302,25 @@ export const AddressDimensionSchema = new mongoose.Schema(
     ],
     lastSeen: { type: Date, default: new Date(), index: true },
     joinedDate: { type: Date, default: new Date(), index: true },
+  },
+  { timestamps: true }
+);
+
+export const ChannelRecipientSchema = new mongoose.Schema(
+  {
+    recipientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+      required: true,
+    },
+    recipientType: { type: Number, index: true, required: true },
+    slug: { type: String, index: true, required: true },
+    channel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Channel",
+      index: true,
+      required: true,
+    },
   },
   { timestamps: true }
 );
