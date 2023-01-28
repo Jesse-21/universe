@@ -166,6 +166,19 @@ type Dimension {
   channels: [Channel]
 }
 
+type Channel {
+  _id: ID
+  name: String
+  slug: String
+  dimension: Dimension
+  description: Content
+  position: Int
+  color: String
+  icon: Image
+  permissionOverwrites: [PermissionOverwrite]
+  recipients: [ChannelRecipient]
+}
+
 enum RecipientType {
   ACCOUNT
   ROLE
@@ -183,26 +196,14 @@ type RoleRecipientUnion {
   type: RecipientType
 }
 
-type AddressChannel {
-  _id: ID
-  channel: Channel
-  address: Address
-  userLastSeen: String
-}
-
 union Recipient = RoleRecipientUnion | AddressRecipientUnion
 
-type Channel {
+type ChannelRecipient {
   _id: ID
-  name: String
+  channel: Channel
+  recipientType: RecipientType
+  recipient: Recipient
   slug: String
-  dimension: Dimension
-  description: Content
-  position: Int
-  color: String
-  icon: Image
-  permissionOverwrites: [PermissionOverwrite]
-  currentAddressChannel: AddressChannel
 }
 
 type MessageCurrentAddressPermissions {
