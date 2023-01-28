@@ -166,6 +166,32 @@ type Dimension {
   channels: [Channel]
 }
 
+enum RecipientType {
+  ACCOUNT
+  ROLE
+}
+
+type AddressRecipientUnion {
+  _id: ID
+  address: Address
+  type: RecipientType
+}
+
+type RoleRecipientUnion {
+  _id: ID
+  role: Role
+  type: RecipientType
+}
+
+type AddressChannel {
+  _id: ID
+  channel: Channel
+  address: Address
+  userLastSeen: String
+}
+
+union Recipient = RoleRecipientUnion | AddressRecipientUnion
+
 type Channel {
   _id: ID
   name: String
