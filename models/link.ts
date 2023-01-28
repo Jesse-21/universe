@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { LinkSchema } from "../schema/main.js";
 
-class LinkClass {}
+class LinkClass extends mongoose.Model {}
 
 LinkSchema.loadClass(LinkClass);
 

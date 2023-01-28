@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { RichEmbedSchema } from "../schema/main.js";
 
-class RichEmbedClass {}
+class RichEmbedClass extends mongoose.Model {}
 
 RichEmbedSchema.loadClass(RichEmbedClass);
 

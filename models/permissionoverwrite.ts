@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { PermissionOverwriteSchema } from "../schema/main.js";
 
-class PermissionOverwriteClass {}
+class PermissionOverwriteClass extends mongoose.Model {}
 
 PermissionOverwriteSchema.loadClass(PermissionOverwriteClass);
 

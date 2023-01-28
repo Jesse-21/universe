@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { PermissionSchema } from "../schema/main.js";
 
-class PermissionClass {}
+class PermissionClass extends mongoose.Model {}
 
 PermissionSchema.loadClass(PermissionClass);
 

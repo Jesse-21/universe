@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { AddressDimensionSchema } from "../schema/main.js";
 
-class AddressDimensionClass {}
+class AddressDimensionClass extends mongoose.Model {}
 
 AddressDimensionSchema.loadClass(AddressDimensionClass);
 

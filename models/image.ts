@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { ImageSchema } from "../schema/main.js";
 
-class ImageClass {}
+class ImageClass extends mongoose.Model {}
 
 ImageSchema.loadClass(ImageClass);
 

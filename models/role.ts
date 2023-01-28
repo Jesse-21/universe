@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { RoleSchema } from "../schema/main.js";
 
-class RoleClass {}
+class RoleClass extends mongoose.Model {}
 
 RoleSchema.loadClass(RoleClass);
 
