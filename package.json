@@ -17,7 +17,6 @@
     "@chainsafe/libp2p-noise": "^11.0.0",
     "@graphql-tools/graphql-file-loader": "^7.5.13",
     "@graphql-tools/load": "^7.8.8",
-    "@libp2p/bootstrap": "^6.0.0",
     "@libp2p/kad-dht": "^7.0.0",
     "@libp2p/tcp": "^6.1.1",
     "@types/lodash-es": "^4.17.6",

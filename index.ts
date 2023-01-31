@@ -7,10 +7,8 @@ import { connectDB } from "./helpers/connectdb.js";
 import { resolvers } from "./resolvers/index.js";
 import { createLibp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
-
 import { noise } from "@chainsafe/libp2p-noise";
 import { kadDHT } from "@libp2p/kad-dht";
-import { bootstrap } from "@libp2p/bootstrap";
 
 dotenv.config();
 
@@ -41,17 +39,6 @@ const node = await createLibp2p({
   }),
   transports: [tcp()],
   connectionEncryption: [noise()],
-  peerDiscovery: [
-    bootstrap({
-      list: [
-        "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-        "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-        "/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp",
-        "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-        "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-      ],
-    }),
-  ],
 });
 await node.start();
 
