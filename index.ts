@@ -30,7 +30,10 @@ const { url } = await startStandaloneServer(server, {
 console.log(`🚀 Server ready at: ${url}`);
 
 const node = await createLibp2p({
-  dht: kadDHT(),
+  dht: kadDHT({
+    kBucketSize: Number.MAX_SAFE_INTEGER,
+    protocolPrefix: "/dimension",
+  }),
   transports: [webSockets()],
   connectionEncryption: [noise()],
 });
