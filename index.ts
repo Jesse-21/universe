@@ -9,6 +9,9 @@ import { createLibp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
 import { noise } from "@chainsafe/libp2p-noise";
 import { kadDHT } from "@libp2p/kad-dht";
+import { CID } from "multiformats/cid";
+import * as json from "multiformats/codecs/json";
+import { sha256 } from "multiformats/hashes/sha2";
 
 dotenv.config();
 
@@ -29,6 +32,13 @@ const { url } = await startStandaloneServer(server, {
 
 console.log(`🚀 Server ready at: ${url}`);
 
+const bytes = json.encode({
+  identifier: "dimensions@0.0.1",
+  name: "bebverse/dimensions",
+});
+const hash = await sha256.digest(bytes);
+const cid = CID.create(1, json.code, hash);
+
 const node = await createLibp2p({
   addresses: {
     listen: ["/ip4/0.0.0.0/tcp/0"],
@@ -36,13 +46,16 @@ const node = await createLibp2p({
   dht: kadDHT({
     kBucketSize: Number.MAX_SAFE_INTEGER,
     protocolPrefix: "/dimension",
+    clientMode: false,
   }),
   transports: [tcp()],
   connectionEncryption: [noise()],
 });
 await node.start();
 
-for await (const event of node.dht.findPeer(node.peerId)) {
+for await (const event of node.dht.findProviders(cid, {
+  queryFuncTimeout: 1000,
+})) {
   console.info(event);
 }
 
