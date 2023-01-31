@@ -26,8 +26,9 @@ const server = new ApolloServer({
   resolvers,
 });
 
+const port = parseInt(process.argv[2]) || 4000;
 const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
+  listen: { port: port },
 });
 
 console.log(`🚀 Server ready at: ${url}`);
@@ -51,6 +52,7 @@ const node = await createLibp2p({
   transports: [tcp()],
   connectionEncryption: [noise()],
 });
+node.dht.provide(cid);
 await node.start();
 
 for await (const event of node.dht.findProviders(cid, {
