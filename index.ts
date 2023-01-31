@@ -5,6 +5,10 @@ import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader";
 import * as dotenv from "dotenv";
 import { connectDB } from "./helpers/connectdb.js";
 import { resolvers } from "./resolvers/index.js";
+import { createLibp2p } from "libp2p";
+import { webSockets } from "@libp2p/websockets";
+import { noise } from "@chainsafe/libp2p-noise";
+import { kadDHT } from "@libp2p/kad-dht";
 
 dotenv.config();
 
@@ -24,5 +28,16 @@ const { url } = await startStandaloneServer(server, {
 });
 
 console.log(`🚀 Server ready at: ${url}`);
+
+const node = await createLibp2p({
+  dht: kadDHT(),
+  transports: [webSockets()],
+  connectionEncryption: [noise()],
+});
+await node.start();
+
+for await (const event of node.dht.findPeer(node.peerId)) {
+  console.info(event);
+}
 
 export { server };
