@@ -28,13 +28,11 @@ class AddressNonceClass extends mongoose.Model {
     return addressNonce;
   }
 
-  /** generate a new account nonce */
   async generateNewNonce() {
     this.nonce = `${crypto.randomInt(1, 1_000_000)}`;
     await this.save();
   }
 
-  /** generate a new account transaction nonce */
   async generateNewTransactionNonce() {
     this.transactionNonce = `${getRandomUint256()}`;
     await this.save();
