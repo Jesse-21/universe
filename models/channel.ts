@@ -23,7 +23,7 @@ class ChannelClass extends mongoose.Model {
     filters,
   }: {
     filters: { communityId?: string; onlyPublic?: boolean };
-  }) {
+  }): mongoose.FilterQuery<ChannelClass> {
     let matchQuery = {};
     if (filters.communityId) {
       matchQuery = {
@@ -55,8 +55,11 @@ class ChannelClass extends mongoose.Model {
   static _lookupByRecipientIds({
     filters,
   }: {
-    filters: { recipientIds: string[] };
-  }) {
+    filters: { recipientIds?: string[] };
+  }): {
+    $match?: mongoose.FilterQuery<ChannelClass>;
+    $lookup?: mongoose.FilterQuery<ChannelClass>;
+  }[] {
     const lookupQueries = [];
     if (filters.recipientIds && filters.recipientIds.length) {
       lookupQueries.push({
@@ -82,6 +85,44 @@ class ChannelClass extends mongoose.Model {
       });
     }
     return lookupQueries;
+  }
+
+  static async findAndSort({
+    filters,
+    sort = "-createdAt",
+    offset = 0,
+    limit = 10,
+  }: {
+    filters: {
+      communityId?: string;
+      onlyPublic?: boolean;
+      recipientIds?: string[];
+    };
+    sort?: string;
+    offset?: number;
+    limit?: number;
+  }): Promise<ChannelClass[]> {
+    let matchQuery = this._buildMatchQuery({ filters });
+    const $sort =
+      sort[0] === "-" ? { [sort.slice(1)]: -1, _id: 1 } : { [sort]: 1, _id: 1 };
+    const pipeline: {
+      $match?: mongoose.FilterQuery<ChannelClass>;
+      $lookup?: mongoose.FilterQuery<ChannelClass>;
+    }[] = [{ $match: matchQuery }];
+    if (filters.recipientIds) {
+      pipeline.push(...this._lookupByRecipientIds({ filters }));
+      // push a lookup stage to the pipeline
+    }
+
+    // @ts-ignore
+    const channels = await this.aggregate([
+      ...pipeline,
+      { $sort: $sort },
+      { $skip: offset },
+      { $limit: limit },
+    ]);
+
+    return channels;
   }
 }
 
