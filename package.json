@@ -1,10 +1,10 @@
 {
-  "name": "dimension",
+  "name": "realm",
   "version": "0.0.1",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "repository": "git@github.com:bebverse/dimension.git",
+  "repository": "git@github.com:bebverse/realm.git",
   "author": "Beb, Inc. <gm@beb.xyz>",
   "main": "README.md",
   "scripts": {
