@@ -1,6 +1,6 @@
-# Realm, a BEB Dimension Implementation
+# Universe, a BEB Dimension Implementation
 
-Realm is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension. Realms are open-source, self-hosted nodes for [BEB, an open messaging protocol](https://github.com/bebverse/protocol).
+Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension. Realms are open-source, self-hosted nodes for [BEB, an open messaging protocol](https://github.com/bebverse/protocol).
 
 This is an early work and will be subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 

@@ -1,10 +1,10 @@
 {
-  "name": "realm",
+  "name": "universe",
   "version": "0.0.1",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "repository": "git@github.com:bebverse/realm.git",
+  "repository": "git@github.com:bebverse/universe.git",
   "author": "Beb, Inc. <gm@beb.xyz>",
   "main": "README.md",
   "scripts": {
