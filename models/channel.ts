@@ -51,6 +51,38 @@ class ChannelClass extends mongoose.Model {
 
     return matchQuery;
   }
+
+  static _lookupByRecipientIds({
+    filters,
+  }: {
+    filters: { recipientIds: string[] };
+  }) {
+    const lookupQueries = [];
+    if (filters.recipientIds && filters.recipientIds.length) {
+      lookupQueries.push({
+        $lookup: {
+          from: "channelrecipients",
+          localField: "recipients",
+          foreignField: "_id",
+          as: "recipients",
+        },
+      });
+      lookupQueries.push({
+        $match: {
+          recipients: {
+            $elemMatch: {
+              recipientId: {
+                $in: filters.recipientIds.map(
+                  (id) => new mongoose.Types.ObjectId(id)
+                ),
+              },
+            },
+          },
+        },
+      });
+    }
+    return lookupQueries;
+  }
 }
 
 ChannelSchema.loadClass(ChannelClass);
