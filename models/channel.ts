@@ -142,7 +142,7 @@ class ChannelClass extends mongoose.Model {
     return channel;
   }
 
-  async delete() {
+  async delete(): Promise<string> {
     this.isHidden = true;
 
     await this.save();
