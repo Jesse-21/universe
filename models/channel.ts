@@ -102,7 +102,7 @@ class ChannelClass extends mongoose.Model {
     offset?: number;
     limit?: number;
   }): Promise<ChannelClass[]> {
-    let matchQuery = this._buildMatchQuery({ filters });
+    const matchQuery = this._buildMatchQuery({ filters });
     const $sort =
       sort[0] === "-" ? { [sort.slice(1)]: -1, _id: 1 } : { [sort]: 1, _id: 1 };
     const pipeline: {
@@ -114,6 +114,7 @@ class ChannelClass extends mongoose.Model {
       // push a lookup stage to the pipeline
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const channels = await this.aggregate([
       ...pipeline,
@@ -123,6 +124,29 @@ class ChannelClass extends mongoose.Model {
     ]);
 
     return channels;
+  }
+
+  static async updateLastPost({
+    channelId,
+    postId,
+  }: {
+    channelId: string;
+    postId: string;
+  }): Promise<ChannelClass> {
+    const channel = await this.findById(channelId);
+    if (!channel) throw new Error("Channel not found");
+    channel.lastPost = postId;
+    channel.lastPostCreatedAt = new Date();
+
+    await channel.save();
+    return channel;
+  }
+
+  async delete() {
+    this.isHidden = true;
+
+    await this.save();
+    return this._id;
   }
 }
 
