@@ -22,7 +22,7 @@ class ChannelClass extends mongoose.Model {
   static _buildMatchQuery({
     filters,
   }: {
-    filters: { communityId?: string; onlyPublic: boolean };
+    filters: { communityId?: string; onlyPublic?: boolean };
   }) {
     let matchQuery = {};
     if (filters.communityId) {
