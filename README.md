@@ -1,4 +1,4 @@
-# Realm, An Open BEB Dimension Implementation
+# Realm, a BEB Dimension Implementation
 
 Realm is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension. Realms are open-source, self-hosted nodes for [BEB, an open messaging protocol](https://github.com/bebverse/protocol).
 
