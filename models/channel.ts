@@ -10,7 +10,6 @@ class ChannelClass extends mongoose.Model {
     index?: number;
   }): Promise<string> {
     if (index > 10) throw new Error("Cannot generate unique slug");
-    /** generate random 4 numbers */
     const random = Math.floor(1000 + Math.random() * 9000);
     const slug = `${name.toLowerCase().replace(/\s/g, "-")}-${random}`;
     const found = await this.exists({ slug });
