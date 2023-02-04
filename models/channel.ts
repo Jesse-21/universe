@@ -22,13 +22,13 @@ class ChannelClass extends mongoose.Model {
   static _buildMatchQuery({
     filters,
   }: {
-    filters: { communityId?: string; onlyPublic?: boolean };
+    filters: { dimensionId?: string; onlyPublic?: boolean };
   }): mongoose.FilterQuery<ChannelClass> {
     let matchQuery = {};
-    if (filters.communityId) {
+    if (filters.dimensionId) {
       matchQuery = {
         ...matchQuery,
-        community: new mongoose.Types.ObjectId(filters.communityId),
+        dimension: new mongoose.Types.ObjectId(filters.dimensionId),
       };
     }
     if (filters.onlyPublic) {
@@ -94,7 +94,7 @@ class ChannelClass extends mongoose.Model {
     limit = 10,
   }: {
     filters: {
-      communityId?: string;
+      dimensionId?: string;
       onlyPublic?: boolean;
       recipientIds?: string[];
     };

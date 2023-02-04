@@ -8,7 +8,7 @@ class ChannelRecipientClass extends mongoose.Model {
     filters: {
       recipientIds?: string[];
       recipientType?: string;
-      communityId?: string;
+      dimensionId?: string;
     };
   }): mongoose.FilterQuery<ChannelRecipientClass> {
     let matchQuery = {};
@@ -29,10 +29,10 @@ class ChannelRecipientClass extends mongoose.Model {
       };
     }
 
-    if (filters.communityId) {
+    if (filters.dimensionId) {
       matchQuery = {
         ...matchQuery,
-        community: new mongoose.Types.ObjectId(filters.communityId),
+        dimension: new mongoose.Types.ObjectId(filters.dimensionId),
       };
     }
 
@@ -50,7 +50,7 @@ class ChannelRecipientClass extends mongoose.Model {
     filters?: {
       recipientIds?: string[];
       recipientType?: string;
-      communityId?: string;
+      dimensionId?: string;
     };
     sort?: string;
   }) {
