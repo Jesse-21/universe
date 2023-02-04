@@ -10,6 +10,9 @@ class ImageClass extends mongoose.Model {
   }: {
     image: string | { filepath: string; newFilename: string };
   }) {
+    if (!process.env.IMGUR_CLIENT_ID) {
+      throw new Error("IMGUR_CLIENT_ID not set");
+    }
     try {
       const form = new FormData();
       if (image instanceof String || typeof image === "string") {

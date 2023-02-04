@@ -24,6 +24,7 @@ Once you have node.js, yarn and mongodb, you'll need to fill the following envir
 
 ```
 MONGO_URL=mongodb+srv://...
+IMGUR_CLIENT_ID=abcde... (so members can upload photos from your dimension)
 ```
 
 After your environment is configured, run `yarn dev` to have a running instance, and play around with graphql commands at `localhost:8080/graphql`!
