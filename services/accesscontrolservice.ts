@@ -1,7 +1,7 @@
 import { AddressDimension } from "../models/addressdimension";
 
-class AccessControlService {
-  async addressDimensionByDimensionIdControl(
+export class AccessControlService {
+  static async addressDimensionByDimensionIdControl(
     _: unknown,
     { dimensionId }: { dimensionId: string },
     context: { addressId?: string; account?: { _id: string } }
@@ -14,5 +14,3 @@ class AccessControlService {
     return true;
   }
 }
-
-module.exports = { Service: AccessControlService };
