@@ -22,6 +22,7 @@ type AddressNonce {
 type Address {
   _id: ID
   address: String!
+  addressDimensions: [AddressDimension]
   chain: Chain
   nonce: AddressNonce
 }

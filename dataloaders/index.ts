@@ -1,5 +1,5 @@
 import DataLoader from "dataloader";
-import { Address } from "../models/address";
+import { Address } from "../models/address.js";
 
 export const createDataLoaders = () => {
   return {
