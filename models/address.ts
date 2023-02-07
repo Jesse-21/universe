@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { AddressSchema } from "../schema/main.js";
 import { getNameFromChainId } from "../helpers/chains.js";
 import { validateAndConvertAddress } from "../helpers/validate.js";
+import { IAddress } from "../schema/interfaces.js";
 
 class AddressClass extends mongoose.Model {
   static async findOrCreate({
@@ -40,4 +41,4 @@ class AddressClass extends mongoose.Model {
 AddressSchema.loadClass(AddressClass);
 
 export const Address =
-  mongoose.models.Address || mongoose.model("Address", AddressSchema);
+  mongoose.models.Address || mongoose.model<IAddress>("Address", AddressSchema);

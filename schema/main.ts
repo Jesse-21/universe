@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import { ethers } from "ethers";
 
+import { IAddress, INonce, IChain } from "./interfaces";
+
 export const LinkSchema = new mongoose.Schema({
   url: { type: String, index: true },
   image: { type: String },
@@ -11,12 +13,12 @@ export const LinkSchema = new mongoose.Schema({
   iframe: { type: String },
 });
 
-export const ChainSchema = new mongoose.Schema({
+export const ChainSchema = new mongoose.Schema<IChain>({
   chainId: { type: Number },
   name: { type: String },
 });
 
-export const AddressNonceSchema = new mongoose.Schema(
+export const AddressNonceSchema = new mongoose.Schema<INonce>(
   {
     nonce: { type: String, default: `${crypto.randomInt(1, 10000)}` },
     transactionNonce: {
@@ -32,7 +34,7 @@ export const AddressNonceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const AddressSchema = new mongoose.Schema({
+export const AddressSchema = new mongoose.Schema<IAddress>({
   address: { type: String, index: true, required: true },
   chain: ChainSchema,
   nonce: AddressNonceSchema,
