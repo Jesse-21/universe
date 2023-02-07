@@ -95,7 +95,7 @@ type RichContent {
 type AddressDimension {
   _id: ID
   address: Address
-  community: Dimension
+  dimension: Dimension
   joined: Boolean
   canRead(channelId: String): Boolean
   canWrite(channelId: String): Boolean

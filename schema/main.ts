@@ -4,15 +4,6 @@ import { ethers } from "ethers";
 
 import { IAddress, INonce, IChain } from "./interfaces";
 
-export const LinkSchema = new mongoose.Schema({
-  url: { type: String, index: true },
-  image: { type: String },
-  title: { type: String },
-  description: { type: String },
-  logo: { type: String },
-  iframe: { type: String },
-});
-
 export const ChainSchema = new mongoose.Schema<IChain>({
   chainId: { type: Number },
   name: { type: String },
@@ -38,6 +29,15 @@ export const AddressSchema = new mongoose.Schema<IAddress>({
   address: { type: String, index: true, required: true },
   chain: ChainSchema,
   nonce: AddressNonceSchema,
+});
+
+export const LinkSchema = new mongoose.Schema({
+  url: { type: String, index: true },
+  image: { type: String },
+  title: { type: String },
+  description: { type: String },
+  logo: { type: String },
+  iframe: { type: String },
 });
 
 export const KeyValueFieldsSchema = new mongoose.Schema({
@@ -100,7 +100,7 @@ export const PermissionSchema = new mongoose.Schema(
   {
     description: ContentSchema,
     name: { type: String, required: true },
-    community: {
+    dimension: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
@@ -138,7 +138,7 @@ export const ChannelSchema = new mongoose.Schema(
     description: ContentSchema,
     name: { type: String, required: true },
     slug: { type: String, index: true },
-    community: {
+    dimension: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
       ref: "Dimension",
@@ -194,15 +194,11 @@ export const DimensionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Image",
     },
-    bebdomain: {
+    domain: {
       type: String,
       index: true,
     },
     tld: {
-      type: String,
-      index: true,
-    },
-    host: {
       type: String,
       index: true,
     },
@@ -240,7 +236,7 @@ export const RoleSchema = new mongoose.Schema(
     description: ContentSchema,
     name: { type: String, required: true },
     slug: { type: String, required: true, index: true },
-    community: {
+    dimension: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
       ref: "Dimension",
@@ -267,7 +263,7 @@ export const AddressDimensionRoleSchema = new mongoose.Schema(
       ref: "Role",
       required: true,
     },
-    accountCommunity: {
+    addressDimension: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
       ref: "AddressDimension",
@@ -290,11 +286,6 @@ export const AddressDimensionSchema = new mongoose.Schema(
       ref: "Dimension",
       index: true,
     },
-    joined: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
     roles: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -302,8 +293,6 @@ export const AddressDimensionSchema = new mongoose.Schema(
         index: true,
       },
     ],
-    lastSeen: { type: Date, default: new Date(), index: true },
-    joinedDate: { type: Date, default: new Date(), index: true },
   },
   { timestamps: true }
 );
