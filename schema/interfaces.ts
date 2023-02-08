@@ -65,6 +65,7 @@ export interface IRichEmbed {
   color?: string;
   url?: string;
   fields?: IKeyValueFields[];
+  timestamp?: Date;
 }
 
 enum BlockType {
@@ -153,7 +154,7 @@ export interface IRole {
 export interface IAddressDimensionRole {
   _id: string;
   role: Types.ObjectId;
-  accountDimension: Types.ObjectId;
+  addressDimension: Types.ObjectId;
   isValid: boolean;
   createdAt: Date;
   updatedAt: Date;

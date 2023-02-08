@@ -2,7 +2,26 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import { ethers } from "ethers";
 
-import { IAddress, INonce, IChain } from "./interfaces";
+import {
+  IAddress,
+  INonce,
+  IChain,
+  IKeyValueFields,
+  IContent,
+  IImage,
+  IRichEmbed,
+  IRichContent,
+  IPermission,
+  IPermissionOverwrite,
+  IChannel,
+  IRole,
+  IDimension,
+  IRichContentBlock,
+  IAddressDimensionRole,
+  IAddressDimension,
+  IMessage,
+  IChannelRecipient,
+} from "./interfaces";
 
 export const ChainSchema = new mongoose.Schema<IChain>({
   chainId: { type: Number },
@@ -40,29 +59,28 @@ export const LinkSchema = new mongoose.Schema({
   iframe: { type: String },
 });
 
-export const KeyValueFieldsSchema = new mongoose.Schema({
+export const KeyValueFieldsSchema = new mongoose.Schema<IKeyValueFields>({
   key: { type: String, required: true, index: true },
   value: { type: String },
 });
 
-export const ContentSchema = new mongoose.Schema({
+export const ContentSchema = new mongoose.Schema<IContent>({
   raw: { type: String },
   json: { type: String },
   html: { type: String },
 });
 
-export const ImageSchema = new mongoose.Schema({
+export const ImageSchema = new mongoose.Schema<IImage>({
   src: { type: String },
   name: { type: String },
   isVerified: { type: Boolean, default: false },
   verificationOrigin: { type: String },
   verificationTokenId: { type: String },
-  verificationChainId: { type: Number },
   verificationContractAddress: { type: String },
   verificationExternalUrl: { type: String },
 });
 
-export const RichEmbedSchema = new mongoose.Schema(
+export const RichEmbedSchema = new mongoose.Schema<IRichEmbed>(
   {
     description: ContentSchema,
     title: { type: String },
@@ -84,7 +102,7 @@ export const RichEmbedSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const RichContentBlockSchema = new mongoose.Schema({
+export const RichContentBlockSchema = new mongoose.Schema<IRichContentBlock>({
   blockType: {
     type: String,
     enum: ["IMAGE", "LINK", "RICH_EMBED", "COLLECTION", "MESSAGE"],
@@ -96,7 +114,7 @@ export const RichContentBlockSchema = new mongoose.Schema({
   },
 });
 
-export const PermissionSchema = new mongoose.Schema(
+export const PermissionSchema = new mongoose.Schema<IPermission>(
   {
     description: ContentSchema,
     name: { type: String, required: true },
@@ -114,26 +132,27 @@ export const PermissionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const PermissionOverwriteSchema = new mongoose.Schema(
-  {
-    objectTypeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      index: true,
-      required: true,
+export const PermissionOverwriteSchema =
+  new mongoose.Schema<IPermissionOverwrite>(
+    {
+      objectTypeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        required: true,
+      },
+      objectType: { type: Number, index: true, required: true },
+      allowedPermissionString: { type: String },
+      deniedPermissionString: { type: String },
     },
-    objectType: { type: Number, index: true, required: true },
-    allowedPermissionString: { type: String },
-    deniedPermissionString: { type: String },
-  },
-  { timestamps: true }
-);
+    { timestamps: true }
+  );
 
-export const RichContentSchema = new mongoose.Schema({
+export const RichContentSchema = new mongoose.Schema<IRichContent>({
   content: ContentSchema,
   blocks: [RichContentBlockSchema],
 });
 
-export const ChannelSchema = new mongoose.Schema(
+export const ChannelSchema = new mongoose.Schema<IChannel>(
   {
     description: ContentSchema,
     name: { type: String, required: true },
@@ -155,10 +174,6 @@ export const ChannelSchema = new mongoose.Schema(
       index: true,
       ref: "Address",
     },
-    position: {
-      type: Number,
-      default: Number.MAX_SAFE_INTEGER,
-    },
     icon: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
@@ -176,7 +191,7 @@ export const ChannelSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const DimensionSchema = new mongoose.Schema(
+export const DimensionSchema = new mongoose.Schema<IDimension>(
   {
     name: {
       type: String,
@@ -231,7 +246,7 @@ export const DimensionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const RoleSchema = new mongoose.Schema(
+export const RoleSchema = new mongoose.Schema<IRole>(
   {
     description: ContentSchema,
     name: { type: String, required: true },
@@ -248,35 +263,35 @@ export const RoleSchema = new mongoose.Schema(
     },
     editable: { type: Boolean, default: false },
     color: { type: String },
-    position: { type: Number },
     permissionString: { type: String },
     isHidden: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
 
-export const AddressDimensionRoleSchema = new mongoose.Schema(
-  {
-    role: {
-      type: mongoose.Schema.Types.ObjectId,
-      index: true,
-      ref: "Role",
-      required: true,
+export const AddressDimensionRoleSchema =
+  new mongoose.Schema<IAddressDimensionRole>(
+    {
+      role: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        ref: "Role",
+        required: true,
+      },
+      addressDimension: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        ref: "AddressDimension",
+        required: true,
+      },
+      isValid: { type: Boolean, default: true, index: true },
     },
-    addressDimension: {
-      type: mongoose.Schema.Types.ObjectId,
-      index: true,
-      ref: "AddressDimension",
-      required: true,
-    },
-    isValid: { type: Boolean, default: true, index: true },
-  },
-  { timestamps: true }
-);
+    { timestamps: true }
+  );
 
-export const AddressDimensionSchema = new mongoose.Schema(
+export const AddressDimensionSchema = new mongoose.Schema<IAddressDimension>(
   {
-    account: {
+    address: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Address",
       index: true,
@@ -297,7 +312,7 @@ export const AddressDimensionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const ChannelRecipientSchema = new mongoose.Schema(
+export const ChannelRecipientSchema = new mongoose.Schema<IChannelRecipient>(
   {
     recipientId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -316,7 +331,7 @@ export const ChannelRecipientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const MessageSchema = new mongoose.Schema(
+export const MessageSchema = new mongoose.Schema<IMessage>(
   {
     richContent: RichContentSchema,
     account: {
