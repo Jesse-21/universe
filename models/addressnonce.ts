@@ -3,6 +3,7 @@ import { AddressNonceSchema } from "../schema/main.js";
 import { bufferToHex } from "ethereumjs-util";
 import { recoverPersonalSignature } from "@metamask/eth-sig-util";
 import { getRandomUint256 } from "../helpers/random.js";
+import { INonce } from "../schema/interfaces.js";
 import crypto from "crypto";
 
 class AddressNonceClass extends mongoose.Model {
@@ -43,4 +44,4 @@ AddressNonceSchema.loadClass(AddressNonceClass);
 
 export const AddressNonce =
   mongoose.models.AddressNonce ||
-  mongoose.model("AddressNonce", AddressNonceSchema);
+  mongoose.model<INonce>("AddressNonce", AddressNonceSchema);

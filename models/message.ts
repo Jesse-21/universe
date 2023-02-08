@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { MessageSchema } from "../schema/main.js";
+import { IMessage } from "../schema/interfaces.js";
 
 class MessageClass extends mongoose.Model {
   static _buildPostFeedMatchQuery({
@@ -107,4 +108,4 @@ class MessageClass extends mongoose.Model {
 MessageSchema.loadClass(MessageClass);
 
 export const Message =
-  mongoose.models.Message || mongoose.model("Message", MessageSchema);
+  mongoose.models.Message || mongoose.model<IMessage>("Message", MessageSchema);

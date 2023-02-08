@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { RoleSchema } from "../schema/main.js";
+import { IRole } from "../schema/interfaces.js";
 
 class RoleClass extends mongoose.Model {
   static async findRoleById({ id }: { id: string }): Promise<RoleClass | null> {
@@ -81,4 +82,5 @@ class RoleClass extends mongoose.Model {
 
 RoleSchema.loadClass(RoleClass);
 
-export const Role = mongoose.models.Role || mongoose.model("Role", RoleSchema);
+export const Role =
+  mongoose.models.Role || mongoose.model<IRole>("Role", RoleSchema);

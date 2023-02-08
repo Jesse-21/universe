@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { ChannelRecipientSchema } from "../schema/main.js";
+import { IChannelRecipient } from "../schema/interfaces.js";
 
 class ChannelRecipientClass extends mongoose.Model {
   static _buildMatchQuery({
@@ -74,4 +75,4 @@ ChannelRecipientSchema.loadClass(ChannelRecipientClass);
 
 export const ChannelRecipient =
   mongoose.models.ChannelRecipient ||
-  mongoose.model("ChannelRecipient", ChannelRecipientSchema);
+  mongoose.model<IChannelRecipient>("ChannelRecipient", ChannelRecipientSchema);

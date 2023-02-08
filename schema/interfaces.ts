@@ -159,7 +159,7 @@ export interface IAddressDimensionRole {
   updatedAt: Date;
 }
 
-export interface IAccountDimension {
+export interface IAddressDimension {
   _id: string;
   address: Types.ObjectId;
   dimension: Types.ObjectId;

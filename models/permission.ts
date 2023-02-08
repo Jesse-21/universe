@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { PermissionSchema } from "../schema/main.js";
+import { IPermission } from "../schema/interfaces.js";
 
 class PermissionClass extends mongoose.Model {
   static async _verifyUniqueIdentifier({
@@ -58,4 +59,5 @@ class PermissionClass extends mongoose.Model {
 PermissionSchema.loadClass(PermissionClass);
 
 export const Permission =
-  mongoose.models.Permission || mongoose.model("Permission", PermissionSchema);
+  mongoose.models.Permission ||
+  mongoose.model<IPermission>("Permission", PermissionSchema);

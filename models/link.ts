@@ -10,6 +10,7 @@ import metascraperTitle from "metascraper-title";
 import metascraperUrl from "metascraper-url";
 import metascraperIframe from "metascraper-iframe";
 import { cleanIframeHtml } from "../helpers/html.js";
+import { ILink } from "../schema/interfaces.js";
 
 const metascraper = _metascraper([
   metascraperDescription(),
@@ -121,4 +122,5 @@ class LinkClass extends mongoose.Model {
 
 LinkSchema.loadClass(LinkClass);
 
-export const Link = mongoose.models.Link || mongoose.model("Link", LinkSchema);
+export const Link =
+  mongoose.models.Link || mongoose.model<ILink>("Link", LinkSchema);

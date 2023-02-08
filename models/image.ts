@@ -3,6 +3,7 @@ import { ImageSchema } from "../schema/main.js";
 import axios from "axios";
 import FormData from "form-data";
 import fs from "fs";
+import { IImage } from "../schema/interfaces.js";
 
 class ImageClass extends mongoose.Model {
   static async uploadImage({
@@ -53,4 +54,4 @@ class ImageClass extends mongoose.Model {
 ImageSchema.loadClass(ImageClass);
 
 export const Image =
-  mongoose.models.Image || mongoose.model("Image", ImageSchema);
+  mongoose.models.Image || mongoose.model<IImage>("Image", ImageSchema);

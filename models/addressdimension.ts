@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { AddressDimensionSchema } from "../schema/main.js";
+import { IAddressDimension } from "../schema/interfaces.js";
 
 class AddressDimensionClass extends mongoose.Model {
   static async _existingAddressDimension({
@@ -40,4 +41,4 @@ AddressDimensionSchema.loadClass(AddressDimensionClass);
 
 export const AddressDimension =
   mongoose.models.AddressDimension ||
-  mongoose.model("AddressDimension", AddressDimensionSchema);
+  mongoose.model<IAddressDimension>("AddressDimension", AddressDimensionSchema);
