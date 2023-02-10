@@ -2,7 +2,6 @@ import { merge } from "lodash-es";
 
 import { resolvers as addressResolvers } from "./address.js";
 import { resolvers as addressDimensionResolvers } from "./addressdimension.js";
-import { resolvers as addressNonceResolvers } from "./addressnonce.js";
 import { resolvers as channelResolvers } from "./channel.js";
 import { resolvers as dimensionResolvers } from "./dimension.js";
 import { resolvers as imageResolvers } from "./image.js";
@@ -18,7 +17,6 @@ import { resolvers as channelRecipientResolvers } from "./channelrecipient.js";
 export const resolvers = merge(
   addressResolvers,
   addressDimensionResolvers,
-  addressNonceResolvers,
   channelResolvers,
   dimensionResolvers,
   imageResolvers,
