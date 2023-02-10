@@ -1,9 +1,9 @@
+import { IAddressDimension } from "../schema/interfaces.js";
+
 export const resolvers = {
   AddressDimension: {
     address: async (
-      parent: {
-        address: string;
-      },
+      parent: IAddressDimension,
       _args: unknown,
       context: {
         dataloaders: {
@@ -13,7 +13,9 @@ export const resolvers = {
         };
       }
     ) => {
-      return await context.dataloaders.addresses.load(parent.address);
+      return await context.dataloaders.addresses.load(
+        parent.address.toString()
+      );
     },
   },
 };
