@@ -81,17 +81,20 @@ class LinkClass extends mongoose.Model {
         description,
         image,
         title,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         logo,
         url: cleanUrl,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         iframe: rawIframe,
-      } = await metascraper({
+      } = (await metascraper({
         html,
         url: targetUrl,
-      });
+      })) as unknown as {
+        description: string;
+        image: string;
+        title: string;
+        logo: string;
+        url: string;
+        iframe: string;
+      };
 
       /**@TODO we only support twitter iframe for now */
       const iframe = rawIframe
