@@ -22,7 +22,7 @@ class ChannelClass extends mongoose.Model {
     filters,
   }: {
     filters: { dimensionId?: string; onlyPublic?: boolean };
-  }): mongoose.FilterQuery<ChannelClass> {
+  }): mongoose.FilterQuery<IChannel> {
     let matchQuery = {};
     if (filters.dimensionId) {
       matchQuery = {
@@ -56,8 +56,8 @@ class ChannelClass extends mongoose.Model {
   }: {
     filters: { recipientIds?: string[] };
   }): {
-    $match?: mongoose.FilterQuery<ChannelClass>;
-    $lookup?: mongoose.FilterQuery<ChannelClass>;
+    $match?: mongoose.FilterQuery<IChannel>;
+    $lookup?: mongoose.FilterQuery<IChannel>;
   }[] {
     const lookupQueries = [];
     if (filters.recipientIds && filters.recipientIds.length) {
@@ -100,27 +100,25 @@ class ChannelClass extends mongoose.Model {
     sort?: string;
     offset?: number;
     limit?: number;
-  }): Promise<ChannelClass[]> {
+  }): Promise<IChannel[]> {
     const matchQuery = this._buildMatchQuery({ filters });
     const $sort =
       sort[0] === "-" ? { [sort.slice(1)]: -1, _id: 1 } : { [sort]: 1, _id: 1 };
     const pipeline: {
-      $match?: mongoose.FilterQuery<ChannelClass>;
-      $lookup?: mongoose.FilterQuery<ChannelClass>;
+      $match?: mongoose.FilterQuery<IChannel>;
+      $lookup?: mongoose.FilterQuery<IChannel>;
     }[] = [{ $match: matchQuery }];
     if (filters.recipientIds) {
       pipeline.push(...this._lookupByRecipientIds({ filters }));
       // push a lookup stage to the pipeline
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     const channels = await this.aggregate([
       ...pipeline,
       { $sort: $sort },
       { $skip: offset },
       { $limit: limit },
-    ]);
+    ] as mongoose.PipelineStage[]);
 
     return channels;
   }
@@ -131,7 +129,7 @@ class ChannelClass extends mongoose.Model {
   }: {
     channelId: string;
     postId: string;
-  }): Promise<ChannelClass> {
+  }): Promise<IChannel> {
     const channel = await this.findById(channelId);
     if (!channel) throw new Error("Channel not found");
     channel.lastPost = postId;

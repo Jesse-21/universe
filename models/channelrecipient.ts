@@ -61,12 +61,10 @@ class ChannelRecipientClass extends mongoose.Model {
 
     const channelRecipients = await this.aggregate([
       { $match: matchQuery },
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       { $sort: $sort },
       { $skip: offset },
       { $limit: limit },
-    ]);
+    ] as mongoose.PipelineStage[]);
     return channelRecipients;
   }
 }
