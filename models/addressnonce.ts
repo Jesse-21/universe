@@ -5,7 +5,8 @@ import { recoverPersonalSignature } from "@metamask/eth-sig-util";
 import { INonce } from "../schema/interfaces.js";
 import crypto from "crypto";
 
-interface IAddressNonceModel extends mongoose.Model<INonce> {
+type IAddressNonceModel = mongoose.Model<INonce>;
+interface IAddressNonce extends INonce {
   getMessageToSign: () => string;
   decodeAddressBySignature: (signature: string) => string;
   generateNewNonce: () => Promise<void>;
@@ -37,7 +38,7 @@ AddressNonceSchema.loadClass(AddressNonceClass);
 
 export const AddressNonce =
   mongoose.models.AddressNonce ||
-  mongoose.model<INonce, IAddressNonceModel>(
+  mongoose.model<IAddressNonce, IAddressNonceModel>(
     "AddressNonce",
     AddressNonceSchema
   );
