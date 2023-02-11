@@ -2,18 +2,23 @@ import mongoose from "mongoose";
 import { AddressNonceSchema } from "../schema/main.js";
 import { bufferToHex } from "ethereumjs-util";
 import { recoverPersonalSignature } from "@metamask/eth-sig-util";
-import { getRandomUint256 } from "../helpers/random.js";
 import { INonce } from "../schema/interfaces.js";
 import crypto from "crypto";
 
+interface IAddressNonceModel extends mongoose.Model<INonce> {
+  getMessageToSign: () => string;
+  decodeAddressBySignature: (signature: string) => string;
+  generateNewNonce: () => Promise<void>;
+}
+
 class AddressNonceClass extends mongoose.Model {
-  async getMessageToSign() {
+  getMessageToSign() {
     const msg = `This BEB Dimension wants you to sign in with your Ethereum account, secured with a signed message:\n ${this.nonce.length} ${this.nonce}`;
     return msg;
   }
 
-  async decodeAddressBySignature(signature: string) {
-    const msg = await this.getMessageToSign();
+  decodeAddressBySignature(signature: string) {
+    const msg = this.getMessageToSign();
     const msgBufferHex = bufferToHex(Buffer.from(msg, "utf8"));
     const address = recoverPersonalSignature({
       data: msgBufferHex,
@@ -22,20 +27,8 @@ class AddressNonceClass extends mongoose.Model {
     return address;
   }
 
-  static async generateNewTransactionNonceByAccountId(addressId: string) {
-    const addressNonce = await this.findOne({ address: addressId });
-    if (!addressNonce) throw new Error("Invalid address nonce");
-    addressNonce.generateNewTransactionNonce();
-    return addressNonce;
-  }
-
   async generateNewNonce() {
     this.nonce = `${crypto.randomInt(1, 1_000_000)}`;
-    await this.save();
-  }
-
-  async generateNewTransactionNonce() {
-    this.transactionNonce = `${getRandomUint256()}`;
     await this.save();
   }
 }
@@ -44,4 +37,7 @@ AddressNonceSchema.loadClass(AddressNonceClass);
 
 export const AddressNonce =
   mongoose.models.AddressNonce ||
-  mongoose.model<INonce>("AddressNonce", AddressNonceSchema);
+  mongoose.model<INonce, IAddressNonceModel>(
+    "AddressNonce",
+    AddressNonceSchema
+  );
