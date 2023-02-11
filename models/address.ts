@@ -5,7 +5,11 @@ import { validateAndConvertAddress } from "../helpers/validate.js";
 import { IAddress } from "../schema/interfaces.js";
 
 interface IAddressModel extends mongoose.Model<IAddress> {
-  findOrCreate: (address: string, chainId: number) => Promise<IAddress>;
+  // find or create takes an object with address and chainId
+  findOrCreate: (prop: {
+    address: string;
+    chainId: number;
+  }) => Promise<IAddress>;
 }
 
 class AddressClass extends mongoose.Model {

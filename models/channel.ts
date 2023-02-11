@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 import { ChannelSchema } from "../schema/main.js";
 import { IChannel } from "../schema/interfaces.js";
+
+interface IChannelModel extends mongoose.Model<IChannel> {
+  _generateUniqueSlug: (props: {
+    name: string;
+    index?: number;
+  }) => Promise<string>;
+}
+
 class ChannelClass extends mongoose.Model {
   static async _generateUniqueSlug({
     name,
@@ -150,4 +158,5 @@ class ChannelClass extends mongoose.Model {
 ChannelSchema.loadClass(ChannelClass);
 
 export const Channel =
-  mongoose.models.Channel || mongoose.model<IChannel>("Channel", ChannelSchema);
+  mongoose.models.Channel ||
+  mongoose.model<IChannel, IChannelModel>("Channel", ChannelSchema);

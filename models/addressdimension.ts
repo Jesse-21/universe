@@ -3,10 +3,10 @@ import { AddressDimensionSchema } from "../schema/main.js";
 import { IAddressDimension } from "../schema/interfaces.js";
 
 interface IAddressDimensionModel extends mongoose.Model<IAddressDimension> {
-  updateOrCreate: (
-    addressId: string,
-    dimensionId: string
-  ) => Promise<IAddressDimension>;
+  updateOrCreate: (props: {
+    addressId: string;
+    dimensionId: string;
+  }) => Promise<IAddressDimension>;
 }
 
 class AddressDimensionClass extends mongoose.Model {
