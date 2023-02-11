@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 import { AddressDimensionSchema } from "../schema/main.js";
 import { IAddressDimension } from "../schema/interfaces.js";
 
+interface IAddressDimensionModel extends mongoose.Model<IAddressDimension> {
+  updateOrCreate: (
+    addressId: string,
+    dimensionId: string
+  ) => Promise<IAddressDimension>;
+}
+
 class AddressDimensionClass extends mongoose.Model {
   static async _existingAddressDimension({
     addressId,
@@ -17,7 +24,6 @@ class AddressDimensionClass extends mongoose.Model {
   static async updateOrCreate({
     addressId,
     dimensionId,
-    ...props
   }: {
     addressId: string;
     dimensionId: string;
@@ -32,7 +38,6 @@ class AddressDimensionClass extends mongoose.Model {
     return await this.create({
       address: addressId,
       dimension: dimensionId,
-      ...props,
     });
   }
 }
@@ -41,4 +46,7 @@ AddressDimensionSchema.loadClass(AddressDimensionClass);
 
 export const AddressDimension =
   mongoose.models.AddressDimension ||
-  mongoose.model<IAddressDimension>("AddressDimension", AddressDimensionSchema);
+  mongoose.model<IAddressDimension, IAddressDimensionModel>(
+    "AddressDimension",
+    AddressDimensionSchema
+  );
