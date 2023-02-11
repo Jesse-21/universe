@@ -4,6 +4,10 @@ import { getNameFromChainId } from "../helpers/chains.js";
 import { validateAndConvertAddress } from "../helpers/validate.js";
 import { IAddress } from "../schema/interfaces.js";
 
+interface IAddressModel extends mongoose.Model<IAddress> {
+  findOrCreate: (address: string, chainId: number) => Promise<IAddress>;
+}
+
 class AddressClass extends mongoose.Model {
   static async findOrCreate({
     address: rawAddress,
@@ -41,4 +45,5 @@ class AddressClass extends mongoose.Model {
 AddressSchema.loadClass(AddressClass);
 
 export const Address =
-  mongoose.models.Address || mongoose.model<IAddress>("Address", AddressSchema);
+  mongoose.models.Address ||
+  mongoose.model<IAddress, IAddressModel>("Address", AddressSchema);
