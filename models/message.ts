@@ -107,5 +107,4 @@ class MessageClass extends mongoose.Model {
 
 MessageSchema.loadClass(MessageClass);
 
-export const Message =
-  mongoose.models.Message || mongoose.model<IMessage>("Message", MessageSchema);
+export const Message = mongoose.model<IMessage>("Message", MessageSchema);

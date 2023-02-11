@@ -36,9 +36,7 @@ class AddressNonceClass extends mongoose.Model {
 
 AddressNonceSchema.loadClass(AddressNonceClass);
 
-export const AddressNonce =
-  mongoose.models.AddressNonce ||
-  mongoose.model<IAddressNonce, IAddressNonceModel>(
-    "AddressNonce",
-    AddressNonceSchema
-  );
+export const AddressNonce = mongoose.model<IAddressNonce, IAddressNonceModel>(
+  "AddressNonce",
+  AddressNonceSchema
+);

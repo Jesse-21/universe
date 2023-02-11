@@ -5,6 +5,7 @@ class DimensionClass extends mongoose.Model {}
 
 DimensionSchema.loadClass(DimensionClass);
 
-export const Dimension =
-  mongoose.models.Dimension ||
-  mongoose.model<IDimension>("Dimension", DimensionSchema);
+export const Dimension = mongoose.model<IDimension>(
+  "Dimension",
+  DimensionSchema
+);

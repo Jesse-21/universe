@@ -7,6 +7,7 @@ class RichEmbedClass extends mongoose.Model {}
 
 RichEmbedSchema.loadClass(RichEmbedClass);
 
-export const RichEmbed =
-  mongoose.models.RichEmbed ||
-  mongoose.model<IRichEmbed>("RichEmbed", RichEmbedSchema);
+export const RichEmbed = mongoose.model<IRichEmbed>(
+  "RichEmbed",
+  RichEmbedSchema
+);

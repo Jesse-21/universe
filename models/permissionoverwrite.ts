@@ -6,9 +6,7 @@ class PermissionOverwriteClass extends mongoose.Model {}
 
 PermissionOverwriteSchema.loadClass(PermissionOverwriteClass);
 
-export const PermissionOverwrite =
-  mongoose.models.PermissionOverwrite ||
-  mongoose.model<IPermissionOverwrite>(
-    "PermissionOverwrite",
-    PermissionOverwriteSchema
-  );
+export const PermissionOverwrite = mongoose.model<IPermissionOverwrite>(
+  "PermissionOverwrite",
+  PermissionOverwriteSchema
+);

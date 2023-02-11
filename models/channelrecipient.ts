@@ -71,6 +71,7 @@ class ChannelRecipientClass extends mongoose.Model {
 
 ChannelRecipientSchema.loadClass(ChannelRecipientClass);
 
-export const ChannelRecipient =
-  mongoose.models.ChannelRecipient ||
-  mongoose.model<IChannelRecipient>("ChannelRecipient", ChannelRecipientSchema);
+export const ChannelRecipient = mongoose.model<IChannelRecipient>(
+  "ChannelRecipient",
+  ChannelRecipientSchema
+);

@@ -48,6 +48,7 @@ class AddressClass extends mongoose.Model {
 
 AddressSchema.loadClass(AddressClass);
 
-export const Address =
-  mongoose.models.Address ||
-  mongoose.model<IAddress, IAddressModel>("Address", AddressSchema);
+export const Address = mongoose.model<IAddress, IAddressModel>(
+  "Address",
+  AddressSchema
+);

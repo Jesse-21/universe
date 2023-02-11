@@ -58,6 +58,7 @@ class PermissionClass extends mongoose.Model {
 
 PermissionSchema.loadClass(PermissionClass);
 
-export const Permission =
-  mongoose.models.Permission ||
-  mongoose.model<IPermission>("Permission", PermissionSchema);
+export const Permission = mongoose.model<IPermission>(
+  "Permission",
+  PermissionSchema
+);

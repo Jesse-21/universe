@@ -44,9 +44,7 @@ class AddressDimensionClass extends mongoose.Model {
 
 AddressDimensionSchema.loadClass(AddressDimensionClass);
 
-export const AddressDimension =
-  mongoose.models.AddressDimension ||
-  mongoose.model<IAddressDimension, IAddressDimensionModel>(
-    "AddressDimension",
-    AddressDimensionSchema
-  );
+export const AddressDimension = mongoose.model<
+  IAddressDimension,
+  IAddressDimensionModel
+>("AddressDimension", AddressDimensionSchema);

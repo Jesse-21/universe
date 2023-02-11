@@ -53,5 +53,4 @@ class ImageClass extends mongoose.Model {
 
 ImageSchema.loadClass(ImageClass);
 
-export const Image =
-  mongoose.models.Image || mongoose.model<IImage>("Image", ImageSchema);
+export const Image = mongoose.model<IImage>("Image", ImageSchema);

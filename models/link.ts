@@ -125,5 +125,4 @@ class LinkClass extends mongoose.Model {
 
 LinkSchema.loadClass(LinkClass);
 
-export const Link =
-  mongoose.models.Link || mongoose.model<ILink>("Link", LinkSchema);
+export const Link = mongoose.model<ILink>("Link", LinkSchema);

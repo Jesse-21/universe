@@ -183,6 +183,7 @@ class ChannelClass extends mongoose.Model {
 
 ChannelSchema.loadClass(ChannelClass);
 
-export const Channel =
-  mongoose.models.Channel ||
-  mongoose.model<IChannelExtended, IChannelModel>("Channel", ChannelSchema);
+export const Channel = mongoose.model<IChannelExtended, IChannelModel>(
+  "Channel",
+  ChannelSchema
+);
