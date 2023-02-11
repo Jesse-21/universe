@@ -7,6 +7,28 @@ interface IChannelModel extends mongoose.Model<IChannel> {
     name: string;
     index?: number;
   }) => Promise<string>;
+  _buildMatchQuery: (props: {
+    filters: { dimensionId?: string; onlyPublic?: boolean };
+  }) => mongoose.FilterQuery<IChannel>;
+  _lookupByRecipientIds: (props: {
+    filters: {
+      recipientIds?: string[];
+    };
+  }) => mongoose.Aggregate<IChannel[]>;
+  findAndSort: (props: {
+    limit?: number;
+    offset?: number;
+    filters?: {
+      dimensionId?: string;
+      onlyPublic?: boolean;
+      recipientIds?: string[];
+    };
+    sort?: string;
+  }) => Promise<IChannel[]>;
+  updateLastPost: (props: {
+    channelId: string;
+    postId: string;
+  }) => Promise<IChannel>;
 }
 
 class ChannelClass extends mongoose.Model {
