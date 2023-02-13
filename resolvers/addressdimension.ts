@@ -17,5 +17,20 @@ export const resolvers = {
         parent.address.toString()
       );
     },
+    dimension: async (
+      parent: IAddressDimension,
+      _args: unknown,
+      context: {
+        dataloaders: {
+          dimensions: {
+            load: (dimension: string) => Promise<string>;
+          };
+        };
+      }
+    ) => {
+      return await context.dataloaders.dimensions.load(
+        parent.dimension.toString()
+      );
+    },
   },
 };
