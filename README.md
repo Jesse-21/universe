@@ -4,7 +4,7 @@ Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension 
 
 This is an early work and will be subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
-**Note: currently the easiest way to build on BEBverse is to use the [`non-protocol BEBverse GraphQL APIs`](https://hackmd.io/@bebverse/graphql).**
+**Note: currently the easiest way to build on BEBverse is to use our [`BEBverse GraphQL APIs`](https://hackmd.io/@bebverse/graphql).**
 
 <img src="./.misc/header.png" width="300" />
 
