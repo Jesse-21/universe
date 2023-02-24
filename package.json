@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "repository": "git@github.com:bebverse/universe.git",
   "author": "Beb, Inc. <gm@beb.xyz>",
   "main": "README.md",
