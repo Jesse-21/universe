@@ -21,3 +21,4 @@ yarn-error.log*
 .terraform
 .env.migration
 .env.selfhosted
+.env.*
