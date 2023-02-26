@@ -1,6 +1,6 @@
 # Universe, a BEB Dimension Host Implementation
 
-**Note (2/18/2023): We are in the process of attempting to open-source our BEBverse server instead of implementing a server from scratch, wait for further details**
+**Note (2/18/2023): We are in the process of open-sourcing our BEBverse server, wait for further details**
 
 Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension Host. Universes are open-source dimension hosts for [BEB, an open messaging protocol](https://github.com/bebverse/protocol).
 
