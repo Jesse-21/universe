@@ -41,6 +41,7 @@ JWT_SECRET=change-this
 ```
 BLOCK_INITIALIZE=true # Block the initialization of communities on your universe
 GLOBAL_MODERATOR_ID=abc123... # An account id that can moderate all dimensions
+IMGUR_CLIENT_ID=123... # Enable imgur image uploads on all dimensions https://apidocs.imgur.com
 ```
 
 Once your environment is configured, run `yarn dev --self-hosted` to have a running instance, and play around with graphql commands at `localhost:8080/graphql`!

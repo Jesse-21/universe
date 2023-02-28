@@ -107,7 +107,10 @@ if (process.env.SENTRY_DSN) {
   );
 
   app.get("/", (_req, res) => {
-    res.json({ message: "Welcome to a BEB Dimension!" });
+    res.json({
+      message:
+        "Welcome to a BEB Dimensions Host running github.com/bebverse/universe, see /graphql for the API!",
+    });
   });
 
   app.get("/health", (_req, res) => {
