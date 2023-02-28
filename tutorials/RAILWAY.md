@@ -1,5 +1,7 @@
 # Deploying to Railway 🚂
 
+## Option 1: git-based
+
 ### 1. Create a [Railway Account](https://railway.app)
 
 This is where you'll be hosting your dimensions!
@@ -32,12 +34,36 @@ We need to make railway aware of the dimension code!
 
 This pushes the service to railway.
 
-### 9. Set the `JWT_SECRET` service variable in your project to a generated password (i.e. 1Password)
+### 9. Set the `JWT_SECRET` service variable in your universe service to a generated password (i.e. 1Password)
 
 We need to make sure no one can eavedrop when talking to your dimension!
 
 <img src="https://i.imgur.com/2OSMsGO.png" width="300">
 
 ### 10. You are now self-hosting! 🚀
+
+Next up is [configuring your domain to our resolver contract](https://etherscan.io/address/0xf71a58ddc57214e431168c4a3f2ff62a069ab8a6#writeContract), which is in a future tutorial 🤓
+
+## Option 2: repo-based
+
+### 1. Create a [Railway Account](https://railway.app)
+
+This is where you'll be hosting your dimensions!
+
+### 2. [Start a Github Repo Project](https://railway.app/new) in Railway
+
+Make sure to fork [github.com/bebverse/universe](https://github.com/bebverse/universe) to your account!
+
+### 3. Add the MongoDB Service to Railway
+
+All dimensions need a database to store posts, (New -> Database -> Add Mongo)
+
+### 4. Set the `JWT_SECRET` service variable in your universe service to a generated password (i.e. 1Password)
+
+We need to make sure no one can eavedrop when talking to your dimension!
+
+<img src="https://i.imgur.com/2OSMsGO.png" width="300">
+
+### 5. You are now self-hosting! 🚀
 
 Next up is [configuring your domain to our resolver contract](https://etherscan.io/address/0xf71a58ddc57214e431168c4a3f2ff62a069ab8a6#writeContract), which is in a future tutorial 🤓
