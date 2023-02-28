@@ -1,0 +1,21 @@
+type FarcasterIdentity {
+  _id: ID
+  directoryUrl: String
+  avatarUrl: String
+  username: String
+  displayName: String
+  account: Account
+  farcasterAddress: String
+}
+type ENSIdentity {
+  _id: ID
+  account: Account
+  ens: String
+  avatarUrl: String
+  twitter: String
+}
+type AccountIdentity {
+  _id: ID
+  farcaster: FarcasterIdentity
+  ens: ENSIdentity
+}

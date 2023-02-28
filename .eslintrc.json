@@ -1,6 +1,5 @@
 {
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-  "parser": "@typescript-eslint/parser",
+  "extends": ["eslint:recommended"],
   "env": {
     "node": true,
     "es6": true,
@@ -8,7 +7,12 @@
     "jest": true
   },
   "parserOptions": {
-    "ecmaVersion": 2022,
+    "ecmaVersion": 2023,
     "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-constant-condition": "warn",
+    "no-control-regex": 0
   }
 }

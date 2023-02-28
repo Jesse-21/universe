@@ -1,0 +1,11 @@
+type AccountAddress {
+  _id: ID
+  address: String!
+  chain: Chain
+  account: Account
+}
+type Address {
+  _id: ID
+  address: String!
+  chain: Chain
+}

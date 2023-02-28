@@ -1,0 +1,40 @@
+enum QuestScheduleType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ONCE
+}
+enum QuestRequirementType {
+  COMMUNITY_PARTICIPATION
+}
+enum QuestRewardType {
+  ASSET_3D
+}
+
+# add more types here Asset3DUnion | NFTUnion | etc
+union QuestRewardItem = Asset3DUnion
+
+type QuestRequirement {
+  _id: ID
+  title: String
+  type: QuestRequirementType
+  data: [KeyValueFields]
+}
+
+type QuestReward {
+  _id: ID
+  title: String
+  type: QuestRewardType
+  quantity: Int
+  reward: QuestRewardItem
+}
+
+type Quest {
+  _id: ID
+  description: Content
+  title: String
+  schedule: QuestScheduleType
+  imageUrl: String
+  requirements: [QuestRequirement]
+  rewards: [QuestReward]
+}
