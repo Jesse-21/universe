@@ -40,4 +40,4 @@ We need to make sure no one can eavedrop when talking to your dimension!
 
 ### 10. You are now self-hosting! 🚀
 
-Next up is [configuring your domain to our resolver contract](https://etherscan.io/address/0xf71a58ddc57214e431168c4a3f2ff62a069ab8a6#writeContract), which is in another tutorial 🤓
+Next up is [configuring your domain to our resolver contract](https://etherscan.io/address/0xf71a58ddc57214e431168c4a3f2ff62a069ab8a6#writeContract), which is in a future tutorial 🤓
