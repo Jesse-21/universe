@@ -10,6 +10,8 @@ This is an early work that is subject to heavy changes, see our [Github Issues](
 
 ## Self-hosting Your Universe
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/_1eUPs)
+
 We've provided a starter `Dockerfile` for you, with `MONGO_URL` and `JWT_SECRET` as `ARG` parameters.
 
 1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or [Railway with our tutorial](https://github.com/bebverse/universe/blob/main/tutorials/RAILWAY.md).
