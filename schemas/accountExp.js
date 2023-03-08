@@ -12,8 +12,8 @@ const portfolioSchema = mongoose.Schema({
 /** The reputation for an account */
 const schema = mongoose.Schema(
   {
-    exp: { type: Number, default: 0, required: true, min: 0 }, // the additional exp
-    baseExp: { type: Number, default: 0, required: true, min: 0 }, // the base exp
+    exp: { type: Number, default: 0, required: true }, // the additional exp
+    baseExp: { type: Number, default: 0, required: true }, // the base exp
     portfolio: [portfolioSchema], // the portfolio timeline
     account: {
       type: mongoose.Schema.Types.ObjectId,
