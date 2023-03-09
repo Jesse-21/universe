@@ -2,7 +2,7 @@
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension Host. Universes are open-source dimension hosts for [BEB, an open messaging protocol](https://github.com/bebverse/protocol). Universes are accessed by clients such as [B7B](https://github.com/bebverse/b7b).
+Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension Host. Universes are open-source dimension hosts for [BEB, a decentralized social protocol similar to reddit](https://github.com/bebverse/protocol). Universes are accessed by clients such as [B7B](https://github.com/bebverse/b7b).
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
@@ -51,5 +51,6 @@ Once your environment is configured, run `yarn dev --self-hosted` to have a runn
 ## Useful Links
 
 - [BEBverse](https://beb.xyz)
-- [Register a BEBverse Dimension](https://beb.domains)
+- [B7B](https://b7b.xyz)
+- [Register a BEB Dimension](https://beb.domains)
 - [High-Level Protocol Specifications](https://github.com/bebverse/protocol)
