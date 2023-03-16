@@ -73,9 +73,6 @@ const resolvers = {
           { post: postOrReply },
           context
         );
-        context.pubSub?.publish("POST_CREATED", {
-          postCreated: postOrReply,
-        });
 
         return {
           code: "201",

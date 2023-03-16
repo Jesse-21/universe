@@ -1,11 +1,14 @@
 const Sentry = require("@sentry/node");
+
 const dotenv = require("dotenv");
+
 const express = require("express");
+
 const { resolvers } = require("./graphql/resolvers");
 
 const { loadSchemaSync } = require("@graphql-tools/load");
-const { makeExecutableSchema } = require("@graphql-tools/schema");
 const { GraphQLFileLoader } = require("@graphql-tools/graphql-file-loader");
+
 const { connectDB } = require("./connectdb");
 const { router: imageRouter } = require("./express-routes/image");
 const { router: utilsRouter } = require("./express-routes/utils");
@@ -14,8 +17,14 @@ const { router: metadataRouter } = require("./express-routes/metadata");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
+
 const { router: ensRouter } = require("./express-routes/ens");
+
 const { requireAuth } = require("./helpers/auth-middleware");
+
+const responseCachePlugin =
+  require("@apollo/server-plugin-response-cache").default;
+
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const {
@@ -24,24 +33,20 @@ const {
 const http = require("http");
 const cors = require("cors");
 const { json } = require("body-parser");
-const { useServer } = require("graphql-ws/lib/use/ws");
-const WebSocket = require("ws");
-const { MongodbPubSub: PubSub } = require("graphql-mongoose-subscriptions");
-// const { PubSub } = require("graphql-subscriptions");
 
 const port = parseInt(process.env.PORT, 10) || 8080;
 
 const typeDefs = loadSchemaSync(
   ["./graphql/typeDefs/*.gql", "./graphql/typeDefs/**/*.gql"],
-  { loaders: [new GraphQLFileLoader()] }
+  {
+    loaders: [new GraphQLFileLoader()],
+  }
 );
 
-const schema = makeExecutableSchema({ typeDefs, resolvers });
-
 const { createDataLoaders } = require("./graphql/dataloaders");
+
 const app = express();
 const httpServer = http.createServer(app);
-const wsServer = new WebSocket.Server({ server: httpServer, path: "/graphql" });
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -52,6 +57,84 @@ if (process.env.SENTRY_DSN) {
 }
 
 (async () => {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    introspection: true,
+    cache: "bounded",
+    csrfPrevention: true,
+    formatError: (e) => {
+      Sentry.captureException(e);
+      console.error(e);
+      return new Error("Internal server error");
+    },
+    plugins: [
+      responseCachePlugin(),
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+    ],
+  });
+
+  await server.start();
+  app.use(
+    "/graphql",
+    cors(),
+    json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => {
+        try {
+          const data = await requireAuth(
+            req.headers.authorization?.slice(7) || ""
+          );
+          return {
+            accountId: data.payload.id,
+            dataloaders: createDataLoaders(),
+          };
+        } catch (e) {
+          try {
+            if (!e.message.includes("jwt must be provided")) {
+              Sentry.captureException(e);
+              console.error(e);
+            }
+            return { dataloaders: createDataLoaders() };
+          } catch (e) {
+            Sentry.captureException(e);
+            console.error(e);
+            return {};
+          }
+        }
+      },
+    })
+  );
+
+  app.get("/", (_req, res) => {
+    res.json({
+      message:
+        "Welcome to a BEB Dimensions Host running github.com/bebverse/universe, see /graphql for the API!",
+    });
+  });
+
+  app.get("/health", (_req, res) => {
+    res.status(200).send("Okay!");
+  });
+
+  app.use(express.json());
+  app.use(function (req, res, next) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage"
+    );
+
+    next();
+  });
+
+  app.use("/image", imageRouter);
+  app.use("/profile", publicProfileRouter);
+  app.use("/community", communityRouter);
+  app.use("/metadata", metadataRouter);
+  app.use("/utils", utilsRouter);
+  app.use("/ens/", ensRouter);
+
   require("yargs").command(
     "$0",
     "Start your Universe",
@@ -108,137 +191,8 @@ if (process.env.SENTRY_DSN) {
         );
         process.exit(1);
       }
+
       await connectDB();
-
-      const pubSub = new PubSub({
-        mongooseOptions: {
-          url: process.env.MONGO_URL,
-          useNewUrlParser: true,
-        },
-      });
-      const dataloaders = createDataLoaders();
-      const serverCleanup = useServer(
-        {
-          // execute,
-          // subscribe,
-          schema,
-          context: async (ctx) => {
-            try {
-              const data = await requireAuth(
-                ctx.connectionParams?.authorization?.slice(7) || ""
-              );
-              return {
-                accountId: data.payload.id,
-                dataloaders,
-                pubSub,
-              };
-            } catch (e) {
-              try {
-                if (!e.message.includes("jwt must be provided")) {
-                  Sentry.captureException(e);
-                  console.error(e);
-                }
-                return { dataloaders, pubSub };
-              } catch (e) {
-                Sentry.captureException(e);
-                console.error(e);
-                return {};
-              }
-            }
-          },
-        },
-        wsServer
-      );
-
-      const server = new ApolloServer({
-        schema,
-        introspection: true,
-        cache: "bounded",
-        csrfPrevention: true,
-        formatError: (e) => {
-          Sentry.captureException(e);
-          console.error(e);
-          return new Error("Internal server error");
-        },
-        plugins: [
-          // Proper shutdown for the HTTP server.
-          ApolloServerPluginDrainHttpServer({ httpServer }),
-
-          // Proper shutdown for the WebSocket server.
-          {
-            async serverWillStart() {
-              return {
-                async drainServer() {
-                  await serverCleanup.dispose();
-                },
-              };
-            },
-          },
-        ],
-      });
-
-      await server.start();
-      app.use(
-        "/graphql",
-        cors(),
-        json(),
-        expressMiddleware(server, {
-          context: async ({ req }) => {
-            try {
-              const data = await requireAuth(
-                req.headers.authorization?.slice(7) || ""
-              );
-              return {
-                accountId: data.payload.id,
-                dataloaders,
-                pubSub,
-              };
-            } catch (e) {
-              try {
-                if (!e.message.includes("jwt must be provided")) {
-                  Sentry.captureException(e);
-                  console.error(e);
-                }
-                return { dataloaders, pubSub };
-              } catch (e) {
-                Sentry.captureException(e);
-                console.error(e);
-                return {};
-              }
-            }
-          },
-        })
-      );
-
-      app.get("/", (_req, res) => {
-        res.json({
-          message:
-            "Welcome to a BEB Dimensions Host running github.com/bebverse/universe, see /graphql for the API!",
-        });
-      });
-
-      app.get("/health", (_req, res) => {
-        res.status(200).send("Okay!");
-      });
-
-      app.use(express.json());
-      app.use(function (req, res, next) {
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader(
-          "Access-Control-Allow-Headers",
-          "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage"
-        );
-
-        next();
-      });
-
-      app.use("/image", imageRouter);
-      app.use("/profile", publicProfileRouter);
-      app.use("/community", communityRouter);
-      app.use("/metadata", metadataRouter);
-      app.use("/utils", utilsRouter);
-      app.use("/ens/", ensRouter);
-
       await new Promise((resolve) =>
         httpServer.listen({ port: port }, resolve)
       );

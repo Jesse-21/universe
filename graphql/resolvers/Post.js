@@ -28,6 +28,7 @@ const resolvers = {
       return reactionCount;
     },
     replies: async (parent, args) => {
+      if (!parent.replies?.length) return [];
       const replies = await Post.findAndSort({
         filters: {
           post: get(parent, "_id"),
