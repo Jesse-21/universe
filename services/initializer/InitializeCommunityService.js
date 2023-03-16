@@ -57,7 +57,7 @@ class InitializeCommunityService {
         isManagedByIndexer: true,
         editable: false,
         description: {
-          raw: "The default role for all users, initially no access",
+          raw: "The default role for all users, all permissions by default",
         },
       }
     );
@@ -114,7 +114,7 @@ class InitializeCommunityService {
   }
 
   /**
-   * Grant the owner role with read and write access to the community, and the public role with no access
+   * Grant the owner role with read and write access to the community, and the public role with read and write access as well
    * @returns {Promise<null>}
    */
   async grantDefaultPermissionsToPublicAndOwner({
@@ -131,7 +131,7 @@ class InitializeCommunityService {
     const RoleService = new _RoleService();
 
     await RoleService.updateRolePermissions(publicRole, {
-      permissionIds: [],
+      permissionIds: [readPermission._id, writePermission._id],
     });
     await RoleService.updateRolePermissions(ownerRole, {
       permissionIds: [readPermission._id, writePermission._id],
