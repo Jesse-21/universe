@@ -95,11 +95,11 @@ if (process.env.SENTRY_DSN) {
 
       if (shouldUseWs) {
         console.log(
-          `Enabling a websocket server with GraphQL subscriptions! 🚀`
+          `⚠️  (Experimental) Enabling a websocket server with GraphQL subscriptions (--use-ws)! Performance will be degraded.`
         );
       } else {
         console.log(
-          `🛑 Websocket server and GraphQL subscriptions are disabled! To enable, run with --use-ws flag.`
+          `👀 Using HTTP-only GraphQL, Websockets and subscriptions are disabled (see --use-ws).`
         );
       }
 
