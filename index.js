@@ -68,7 +68,7 @@ if (process.env.SENTRY_DSN) {
         type: "boolean",
         default: false,
         description:
-          "Create a websocket server to server GraphQL subscriptions",
+          "⚠️  (Experimental) Create a websocket server for GraphQL subscriptions. Performance will be degraded.",
       });
     },
     async (argv) => {
