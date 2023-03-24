@@ -1,6 +1,7 @@
 const merge = require("lodash/merge");
 
 const { resolvers: Query } = require("./resolvers/Query");
+const { resolvers: Subscription } = require("./resolvers/Subscription");
 const { resolvers: Account } = require("./resolvers/Account");
 const { resolvers: RichContent } = require("./resolvers/RichContent");
 const { resolvers: RichEmbed } = require("./resolvers/RichEmbed");
@@ -40,6 +41,7 @@ const {
 
 /** main resolvers */
 const resolvers = merge(
+  Subscription,
   Account,
   AccountSection,
   AccountThread,
