@@ -104,7 +104,8 @@ class LinkClass {
         callback?.(link); // in case we want to async scrape the link
         link.iframe = html;
         link.image = imgur;
-        link.url = targetUrl;
+        link.url = `https://warpcast.com/${cast.author.username}/${finalHash}`;
+        link.title = cast.text;
         return await link.save();
       }
 
