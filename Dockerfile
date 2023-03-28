@@ -9,7 +9,7 @@ ARG MONGO_URL
 ARG JWT_SECRET
 ENV NODE_ENV=production
 
-RUN apk add git python build-essential
+RUN apk add git
 
 # Copy package.json to the working directory
 WORKDIR '/bebxyz_server'
@@ -17,7 +17,6 @@ COPY package.json /bebxyz_server
 
 # Install any needed packages specified in package.json
 RUN yarn install --ignore-scripts
-RUN npm rebuild @tensorflow/tfjs-node --build-from-source
 
 # Copying the rest of the code to the working directory
 COPY . /bebxyz_server
