@@ -17,6 +17,7 @@ const { router: metadataRouter } = require("./express-routes/metadata");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
+const { router: scoreRouter } = require("./express-routes/score");
 
 const { router: ensRouter } = require("./express-routes/ens");
 
@@ -134,6 +135,7 @@ if (process.env.SENTRY_DSN) {
   app.use("/metadata", metadataRouter);
   app.use("/utils", utilsRouter);
   app.use("/ens/", ensRouter);
+  app.use("/score", scoreRouter);
 
   require("yargs").command(
     "$0",
