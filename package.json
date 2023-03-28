@@ -1,6 +1,6 @@
 {
   "name": "universe",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:bebverse/universe.git",
@@ -29,7 +29,6 @@
     "@sendgrid/mail": "^7.6.2",
     "@sentry/node": "^7.12.1",
     "@sentry/tracing": "^7.12.1",
-    "@tensorflow/tfjs": "^4.2.0",
     "@tensorflow/tfjs-node": "^4.2.0",
     "add": "^2.0.6",
     "agenda": "4.4.0",
