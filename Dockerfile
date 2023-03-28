@@ -9,7 +9,7 @@ ARG MONGO_URL
 ARG JWT_SECRET
 ENV NODE_ENV=production
 
-RUN apk add git
+RUN apk add git python3
 
 # Copy package.json to the working directory
 WORKDIR '/bebxyz_server'
