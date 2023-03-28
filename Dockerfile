@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:buster-slim
 
 # For mongodb, there are various hosting strategies:
 # 1. Use a mongodb hosting service like Atlas: https://www.mongodb.com/cloud/atlas
@@ -9,7 +9,7 @@ ARG MONGO_URL
 ARG JWT_SECRET
 ENV NODE_ENV=production
 
-RUN apk add git build-base python3
+RUN apt-get update && apt-get install -y build-essential python3 git make wget gcc libc6-dev
 
 # Copy package.json to the working directory
 WORKDIR '/bebxyz_server'
@@ -17,7 +17,6 @@ COPY package.json /bebxyz_server
 
 # Install any needed packages specified in package.json
 RUN yarn install --ignore-scripts
-RUN npm rebuild @tensorflow/tfjs-node --build-addon-from-source
 
 # Copying the rest of the code to the working directory
 COPY . /bebxyz_server
