@@ -6,23 +6,23 @@ class ScoreService {
     return prediction[0];
   }
 
-  static async getScore(address) {
+  static async getScore(data, address) {
     const model = await tf.loadLayersModel(
       `file://./services/data/ethereum_score_model/model.json`
     );
 
-    const data = {
-      // default to example data (jcdenton.eth)
-      num_transactions: 362,
-      transaction_frequency: 0.6006602902179918,
-      total_value: 67.36201197409075,
-      unique_counterparties: 84,
-      age: 602.6701047086412,
-      total_gas_paid: 1.7035700659938984,
-      num_successful_transactions: 359,
-      activity_level: 0.609177441393978,
-      address,
-    };
+    // const data = {
+    //   // default to example data (jcdenton.eth)
+    //   num_transactions: 362,
+    //   transaction_frequency: 0.6006602902179918,
+    //   total_value: 67.36201197409075,
+    //   unique_counterparties: 84,
+    //   age: 602.6701047086412,
+    //   total_gas_paid: 1.7035700659938984,
+    //   num_successful_transactions: 359,
+    //   activity_level: 0.609177441393978,
+    //   address,
+    // };
 
     const inputData = [
       data.num_transactions,
