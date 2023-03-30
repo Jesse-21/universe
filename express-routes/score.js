@@ -3,10 +3,9 @@ const Sentry = require("@sentry/node");
 
 const { Service: ScoreService } = require("../services/ScoreService");
 
-app.get("/:address", async (req, res) => {
+app.post("/:address", async (req, res) => {
   try {
-    const address = req.params.address;
-    const score = await ScoreService.getScore(address);
+    const score = await ScoreService.getScore(req.body);
     return res.json({
       code: 200,
       success: true,
