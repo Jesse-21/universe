@@ -90,6 +90,7 @@ class AlchemyService {
       const { data } = await axios.get(route, { params, ...opts });
       return !!data?.isHolderOfCollection;
     } catch (e) {
+      console.log(e);
       Sentry.captureException(e);
       return false;
     }

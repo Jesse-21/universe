@@ -3,8 +3,19 @@ const Sentry = require("@sentry/node");
 
 const { Service: ScoreService } = require("../services/ScoreService");
 
+const { mustBeBEBHolder } = require("../helpers/must-be-beb-holder");
+
 app.post("/:address", async (req, res) => {
   try {
+    const token = req.headers.authorization?.slice(7) || "";
+    if (req.body.accessToken) {
+      if (process.env.SCORE_ACCESS_TOKEN !== req.body.accessToken) {
+        throw new Error("Invalid access token");
+      }
+    } else {
+      await mustBeBEBHolder(token);
+    }
+
     const score = await ScoreService.getScore(req.body);
     return res.json({
       code: 200,
