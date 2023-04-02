@@ -1,5 +1,6 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
+const axios = require("axios").default;
 const d3 = import("d3");
 const jsdom = require("jsdom");
 const svgToMiniDataURI = require("mini-svg-data-uri");
@@ -137,19 +138,36 @@ app.get("/uri/:uri", async (req, res) => {
     svgContainer
       .append("text")
       .attr("x", 250)
-      .attr("y", 275)
+      .attr("y", 255)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
-      .attr("fill", "white")
+      .attr("fill", "#E7FFA4")
       .attr("text-anchor", "middle")
-      .style("font-weight", "600")
-      .style("text-shadow", "2px 2px #111111")
+      .style("font-weight", "800")
+      .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
       .text(`${rawDomain}.beb`);
-
-    const svg = body.select(".container").html();
-    const image = svgToMiniDataURI(svg);
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
+
+    const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
+    const scoreData = await axios.get(scoreDataUrl);
+    const addressScore = parseInt(scoreData.data.score);
+
+    svgContainer
+      .append("text")
+      .attr("x", 250)
+      .attr("y", 325)
+      .attr("font-size", `48px`)
+      .attr("font-family", "Helvetica, sans-serif")
+      .attr("fill", "#E7FFA4")
+      .attr("text-anchor", "middle")
+      .style("font-weight", "600")
+      .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
+      .text(`Score: ${addressScore}`);
+
+    const svg = body.select(".container").html();
+    console.log(svg);
+    const image = svgToMiniDataURI(svg);
 
     let data = {
       name: `${rawDomain}.beb`,
@@ -160,6 +178,7 @@ app.get("/uri/:uri", async (req, res) => {
       animation_url: `https://beb.domains/metadata/${uri}`,
       host: "https://protocol.beb.xyz/graphql",
       image,
+      score: addressScore,
     };
 
     if (filter.isProfane(rawDomain) && process.env.MODE !== "self-hosted") {
