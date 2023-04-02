@@ -10,13 +10,13 @@ app.post("/:address", async (req, res) => {
     const token = req.headers.authorization?.slice(7) || "";
     if (req.body.accessToken) {
       if (process.env.SCORE_ACCESS_TOKEN !== req.body.accessToken) {
-        throw new Error("Invalid access token");
+        throw new Error("Invalid score access token");
       }
     } else {
       await mustBeBEBHolder(token);
     }
 
-    const score = await ScoreService.getScore(req.body);
+    const score = await ScoreService.getScore(req.body.stats);
     return res.json({
       code: 200,
       success: true,
