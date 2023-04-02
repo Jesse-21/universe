@@ -8,8 +8,7 @@ const { validateName } = require("../helpers/validate-community-name");
 const sha3 = require("web3-utils").sha3;
 const { ethers } = require("ethers");
 const filter = require("../helpers/filter");
-const { Service } = require("../services/RegistrarService");
-const { prod } = require("../helpers/registrar");
+const { Service: _RegistrarService } = require("../services/RegistrarService");
 
 const planet1 = require("../helpers/constants/metadata/planet1");
 const planet2 = require("../helpers/constants/metadata/planet2");
@@ -84,10 +83,6 @@ const bebLogo =
   '<svg height="100%" fill="rgb(0,0,0,0.6)" version="1" viewBox="100 -50 1280 1280"></svg>';
 
 app.get("/uri/:uri", async (req, res) => {
-  const RegistrarService = new Service({
-    apiKey: process.env.HOMESTEAD_NODE_URL,
-  });
-
   try {
     const uri = req.params.uri;
 
@@ -153,6 +148,7 @@ app.get("/uri/:uri", async (req, res) => {
 
     const svg = body.select(".container").html();
     const image = svgToMiniDataURI(svg);
+    const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
 
     let data = {
