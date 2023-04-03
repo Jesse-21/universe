@@ -163,7 +163,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("text-anchor", "middle")
       .style("font-weight", "600")
       .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
-      .text(`Score: ${addressScore}`);
+      .text(`Rep: ${addressScore}`);
 
     const svg = body.select(".container").html();
     console.log(svg);
