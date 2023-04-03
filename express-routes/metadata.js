@@ -176,9 +176,8 @@ app.get("/uri/:uri", async (req, res) => {
     let data = {
       name: `${rawDomain}.beb`,
       owner,
-      aliases: [],
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `${rawDomain}.beb was registered on beb.domains!`,
+      description: `${rawDomain}.beb was registered on beb.domains! Learn about reputation scores at: beb.xyz/reputation`,
       animation_url: `https://beb.domains/metadata/${uri}`,
       host: "https://protocol.beb.xyz/graphql",
       image,
