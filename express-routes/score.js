@@ -13,7 +13,7 @@ const limiter = rateLimit({
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     const address = req.params.address;
-    let score = cache.get(address);
+    const score = cache.get(address);
     if (score) {
       return res.json({
         code: 200,
