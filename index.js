@@ -1,9 +1,6 @@
 const Sentry = require("@sentry/node");
-
 const dotenv = require("dotenv");
-
 const express = require("express");
-
 const { resolvers } = require("./graphql/resolvers");
 
 const { loadSchemaSync } = require("@graphql-tools/load");
