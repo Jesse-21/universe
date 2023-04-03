@@ -20,6 +20,7 @@ app.use(limiter);
 
 app.post("/:address", async (req, res) => {
   try {
+    const address = req.params.address;
     const token = req.headers.authorization?.slice(7) || "";
     if (req.body.accessToken) {
       if (process.env.SCORE_ACCESS_TOKEN !== req.body.accessToken) {
@@ -28,11 +29,11 @@ app.post("/:address", async (req, res) => {
     } else {
       await mustBeBEBHolder(token);
     }
-    let score = cache.get(JSON.stringify(req.body.stats));
+    let score = cache.get(address);
 
     if (!score) {
       score = await ScoreService.getScore(req.body.stats);
-      cache.put(JSON.stringify(req.body.stats), score, 1000 * 60 * 60 * 72); // cache for 72 hours
+      cache.put(address, score, 1000 * 60 * 60 * 72); // cache for 72 hours
     }
     return res.json({
       code: 200,
