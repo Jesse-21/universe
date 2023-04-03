@@ -1,6 +1,6 @@
 {
   "name": "universe",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:bebverse/universe.git",
@@ -87,7 +87,7 @@
     "p-retry": "4.6.1",
     "prando": "^6.0.1",
     "sanitize-html": "^2.7.0",
-    "underscore": "^1.12.1",
+    "underscore": "1.13.6",
     "web3-utils": "^1.7.5",
     "yargs": "^17.6.2",
     "yarn": "^1.22.17"
