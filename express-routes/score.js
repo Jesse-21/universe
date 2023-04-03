@@ -12,6 +12,15 @@ const limiter = rateLimit({
   max: 5, // limit each IP to 5 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
+    const address = req.params.address;
+    let score = cache.get(address);
+    if (score) {
+      return res.json({
+        code: 200,
+        success: true,
+        score,
+      });
+    }
     res.status(429).send("Too many requests, please try again later.");
   },
 });
