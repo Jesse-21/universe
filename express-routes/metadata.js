@@ -151,19 +151,24 @@ app.get("/uri/:uri", async (req, res) => {
 
     const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
     const scoreData = await axios.get(scoreDataUrl);
-    const addressScore = parseInt(scoreData.data.score);
+    let addressScore = null;
 
-    svgContainer
-      .append("text")
-      .attr("x", 250)
-      .attr("y", 325)
-      .attr("font-size", `48px`)
-      .attr("font-family", "Helvetica, sans-serif")
-      .attr("fill", "#E7FFA4")
-      .attr("text-anchor", "middle")
-      .style("font-weight", "600")
-      .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
-      .text(`Rep: ${addressScore}`);
+    if (scoreData.data.score) {
+      addressScore = parseInt(scoreData.data.score);
+      svgContainer
+        .append("text")
+        .attr("x", 250)
+        .attr("y", 325)
+        .attr("font-size", `48px`)
+        .attr("font-family", "Helvetica, sans-serif")
+        .attr("fill", "#E7FFA4")
+        .attr("text-anchor", "middle")
+        .style("font-weight", "600")
+        .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
+        .text(`Rep: ${addressScore}`);
+    } else {
+      console.error(`Could not get score data: ${scoreData}`);
+    }
 
     const svg = body.select(".container").html();
     const image = svgToMiniDataURI(svg);
