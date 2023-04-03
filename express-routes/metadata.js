@@ -166,7 +166,6 @@ app.get("/uri/:uri", async (req, res) => {
       .text(`Rep: ${addressScore}`);
 
     const svg = body.select(".container").html();
-    console.log(svg);
     const image = svgToMiniDataURI(svg);
 
     let data = {

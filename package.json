@@ -1,6 +1,6 @@
 {
   "name": "universe",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:bebverse/universe.git",
@@ -67,6 +67,7 @@
     "json5": "^1.0.2",
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
+    "memory-cache": "^0.2.0",
     "merkletreejs": "^0.2.31",
     "metascraper": "^5.25.8",
     "metascraper-description": "^5.25.8",
