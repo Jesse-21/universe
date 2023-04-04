@@ -1,10 +1,17 @@
 const Filter = require("bad-words");
 
+const allowList = ["reputation", "computational"];
+
 class ExtendedFilter extends Filter {
   constructor(options) {
     super(options);
   }
   isProfane(string) {
+    if (
+      allowList.filter((word) => string.toLowerCase().includes(word)).length > 0
+    ) {
+      return false;
+    }
     return (
       this.list.filter((word) => {
         const wordExp = new RegExp(
