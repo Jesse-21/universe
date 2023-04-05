@@ -157,7 +157,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("fill", "#FFFFFF")
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
-      .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
+      .style("text-shadow", "0px 0px 15px rgba(0,0,0,1)")
       .text(`${rawDomain}.beb`);
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
@@ -180,7 +180,7 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("fill", "#FFFFFF")
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
-        .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
+        .style("text-shadow", "0px 0px 15px rgba(0,0,0,1)")
         .text(`BEB Score: ${addressScore}`);
     } else {
       console.error(`Could not get score data: ${scoreData}`);
