@@ -120,7 +120,7 @@ app.get("/uri/:uri", async (req, res) => {
     const filterDefinition = `
       <defs>
         <filter id="${filterId}">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
         </filter>
       </defs>
     `;
@@ -154,7 +154,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("y", 255)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
-      .attr("fill", "#E7FFA4")
+      .attr("fill", "#FFFFFF")
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
       .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
@@ -177,7 +177,7 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("y", 325)
         .attr("font-size", `48px`)
         .attr("font-family", "Helvetica, sans-serif")
-        .attr("fill", "#E7FFA4")
+        .attr("fill", "#FFFFFF")
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
         .style("text-shadow", " 1px 1px 12px rgba(0,0,0,0.9)")
