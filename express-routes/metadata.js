@@ -116,7 +116,21 @@ app.get("/uri/:uri", async (req, res) => {
     ];
     const index = Math.floor(hsla[0] % 7);
 
-    let gradiantStyle = `background-image:url(${planets[index]});background-size:cover;`;
+    const filterId = "blur-filter";
+    const filterDefinition = `
+      <defs>
+        <filter id="${filterId}">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+        </filter>
+      </defs>
+    `;
+
+    const backgroundImage = `
+    <svg width="500" height="500">
+      <image href="${planets[index]}" width="100%" height="100%" filter="url(#${filterId})" preserveAspectRatio="xMidYMid slice"></image>
+    </svg>
+  `;
+
     let svgContainer = body
       .append("div")
       .attr("class", "container")
@@ -124,8 +138,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("width", 500)
       .attr("height", 500)
       .attr("xmlns", "http://www.w3.org/2000/svg")
-      .attr("style", gradiantStyle)
-      .html(bebLogo);
+      .html(filterDefinition + backgroundImage + bebLogo);
 
     let length = [...rawDomain].length;
     let base = 0.95;
@@ -148,6 +161,9 @@ app.get("/uri/:uri", async (req, res) => {
       .text(`${rawDomain}.beb`);
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
+    if (!owner) {
+      throw Error("Domain does not exist!");
+    }
 
     const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
     const scoreData = await axios.get(scoreDataUrl);
