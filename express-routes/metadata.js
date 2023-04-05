@@ -120,7 +120,7 @@ app.get("/uri/:uri", async (req, res) => {
     const filterDefinition = `
       <defs>
         <filter id="${filterId}">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
         </filter>
       </defs>
     `;
