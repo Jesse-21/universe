@@ -10,6 +10,7 @@ const sha3 = require("web3-utils").sha3;
 const { ethers } = require("ethers");
 const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
+const rateLimit = require("express-rate-limit");
 
 const planet1 = require("../helpers/constants/metadata/planet1");
 const planet2 = require("../helpers/constants/metadata/planet2");
@@ -23,6 +24,18 @@ const planets = [planet1, planet2, planet3, planet4, planet5, planet6, planet7];
 const { Metadata } = require("../models/Metadata");
 
 const { JSDOM } = jsdom;
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 5_000, // 5s
+  max: 1, // limit each IP to 1 requests per windowMs
+  message: "Too many requests, please try again later.",
+  handler: (req, res, next) => {
+    res.status(429).send("Too many requests, please try again later.");
+  },
+});
+
+app.use(limiter);
 
 app.get("/domain/:domain", async (req, res) => {
   try {
