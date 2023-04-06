@@ -116,18 +116,9 @@ app.get("/uri/:uri", async (req, res) => {
     ];
     const index = Math.floor(hsla[0] % 7);
 
-    const filterId = "blur-filter";
-    const filterDefinition = `
-      <defs>
-        <filter id="${filterId}">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
-        </filter>
-      </defs>
-    `;
-
     const backgroundImage = `
     <svg width="500" height="500">
-      <image href="${planets[index]}" width="100%" height="100%" filter="url(#${filterId})" preserveAspectRatio="xMidYMid slice"></image>
+      <image href="${planets[index]}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
     </svg>
   `;
 
@@ -138,7 +129,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("width", 500)
       .attr("height", 500)
       .attr("xmlns", "http://www.w3.org/2000/svg")
-      .html(filterDefinition + backgroundImage + bebLogo);
+      .html(backgroundImage + bebLogo);
 
     let length = [...rawDomain].length;
     let base = 0.95;
@@ -157,7 +148,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("fill", "#E7FFA4")
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
-      .style("text-shadow", "0px 0px 5px #000")
+      .style("text-shadow", "0px 0px 4px #000")
       .text(`${rawDomain}.beb`);
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
@@ -180,7 +171,7 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("fill", "#E7FFA4")
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
-        .style("text-shadow", "0px 0px 5px #000")
+        .style("text-shadow", "0px 0px 4px #000")
         .text(`BEB Score: ${addressScore}`);
     } else {
       console.error(`Could not get score data: ${scoreData}`);

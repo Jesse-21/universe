@@ -9,7 +9,7 @@ const { mustBeBEBHolder } = require("../helpers/must-be-beb-holder");
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 1000, // 1s
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: 2, // limit each IP to 2 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     const address = req.params.address;
