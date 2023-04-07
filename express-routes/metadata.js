@@ -153,15 +153,23 @@ app.get("/uri/:uri", async (req, res) => {
     const dynamicfontsize = parseInt(80 * Math.pow(base, length));
 
     svgContainer
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", 195)
+      .attr("height", 155)
+      .attr("width", 500)
+      .attr("fill", "#111111");
+
+    svgContainer
       .append("text")
       .attr("x", 250)
       .attr("y", 255)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
-      .attr("fill", "#E7FFA4")
+      .attr("fill", "#FFF")
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
-      .style("text-shadow", "0px 0px 4px #000")
+      .style("text-shadow", "2px 2px #111111")
       .text(`${rawDomain}.beb`);
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
@@ -181,10 +189,10 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("y", 325)
         .attr("font-size", `48px`)
         .attr("font-family", "Helvetica, sans-serif")
-        .attr("fill", "#E7FFA4")
+        .attr("fill", "#FFF")
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
-        .style("text-shadow", "0px 0px 4px #000")
+        .style("text-shadow", "2px 2px #111111")
         .text(`BEB Score: ${addressScore}`);
     } else {
       console.error(`Could not get score data: ${scoreData}`);
@@ -192,6 +200,7 @@ app.get("/uri/:uri", async (req, res) => {
 
     const svg = body.select(".container").html();
     const image = svgToMiniDataURI(svg);
+    console.log(svg);
 
     let data = {
       name: `${rawDomain}.beb`,
