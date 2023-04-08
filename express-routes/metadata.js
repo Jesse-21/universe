@@ -118,6 +118,12 @@ app.get("/uri/:uri", async (req, res) => {
 
     let rng = new Prando(rawDomain);
 
+    const RegistrarService = new _RegistrarService();
+    const owner = await RegistrarService.getOwner(rawDomain);
+    if (!owner) {
+      throw Error("Domain does not exist!");
+    }
+
     let hsla = [
       rng.next(300),
       rng.next(300),
@@ -150,6 +156,30 @@ app.get("/uri/:uri", async (req, res) => {
       length = 2 * length;
     }
 
+    const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
+    const scoreData = await axios.get(scoreDataUrl);
+    let addressScore = null;
+    if (scoreData.data.score) {
+      addressScore = parseInt(scoreData.data.score);
+    }
+
+    const colorMap = {
+      green: "#296E01",
+      gold: "#D4AF37",
+      platinum: "#E3C2C0",
+      nova: "#fff",
+    };
+    let textColor = colorMap.green;
+    if (addressScore && length < 10) {
+      if (addressScore <= 500) {
+        textColor = colorMap.gold;
+      } else if (addressScore <= 650) {
+        textColor = colorMap.platinum;
+      } else {
+        textColor = colorMap.nova;
+      }
+    }
+
     const dynamicfontsize = parseInt(80 * Math.pow(base, length));
 
     svgContainer
@@ -166,22 +196,13 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("y", 255)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
-      .attr("fill", "#FFF")
+      .attr("fill", textColor)
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
       .style("text-shadow", "2px 2px #111111")
       .text(`${rawDomain}.beb`);
-    const RegistrarService = new _RegistrarService();
-    const owner = await RegistrarService.getOwner(rawDomain);
-    if (!owner) {
-      throw Error("Domain does not exist!");
-    }
 
-    const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
-    const scoreData = await axios.get(scoreDataUrl);
-    let addressScore = null;
-
-    if (scoreData.data.score) {
+    if (addressScore) {
       addressScore = parseInt(scoreData.data.score);
       svgContainer
         .append("text")
@@ -189,7 +210,7 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("y", 325)
         .attr("font-size", `48px`)
         .attr("font-family", "Helvetica, sans-serif")
-        .attr("fill", "#FFF")
+        .attr("fill", textColor)
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
         .style("text-shadow", "2px 2px #111111")
