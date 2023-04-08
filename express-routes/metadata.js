@@ -164,12 +164,12 @@ app.get("/uri/:uri", async (req, res) => {
     }
 
     const colorMap = {
-      green: "#296E01",
+      free: "#296E01",
       gold: "#D4AF37",
       platinum: "#E3C2C0",
       nova: "#fff",
     };
-    let textColor = colorMap.green;
+    let textColor = colorMap.free;
     if (addressScore && length < 10) {
       if (addressScore <= 500) {
         textColor = colorMap.gold;
