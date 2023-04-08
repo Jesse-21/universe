@@ -164,7 +164,7 @@ app.get("/uri/:uri", async (req, res) => {
     }
 
     const colorMap = {
-      free: "#4B8024",
+      free: "#5C9135",
       gold: "#D4AF37",
       platinum: "#E3C2C0",
       nova: "#fff",
