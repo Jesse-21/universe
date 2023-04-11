@@ -120,7 +120,11 @@ app.get("/uri/:uri", async (req, res) => {
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
     if (!owner) {
-      throw Error("Domain does not exist!");
+      const errorData = {
+        name: `no_metadata_refresh_beb_domains.beb`,
+        description: `This domain does not have metadata, navigate to beb.domains to refresh!`,
+      };
+      return res.json(errorData);
     }
 
     let hsla = [
