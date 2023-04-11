@@ -12,14 +12,8 @@ const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
 const rateLimit = require("express-rate-limit");
 
-const planet1 = require("../helpers/constants/metadata/planet1");
-const planet2 = require("../helpers/constants/metadata/planet2");
-const planet3 = require("../helpers/constants/metadata/planet3");
-const planet4 = require("../helpers/constants/metadata/planet4");
-const planet5 = require("../helpers/constants/metadata/planet5");
-const planet6 = require("../helpers/constants/metadata/planet6");
-const planet7 = require("../helpers/constants/metadata/planet7");
-const planets = [planet1, planet2, planet3, planet4, planet5, planet6, planet7];
+const background = (tier) =>
+  `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.png`;
 
 const { Metadata } = require("../models/Metadata");
 
@@ -135,21 +129,6 @@ app.get("/uri/:uri", async (req, res) => {
     ];
     const index = Math.floor(hsla[0] % 7);
 
-    const backgroundImage = `
-    <svg width="500" height="500">
-      <image href="${planets[index]}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
-    </svg>
-  `;
-
-    let svgContainer = body
-      .append("div")
-      .attr("class", "container")
-      .append("svg")
-      .attr("width", 500)
-      .attr("height", 500)
-      .attr("xmlns", "http://www.w3.org/2000/svg")
-      .html(backgroundImage + bebLogo);
-
     let length = [...rawDomain].length;
     let base = 0.95;
     if (!rawDomain.match(/^[\u0000-\u007f]*$/)) {
@@ -163,37 +142,59 @@ app.get("/uri/:uri", async (req, res) => {
       addressScore = parseInt(scoreData.data.score);
     }
 
+    const textColor = "#fff";
     const colorMap = {
-      free: "#5C9135",
-      gold: "#D4AF37",
-      platinum: "#E3C2C0",
-      nova: "#fff",
+      free: "free",
+      bronze: "bronze",
+      gold: "gold",
+      platinum: "platinum",
+      nova: "nova",
     };
-    let textColor = colorMap.free;
+    let color = colorMap.free;
     if (addressScore && length < 10) {
-      if (addressScore <= 500) {
-        textColor = colorMap.gold;
-      } else if (addressScore <= 650) {
-        textColor = colorMap.platinum;
+      if (addressScore < 450) {
+        color = colorMap.bronze;
+      } else if (addressScore < 550) {
+        color = colorMap.gold;
+      } else if (addressScore < 700) {
+        color = colorMap.platinum;
       } else {
-        textColor = colorMap.nova;
+        color = colorMap.nova;
       }
     }
 
     const dynamicfontsize = parseInt(80 * Math.pow(base, length));
 
+    const backgroundImage = `
+    <svg width="500" height="500">
+      <image href="${background(
+        color
+      )}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
+    </svg>
+  `;
+
+    let svgContainer = body
+      .append("div")
+      .attr("class", "container")
+      .append("svg")
+      .attr("width", 500)
+      .attr("height", 500)
+      .attr("xmlns", "http://www.w3.org/2000/svg")
+      .html(backgroundImage + bebLogo);
+
     svgContainer
       .append("rect")
       .attr("x", 0)
-      .attr("y", 195)
+      .attr("y", 345)
       .attr("height", 155)
       .attr("width", 500)
+      .attr("fill-opacity", 0.5)
       .attr("fill", "#111111");
 
     svgContainer
       .append("text")
       .attr("x", 250)
-      .attr("y", 255)
+      .attr("y", 405)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
       .attr("fill", textColor)
@@ -207,7 +208,7 @@ app.get("/uri/:uri", async (req, res) => {
       svgContainer
         .append("text")
         .attr("x", 250)
-        .attr("y", 325)
+        .attr("y", 475)
         .attr("font-size", `48px`)
         .attr("font-family", "Helvetica, sans-serif")
         .attr("fill", textColor)
