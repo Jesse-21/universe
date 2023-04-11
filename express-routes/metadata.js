@@ -11,9 +11,14 @@ const { ethers } = require("ethers");
 const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
 const rateLimit = require("express-rate-limit");
+const imageToBase64 = require("image-to-base64");
 
-const background = (tier) =>
-  `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.png`;
+const background = async (tier) => {
+  const uri = await imageToBase64(
+    `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.png`
+  );
+  return `data:image/png;base64,${uri}`;
+};
 
 const { Metadata } = require("../models/Metadata");
 
@@ -164,12 +169,11 @@ app.get("/uri/:uri", async (req, res) => {
     }
 
     const dynamicfontsize = parseInt(80 * Math.pow(base, length));
+    const backgroundCard = await background(color);
 
     const backgroundImage = `
     <svg width="500" height="500">
-      <image href="${background(
-        color
-      )}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
+      <image href="${backgroundCard}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
     </svg>
   `;
 
@@ -222,7 +226,9 @@ app.get("/uri/:uri", async (req, res) => {
 
     const svg = body.select(".container").html();
     const image = svgToMiniDataURI(svg);
-    console.log(svg);
+    if (process.env.NODE_ENV === "development") {
+      console.log(svg);
+    }
 
     let data = {
       name: `${rawDomain}.beb`,
