@@ -14,7 +14,6 @@ const {
 
 // const { unauthorizedErrorOrAccount } = require("../../helpers/auth-middleware");
 
-const RegistrarService = new _RegistrarService();
 const CommunityQueryService = new _CommunityQueryService();
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
@@ -23,6 +22,8 @@ const RATE_LIMIT_MAX = 30;
 const resolvers = {
   Community: {
     available: async (root, args = {}, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const bebdomain = root.bebdomain || args.bebdomain;
       const errorMessage = await rateLimiter(
         { root, args, context, info },
@@ -32,6 +33,8 @@ const resolvers = {
       return await RegistrarService.available(bebdomain);
     },
     expiresAt: async (root, args = {}, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const bebdomain = root.bebdomain || args.bebdomain;
       const errorMessage = await rateLimiter(
         { root, args, context, info },
@@ -41,6 +44,8 @@ const resolvers = {
       return await RegistrarService.expiresAt(bebdomain);
     },
     rentPrice: async (root, args = {}, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const bebdomain = root.bebdomain || args.bebdomain;
       const errorMessage = await rateLimiter(
         { root, args, context, info },
@@ -53,6 +58,8 @@ const resolvers = {
       });
     },
     commitment: async (root, args = {}, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const bebdomain = root.bebdomain || args.bebdomain;
       const errorMessage = await rateLimiter(
         { root, args, context, info },
@@ -75,6 +82,8 @@ const resolvers = {
       };
     },
     tokenId: async (root, args = {}, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const bebdomain = root.bebdomain || args.bebdomain;
       const errorMessage = await rateLimiter(
         { root, args, context, info },
@@ -109,6 +118,8 @@ const resolvers = {
       );
     },
     tokenOwnerAddress: async (root, args, context, info) => {
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       const errorMessage = await rateLimiter(
         { root, args, context, info },
         { max: RATE_LIMIT_MAX, window: "60s" }

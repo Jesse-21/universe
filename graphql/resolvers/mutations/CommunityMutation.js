@@ -53,7 +53,8 @@ const resolvers = {
       }
     },
     registerCommunity: async (root, args, context, info) => {
-      const RegistrarService = new _RegistrarService();
+      const RegistrarService =
+        context.services?.RegistrarService || new _RegistrarService();
       try {
         const errorMessage = await rateLimiter(
           { root, args, context, info },

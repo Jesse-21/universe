@@ -32,6 +32,8 @@ const http = require("http");
 const cors = require("cors");
 const { json } = require("body-parser");
 
+const { Service: _RegistrarService } = require("./services/RegistrarService");
+
 const port = parseInt(process.env.PORT, 10) || 8080;
 
 const typeDefs = loadSchemaSync(
@@ -79,13 +81,20 @@ if (process.env.SENTRY_DSN) {
     json(),
     expressMiddleware(server, {
       context: async ({ req }) => {
+        const context = {
+          dataloaders: createDataLoaders(),
+          services: {
+            RegistrarService: new _RegistrarService(),
+            // @TODO add more services here
+          },
+        };
         try {
           const data = await requireAuth(
             req.headers.authorization?.slice(7) || ""
           );
           return {
+            ...context,
             accountId: data.payload.id,
-            dataloaders: createDataLoaders(),
           };
         } catch (e) {
           try {
@@ -93,11 +102,11 @@ if (process.env.SENTRY_DSN) {
               Sentry.captureException(e);
               console.error(e);
             }
-            return { dataloaders: createDataLoaders() };
+            return { ...context };
           } catch (e) {
             Sentry.captureException(e);
             console.error(e);
-            return {};
+            return { ...context };
           }
         }
       },
