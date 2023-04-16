@@ -105,7 +105,19 @@ app.get("/uri/:uri", async (req, res) => {
     if (!uri || uri.length == 0) {
       throw Error("uri invalid!");
     }
-    const hexUri = ethers.BigNumber.from(uri).toHexString();
+
+    const uriBigNumber = ethers.BigNumber.from(uri);
+    const max256BitValue = ethers.BigNumber.from(2).pow(256).sub(1);
+    if (uriBigNumber.gt(max256BitValue)) {
+      throw new Error(
+        "The URI is too large to be represented in a 64-character-long hexadecimal string!"
+      );
+    }
+
+    const rawHexUri = uriBigNumber.toHexString();
+    const paddingZeros = 64 - (rawHexUri.length - 2); // Subtract 2 for the '0x' prefix
+    const hexUri = "0x" + "0".repeat(paddingZeros) + rawHexUri.slice(2);
+
     const metadata = await Metadata.findOne({
       uri: hexUri,
     });
