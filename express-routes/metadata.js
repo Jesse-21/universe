@@ -103,11 +103,15 @@ app.get("/uri/:uri", async (req, res) => {
       throw Error("uri invalid!");
     }
     const hexUri = ethers.BigNumber.from(uri).toHexString();
-    let metadata = await Metadata.findOne({
+    const metadata = await Metadata.findOne({
       uri: hexUri,
     });
     if (!metadata) {
-      metadata = { uri: hexUri, domain: "no_metadata_refresh_beb_domains" };
+      const errorData = {
+        name: `no_metadata_refresh_beb_domains.beb`,
+        description: `This domain does not have metadata, navigate to beb.domains to refresh!`,
+      };
+      return res.json(errorData);
     }
     const rawDomain = metadata.domain;
 
@@ -121,8 +125,8 @@ app.get("/uri/:uri", async (req, res) => {
     const owner = await RegistrarService.getOwner(rawDomain);
     if (!owner) {
       const errorData = {
-        name: `no_metadata_refresh_beb_domains.beb`,
-        description: `This domain does not have metadata, navigate to beb.domains to refresh!`,
+        name: `no_owner_beb_domains.beb`,
+        description: `This domain does not have an owner!`,
       };
       return res.json(errorData);
     }
