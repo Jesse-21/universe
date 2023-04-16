@@ -43,7 +43,6 @@ app.get("/domain/:domain", async (req, res) => {
     if (
       !inputDomain ||
       inputDomain.length == 0 ||
-      inputDomain.length > 32 ||
       inputDomain.toLowerCase() != inputDomain
     ) {
       throw Error("inputDomain invalid!");
