@@ -6,7 +6,8 @@ const jsdom = require("jsdom");
 const svgToMiniDataURI = require("mini-svg-data-uri");
 var Prando = require("prando");
 const { validateName } = require("../helpers/validate-community-name");
-const sha3 = require("web3-utils").sha3;
+const keccak256 = require("web3-utils").keccak256;
+const utf8ToHex = require("web3-utils").utf8ToHex;
 const { ethers } = require("ethers");
 const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
@@ -62,7 +63,9 @@ app.get("/domain/:domain", async (req, res) => {
     validateName(inputDomain);
     const rawDomain = inputDomain.replace(".beb", "");
 
-    const existing = await Metadata.findOne({ uri: sha3(rawDomain) });
+    const existing = await Metadata.findOne({
+      uri: keccak256(utf8ToHex(rawDomain)),
+    });
     if (existing) {
       return res.json({
         created: false,
@@ -73,7 +76,7 @@ app.get("/domain/:domain", async (req, res) => {
 
     const metadata = await Metadata.create({
       domain: rawDomain,
-      uri: sha3(rawDomain),
+      uri: keccak256(utf8ToHex(rawDomain)),
     });
 
     return res.json({
