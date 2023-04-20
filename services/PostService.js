@@ -196,7 +196,7 @@ class PostService {
    * @returns Promise<Post[]>
    * */
   async getExplorePostFeed(_, { filters = {}, ...args }, context) {
-    const getCommunitiIds = async () =>
+    const getCommunityIds = async () =>
       await this.getExplorePostFeedCommunityIds(
         _,
         {
@@ -208,7 +208,7 @@ class PostService {
 
     const CacheService = new _CacheService();
     const communityIds = await CacheService.getOrCallbackAndSet(
-      getCommunitiIds,
+      getCommunityIds,
       {
         key: "ExploreFeedCommunities",
         params: {

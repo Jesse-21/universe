@@ -12,7 +12,7 @@ const SCORE_KEY = "BebScoreService";
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000, // 3s
-  max: 1, // limit each IP to 1 requests per windowMs
+  max: 5, // limit each IP to 1 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: async (req, res) => {
     const address = req.params.address;
