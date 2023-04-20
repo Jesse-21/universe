@@ -35,9 +35,7 @@ const limiter = rateLimit({
   },
 });
 
-app.use(limiter);
-
-app.get("/domain/:domain", async (req, res) => {
+app.get("/domain/:domain", limiter, async (req, res) => {
   try {
     const inputDomain = req.params.domain;
     if (

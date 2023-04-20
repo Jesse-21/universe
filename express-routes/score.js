@@ -2,18 +2,27 @@ const app = require("express").Router();
 const Sentry = require("@sentry/node");
 const rateLimit = require("express-rate-limit");
 const { Service: ScoreService } = require("../services/ScoreService");
-const cache = require("memory-cache");
-
+const { Service: _CacheService } = require("../services/cache/CacheService");
 const { mustBeBEBHolder } = require("../helpers/must-be-beb-holder");
+
+const CacheService = new _CacheService();
+
+const SCORE_KEY = "BebScoreService";
 
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000, // 3s
   max: 1, // limit each IP to 1 requests per windowMs
   message: "Too many requests, please try again later.",
-  handler: (req, res, next) => {
+  handler: async (req, res) => {
     const address = req.params.address;
-    const score = cache.get(address);
+    const score = await CacheService.get({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+      },
+    });
+
     if (score) {
       return res.json({
         code: 200,
@@ -25,9 +34,7 @@ const limiter = rateLimit({
   },
 });
 
-app.use(limiter);
-
-app.post("/:address", async (req, res) => {
+app.post("/:address", limiter, async (req, res) => {
   try {
     const address = req.params.address;
     const token = req.headers.authorization?.slice(7) || "";
@@ -38,11 +45,23 @@ app.post("/:address", async (req, res) => {
     } else {
       await mustBeBEBHolder(token);
     }
-    let score = cache.get(address);
+    let score = await CacheService.get({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+      },
+    });
 
     if (!score) {
       score = await ScoreService.getScore(req.body.stats);
-      cache.put(address, score, 1000 * 60 * 60 * 72); // cache for 72 hours
+      await CacheService.set({
+        key: SCORE_KEY,
+        params: {
+          address: address,
+        },
+        value: score,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 72), // 72 hour cache
+      });
     }
     return res.json({
       code: 200,
