@@ -41,6 +41,7 @@ app.post("/:address", limiter, async (req, res) => {
     const address = req.params.address;
     const token = req.headers.authorization?.slice(7) || "";
     const scoreType = req.query.scoreType || "beb";
+    const stats = req.body.stats;
     if (["beb", "farcaster"].indexOf(scoreType) === -1) {
       throw new Error("Invalid score type");
     }
@@ -60,7 +61,10 @@ app.post("/:address", limiter, async (req, res) => {
     });
 
     if (!score) {
-      score = await ScoreService.getScore(req.body.stats, {
+      if (!stats) {
+        throw new Error("Missing stats!");
+      }
+      score = await ScoreService.getScore(stats, {
         scoreType: scoreType,
       });
       await CacheService.set({
