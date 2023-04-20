@@ -16,10 +16,12 @@ const limiter = rateLimit({
   message: "Too many requests, please try again later.",
   handler: async (req, res) => {
     const address = req.params.address;
+    const scoreType = req.query.scoreType || "beb";
     const score = await CacheService.get({
       key: SCORE_KEY,
       params: {
         address: address,
+        scoreType,
       },
     });
 
@@ -38,6 +40,10 @@ app.post("/:address", limiter, async (req, res) => {
   try {
     const address = req.params.address;
     const token = req.headers.authorization?.slice(7) || "";
+    const scoreType = req.query.scoreType || "beb";
+    if (["beb", "farcaster"].indexOf(scoreType) === -1) {
+      throw new Error("Invalid score type");
+    }
     if (req.body.accessToken) {
       if (process.env.SCORE_ACCESS_TOKEN !== req.body.accessToken) {
         throw new Error("Invalid score access token");
@@ -48,16 +54,20 @@ app.post("/:address", limiter, async (req, res) => {
     let score = await CacheService.get({
       key: SCORE_KEY,
       params: {
-        address: address,
+        address,
+        scoreType,
       },
     });
 
     if (!score) {
-      score = await ScoreService.getScore(req.body.stats);
+      score = await ScoreService.getScore(req.body.stats, {
+        scoreType: scoreType,
+      });
       await CacheService.set({
         key: SCORE_KEY,
         params: {
-          address: address,
+          address,
+          scoreType,
         },
         value: score,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 72), // 72 hour cache
