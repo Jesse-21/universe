@@ -14,7 +14,7 @@ This is an early work that is subject to heavy changes, see our [Github Issues](
 
 We've provided a starter `Dockerfile` for you, with `MONGO_URL` and `JWT_SECRET` as `ARG` parameters.
 
-We have a [self-hosting guide on HackMD](https://hackmd.io/@bebverse/selfhosting).
+We have a [self-hosting guide on HackMD](https://hackmd.io/@bebverse/selfhosting) which walks through Railway deployment all the way to using our resolver contract.
 
 1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or [Railway with our HackMD tutorial](https://hackmd.io/@bebverse/selfhosting).
 2. You'll also need to deploy this Dockerfile to a hosting location of your preference ([Railway](https://railway.app), [Heroku](https://www.heroku.com/), etc).
