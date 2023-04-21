@@ -14,6 +14,19 @@ const limiter = rateLimit({
   windowMs: 3_000, // 3s
   max: 5, // limit each IP to 5 requests per windowMs
   message: "Too many requests, please try again later.",
+  skip: async (req, _res) => {
+    // skip rate limiting for requests that have a cached score
+    const address = req.params.address;
+    const scoreType = req.query.scoreType || "beb";
+    const score = await CacheService.get({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+        scoreType,
+      },
+    });
+    return !!score;
+  },
   handler: async (req, res) => {
     const address = req.params.address;
     const scoreType = req.query.scoreType || "beb";
