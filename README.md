@@ -6,7 +6,7 @@ Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension 
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
-**See our developer documents at [`BEB Dimension GraphQL APIs`](https://hackmd.io/@bebverse/graphql).**
+**See our developer documents at [`BEB Dimension GraphQL APIs`](https://docs.beb.xyz/developers).**
 
 ## Self-hosting Your Universe
 
@@ -14,11 +14,11 @@ This is an early work that is subject to heavy changes, see our [Github Issues](
 
 We've provided a starter `Dockerfile` for you, with `MONGO_URL` and `JWT_SECRET` as `ARG` parameters.
 
-We have a [self-hosting guide on HackMD](https://hackmd.io/@bebverse/selfhosting) which walks through Railway deployment all the way to using our resolver contract.
+We have a [self-hosting guide on our docs](https://docs.beb.xyz/selfhosting) which walks through Railway deployment all the way to using our resolver contract.
 
-1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or [Railway with our HackMD tutorial](https://hackmd.io/@bebverse/selfhosting).
+1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or [Railway with our tutorial](https://docs.beb.xyz/selfhosting).
 2. You'll also need to deploy this Dockerfile to a hosting location of your preference ([Railway](https://railway.app), [Heroku](https://www.heroku.com/), etc).
-3. Once you have a hosted url, you can set this path in the BEBverse [resolver smart contracts](https://github.com/bebverse/contracts). For example, `foo.beb` would resolve to your host at `example-load-balancer-1234567890.us-west-2.elb.amazonaws.com`. See our [self-hosting guide](https://hackmd.io/@bebverse/selfhosting#Configuring-the-Resolver-Contract) for more details!
+3. Once you have a hosted url, you can set this path in the BEBverse [resolver smart contracts](https://github.com/bebverse/contracts). For example, `foo.beb` would resolve to your host at `example-load-balancer-1234567890.us-west-2.elb.amazonaws.com`. See our [self-hosting guide](https://docs.beb.xyz/selfhosting#configuring-the-resolver-contract) for more details!
 
 ## Contribution Guidelines
 
