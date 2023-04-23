@@ -8,8 +8,8 @@ class ScoreService {
 
   static async getScore(data, { scoreType = "beb" }) {
     let modelUrl = `file://./services/data/beb_score_model/model.json`;
-    if (scoreType === "farcaster") {
-      modelUrl = `file://./services/data/farcaster_score_model/model.json`;
+    if (scoreType === "social") {
+      modelUrl = `file://./services/data/social_score_model/model.json`;
     }
     const model = await tf.loadLayersModel(modelUrl);
 
