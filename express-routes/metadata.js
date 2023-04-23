@@ -12,13 +12,15 @@ const { ethers } = require("ethers");
 const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
 const rateLimit = require("express-rate-limit");
-const imageToBase64 = require("image-to-base64");
 
 const background = async (tier) => {
-  const uri = await imageToBase64(
-    `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.png`
+  const response = await axios.get(
+    `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.svg`,
+    { responseType: "text" }
   );
-  return `data:image/png;base64,${uri}`;
+  const data = response.data;
+  const base64Data = Buffer.from(data, "utf8").toString("base64");
+  return `data:image/svg+xml;base64,${base64Data}`;
 };
 
 const { Metadata } = require("../models/Metadata");
