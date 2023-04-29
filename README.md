@@ -2,7 +2,7 @@
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension Host. Universes are open-source dimension hosts for [BEB, a decentralized social protocol for AI Defense](https://docs.beb.xyz). Universes are accessed by clients such as [B7B](https://github.com/bebverse/b7b).
+Universe is an implementation of a BEB (Blockchain-Enabled Broadcast) Dimension Host. Universes are open-source dimension hosts for [BEB, a protocol creating trust in a trustless world](https://docs.beb.xyz). Universes are accessed by clients such as [B7B](https://github.com/bebverse/b7b).
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
