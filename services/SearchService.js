@@ -59,10 +59,10 @@ class SearchService {
     const communities = await Community.find({
       $or: [
         {
-          bebdomain: { $regex: query, $options: "i" },
+          bebdomain: { $regex: query.trim(), $options: "i" },
         },
         {
-          name: { $regex: query, $options: "i" },
+          name: { $regex: query.trim(), $options: "i" },
         },
       ],
     })
