@@ -49,6 +49,11 @@ const limiter = rateLimit({
   },
 });
 
+const normalizeScore = (score) => {
+  const normalizedScore = Math.max(Math.min(score, 850), 300);
+  return normalizedScore;
+};
+
 app.post("/:address", limiter, async (req, res) => {
   try {
     const address = req.params.address;
@@ -65,6 +70,7 @@ app.post("/:address", limiter, async (req, res) => {
     } else {
       await mustBeBEBHolder(token);
     }
+
     let score = await CacheService.get({
       key: SCORE_KEY,
       params: {
@@ -72,6 +78,7 @@ app.post("/:address", limiter, async (req, res) => {
         scoreType,
       },
     });
+    // @TODO add refresh cache endpoint
 
     if (!score) {
       if (!stats) {
@@ -88,13 +95,13 @@ app.post("/:address", limiter, async (req, res) => {
           scoreType,
         },
         value: score,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 72), // 72 hour cache
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hour cache
       });
     }
     return res.json({
       code: 200,
       success: true,
-      score,
+      score: normalizeScore(score),
     });
   } catch (e) {
     console.error(e);
