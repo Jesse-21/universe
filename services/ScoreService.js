@@ -1,4 +1,5 @@
 const tf = require("@tensorflow/tfjs-node");
+const { Service: _CacheService } = require("../services/cache/CacheService");
 
 class ScoreService {
   static async _getScore(model, inputData) {
@@ -36,6 +37,38 @@ class ScoreService {
     const inputData = [...data];
 
     return await ScoreService._getScore(model, inputData);
+  }
+
+  static async setScore({ address, scoreType, score = 300, modifier = null }) {
+    const CacheService = new _CacheService();
+
+    const SCORE_KEY = "BebScoreService";
+
+    let finalScore = score;
+    if (modifier) {
+      const existingScore = await CacheService.get({
+        key: SCORE_KEY,
+        params: {
+          address: address,
+          scoreType: scoreType,
+        },
+      });
+      if (existingScore) {
+        finalScore = existingScore + modifier;
+      } else {
+        finalScore = score + modifier;
+      }
+    }
+    finalScore = Math.min(Math.max(finalScore, 300), 800);
+    return await CacheService.set({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+        scoreType: scoreType,
+      },
+      value: finalScore,
+      // custom scores never expire, so has no expiredAt
+    });
   }
 }
 

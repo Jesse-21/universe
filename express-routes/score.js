@@ -60,9 +60,7 @@ app.post("/:address", limiter, async (req, res) => {
     const token = req.headers.authorization?.slice(7) || "";
     const scoreType = req.query.scoreType || "beb";
     const stats = req.body.stats;
-    if (["beb", "social"].indexOf(scoreType) === -1) {
-      throw new Error("Invalid score type");
-    }
+
     if (req.body.accessToken) {
       if (process.env.SCORE_ACCESS_TOKEN !== req.body.accessToken) {
         throw new Error("Invalid score access token");

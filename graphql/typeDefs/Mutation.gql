@@ -306,6 +306,12 @@ type Mutation {
     bannerImageId: String
     bio: ContentInput
   ): CommunityMutationResponse # only owner or admins of community
+  editCommunityAddressScore(
+    bebdomain: String!
+    address: String!
+    score: Int
+    modifier: Int
+  ): CommunityMutationResponse # only owner or admins of community
   registerCommunity(bebdomain: String!, tld: String): CommunityMutationResponse
 
   # Channel mutations, require auth
