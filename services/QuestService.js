@@ -165,6 +165,7 @@ class QuestService extends QuestRewardService {
     imageUrl,
     requirements = [],
     rewards = [],
+    community,
   } = {}) {
     const ContentService = new _ContentService();
     const content = ContentService.makeContent({
@@ -177,6 +178,7 @@ class QuestService extends QuestRewardService {
       description: content,
       imageUrl,
       schedule,
+      community,
     });
     quest.requirements = await this.createQuestRequirements({
       requirements,

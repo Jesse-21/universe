@@ -8,6 +8,10 @@ const { Service: CommunityQuestService } = require("../CommunityQuestService");
 const {
   Service: _CommunityAssetsService,
 } = require("../assets/CommunityAssetsService");
+const { Service: _ScoreService } = require("../ScoreService");
+
+const CommunityAssetsService = new _CommunityAssetsService();
+const ScoreService = new _ScoreService();
 
 class CommunityQuestMutationService extends CommunityQuestService {
   async _canAdminCommunityOrError(community, props, context) {
@@ -23,23 +27,48 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * Create the reward of a Quest for a community
    * @returns Promise<CommunityAsset[]>
    * */
-  async _claimReward(communityQuest) {
+  async _claimRewardByType(reward, { communityId }, context) {
+    if (reward.type === "ASSET_3D") {
+      await CommunityAssetsService.addQuantityOrCreateAsset(null, {
+        assetId: reward.rewardId,
+        type: reward.type,
+        communityId,
+        maxQuantity: reward.quantity,
+      });
+    } else if (reward.type === "SCORE") {
+      await context.account?.populate?.("addresses");
+      const address = context.account?.addresses?.[0]?.address;
+      if (!address) {
+        throw new Error("You must be logged in to claim this reward.");
+      }
+      const community = await Community.findById(communityId);
+      await ScoreService.setScore({
+        address: address,
+        scoreType: community.bebdomain,
+        modifier: reward.quantity,
+      });
+    }
+
+    return reward;
+  }
+
+  /**
+   * Create the reward of a Quest for a community
+   * @returns Promise<CommunityAsset[]>
+   * */
+  async _claimReward(communityQuest, { communityId }, context) {
     const quest = await Quest.findById(communityQuest.quest);
     if (!quest?.rewards?.length)
       throw new Error("No rewards found for this quest");
 
-    const CommunityAssetsService = new _CommunityAssetsService();
-
     const rewards = await Promise.all(
       quest.rewards.map(async (reward) => {
-        const communityAsset =
-          await CommunityAssetsService.addQuantityOrCreateAsset(null, {
-            assetId: reward.rewardId,
-            type: reward.type,
-            communityId: communityQuest.community,
-            maxQuantity: reward.quantity,
-          });
-        return communityAsset;
+        const r = await this._claimRewardByType(
+          reward,
+          { communityId },
+          context
+        );
+        return r;
       })
     );
     return rewards;
@@ -57,9 +86,11 @@ class CommunityQuestMutationService extends CommunityQuestService {
     if (!canClaimReward)
       throw new Error("Reward cannot be claimed at this time.");
 
-    const community = await Community.findById(communityId);
-    await this._canAdminCommunityOrError(community, { communityId }, context);
-    const communityAssets = await this._claimReward(communityQuest);
+    const communityAssets = await this._claimReward(
+      communityQuest,
+      { communityId, questId },
+      context
+    );
 
     communityQuest.isArchived = true;
     await communityQuest.save();
@@ -78,6 +109,9 @@ class CommunityQuestMutationService extends CommunityQuestService {
       community: communityId,
       quest: questId,
     });
+    if (!existing) {
+      throw new Error("CommunityQuest not found");
+    }
     if (existing) {
       // check if the account can complete the quest
       const status = await this.getQuestStatus(

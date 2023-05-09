@@ -18,6 +18,14 @@ input CommunityAssetFilter {
   communityId: ID
   type: CommunityAssetType
 }
+input QuestFilter {
+  communities: [ID]
+  domains: [String]
+  domain: String
+}
+input CommunitiesFilter {
+  domains: [String]
+}
 input AccountChannelFilter {
   communityId: ID
 }
@@ -61,7 +69,7 @@ type RoleQuery {
 }
 
 type QuestQuery {
-  getQuests(limit: Int, offset: Int): [Quest]
+  getQuests(limit: Int, offset: Int, filters: QuestFilter): [Quest]
 }
 type CommunityQuestQuery {
   getCommunityQuestStatus(questId: ID!, communityId: ID!): CommunityQuestStatus
@@ -119,7 +127,12 @@ type Query {
   ): AccountReaction
   getCurrentAccountAvailableRoles(communityId: ID!): [Role]
   getAccountNotifications: [Notification] # @deprecated
-  getCommunities(limit: Int, offset: Int, sort: String): [Community]
+  getCommunities(
+    limit: Int
+    offset: Int
+    sort: String
+    filters: CommunitiesFilter
+  ): [Community]
   # Model Queries #
   NotificationQuery: NotificationQuery
   SearchQuery: SearchQuery

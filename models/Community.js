@@ -10,6 +10,17 @@ class CommunityClass {
     console.log("model: CommunityClass");
   }
 
+  static _buildMatchQuery(filters = {}) {
+    let match = {};
+    if (filters.domains) {
+      match = {
+        ...match,
+        bebdomain: { $in: filters.domains },
+      };
+    }
+    return match;
+  }
+
   /**
    * Find Community
    * @returns Community[]
@@ -26,8 +37,10 @@ class CommunityClass {
    * Find Community
    * @returns Community[]
    */
-  static async findAndSoryByCreated({ offset = 0, limit = 10 }) {
+  static async findAndSoryByCreated({ offset = 0, limit = 10, filters = {} }) {
+    const match = this._buildMatchQuery(filters);
     const communities = await this.aggregate([
+      { $match: match },
       { $sort: { createdAt: -1, _id: 1 } },
       { $skip: parseInt(offset, 10) },
       { $limit: parseInt(limit, 10) },

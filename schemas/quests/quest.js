@@ -9,7 +9,7 @@ const { schema: keyValueFieldsSchema } = require("../keyValueFields");
  */
 const questRequirementSchema = mongoose.Schema({
   title: { type: String },
-  type: { type: String, enum: ["COMMUNITY_PARTICIPATION"] }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
+  type: { type: String, enum: ["COMMUNITY_PARTICIPATION", "SCORE"] }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW
   // e.g. { key: "apiEndpoint", value: "https://api.bebverse.com/quest/1" } for API
   data: [keyValueFieldsSchema],
@@ -21,8 +21,12 @@ const questRequirementSchema = mongoose.Schema({
  */
 const questRewardsSchema = mongoose.Schema({
   title: { type: String },
-  type: { type: String, enum: ["ASSET_3D"] }, // e.g Assets, NFTs...
-  quantity: { type: Number, default: 1 }, // if -1 then it is unlimited, create a 'copiable' reward e.g a prefab
+  type: { type: String, enum: ["ASSET_3D", "SCORE"] }, // e.g Assets, NFTs...
+
+  // in case of score, this is the amount of modifier to apply to the score
+  // for asset, -1 then it is unlimited, create a 'copiable' reward e.g a prefab
+  quantity: { type: Number, default: 1 },
+
   rewardId: { type: mongoose.Schema.Types.ObjectId, index: true },
 });
 
@@ -33,6 +37,11 @@ const schema = mongoose.Schema(
   {
     description: contentSchema,
     title: { type: String },
+    community: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+      ref: "Community",
+    },
     schedule: { type: String, enum: ["ONCE", "DAILY", "WEEKLY", "MONTHLY"] },
     imageUrl: {
       type: String,
@@ -45,4 +54,4 @@ const schema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = { schema };
+module.exports = { schema, questRequirementSchema, questRewardsSchema };
