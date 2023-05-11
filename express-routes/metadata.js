@@ -259,7 +259,6 @@ app.get("/uri/:uri", async (req, res) => {
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
       description: `${rawDomain}.beb was registered on beb.domains! Learn about BEB Scores at: beb.xyz/reputation`,
-      animation_url: `https://beb.domains/metadata/${uri}`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       score: addressScore,
