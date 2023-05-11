@@ -158,6 +158,7 @@ app.get("/uri/:uri", async (req, res) => {
 
     const RegistrarService = new _RegistrarService();
     const owner = await RegistrarService.getOwner(rawDomain);
+    const expiresAt = await RegistrarService.expiresAt(rawDomain);
     if (!owner) {
       const errorData = {
         name: `no_owner_beb_domains.beb`,
@@ -296,6 +297,11 @@ app.get("/uri/:uri", async (req, res) => {
         {
           trait_type: "Character Set",
           value: getCharacterSet(rawDomain),
+        },
+        {
+          display_type: "date",
+          trait_type: "Expiration Date",
+          value: expiresAt,
         },
       ],
     };
