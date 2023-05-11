@@ -227,6 +227,7 @@ app.get("/uri/:uri", async (req, res) => {
       .attr("text-anchor", "middle")
       .style("font-weight", "800")
       .style("text-shadow", "2px 2px #111111")
+      .attr("text-rendering", "optimizeSpeed")
       .text(`${rawDomain}.beb`);
 
     if (addressScore) {
@@ -241,6 +242,7 @@ app.get("/uri/:uri", async (req, res) => {
         .attr("text-anchor", "middle")
         .style("font-weight", "600")
         .style("text-shadow", "2px 2px #111111")
+        .attr("text-rendering", "optimizeSpeed")
         .text(`BEB Score: ${addressScore}`);
     } else {
       console.error(`Could not get score data: ${scoreData}`);
