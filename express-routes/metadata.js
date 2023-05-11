@@ -13,6 +13,27 @@ const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
 const rateLimit = require("express-rate-limit");
 
+const getCharacterSet = (name) => {
+  // if name is only letters
+  if (name.match(/^[a-zA-Z]+$/)) {
+    return "letter";
+  }
+  // if name is only numbers
+  if (name.match(/^[0-9]+$/)) {
+    return "digit";
+  }
+  // if name is letters and numbers
+  if (name.match(/^[a-zA-Z0-9]+$/)) {
+    return "alphanumeric";
+  }
+  // if name is emoji
+  if (name.match(/[\u{1F300}-\u{1F5FF}]/u)) {
+    return "emoji";
+  }
+
+  return "mixed";
+};
+
 const background = async (tier) => {
   const response = await axios.get(
     `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.svg`,
@@ -171,11 +192,11 @@ app.get("/uri/:uri", async (req, res) => {
 
     const textColor = "#fff";
     const colorMap = {
-      free: "free",
-      bronze: "bronze",
-      gold: "gold",
-      platinum: "platinum",
-      nova: "nova",
+      free: "Free",
+      bronze: "Bronze",
+      gold: "Gold",
+      platinum: "Platinum",
+      nova: "Nova",
     };
     let color = colorMap.free;
     if (addressScore && length < 10) {
@@ -262,6 +283,21 @@ app.get("/uri/:uri", async (req, res) => {
       host: "https://protocol.beb.xyz/graphql",
       image,
       score: addressScore,
+      attributes: [
+        {
+          trait_type: "Length",
+          value: rawDomain.length,
+          display_type: "number",
+        },
+        {
+          trait_type: "Category",
+          value: rawDomain.length < 10 ? "Premium" : "Free",
+        },
+        {
+          trait_type: "Character Set",
+          value: getCharacterSet(rawDomain),
+        },
+      ],
     };
 
     if (filter.isProfane(rawDomain) && process.env.MODE !== "self-hosted") {
