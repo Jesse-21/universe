@@ -291,7 +291,7 @@ app.get("/uri/:uri", async (req, res) => {
         },
         {
           trait_type: "Category",
-          value: rawDomain.length < 10 ? "Premium" : "Free",
+          value: rawDomain.length < 10 ? "Premium Renewal" : "Free Renewal",
         },
         {
           trait_type: "Character Set",
