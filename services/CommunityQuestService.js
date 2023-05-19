@@ -1,4 +1,7 @@
 const { Quest } = require("../models/quests/Quest");
+const {
+  CommunityQuestAccount,
+} = require("../models/quests/CommunityQuestAccount");
 
 const { Service: _QuestService } = require("./QuestService");
 class CommunityQuestService {
@@ -13,6 +16,7 @@ class CommunityQuestService {
 
     const quest = await Quest.findById(communityQuest.quest);
     const requirement = quest?.requirements?.[0];
+    if (!requirement) return false;
     switch (requirement.type) {
       case "COMMUNITY_PARTICIPATION": {
         const requiredAmount =
@@ -22,7 +26,7 @@ class CommunityQuestService {
         return communityQuest.accounts?.length >= requiredAmount;
       }
       default: {
-        return communityQuest.accounts?.length >= 1;
+        return false;
       }
     }
   }
@@ -41,7 +45,11 @@ class CommunityQuestService {
     if (canClaimReward) return "CAN_CLAIM_REWARD";
 
     // if account already completed the quest and cannot claim reward
-    if (communityQuest.accounts?.includes(context.account._id)) {
+    const exist = await CommunityQuestAccount.exists({
+      communityQuest: communityQuest._id,
+      account: context.account._id,
+    });
+    if (exist) {
       return "CHECKED_IN";
     }
 

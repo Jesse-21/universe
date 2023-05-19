@@ -73,7 +73,17 @@ type QuestQuery {
 }
 type CommunityQuestQuery {
   getCommunityQuestStatus(questId: ID!, communityId: ID!): CommunityQuestStatus
+  getCommunityQuestStatusByAddress(
+    questId: ID!
+    communityId: ID!
+    address: String!
+  ): CommunityQuestStatus
   getCommunityQuest(questId: ID!, communityId: ID!): CommunityQuest
+  getCommunityRewards(
+    limit: Int
+    offset: Int
+    communityId: ID
+  ): [CommunityReward]
 }
 type CommunityAssetQuery {
   getCommunityAssets(
@@ -120,6 +130,7 @@ type Query {
     filters: AccountRelationshipFilter
   ): [AccountRelationship]
   getPost(id: ID!): Post
+  getCommunityAddressScore(address: String!, bebdomain: String!): Int
   getReactionsByPostId(limit: Int, offset: Int, postId: ID!): [AccountReaction]
   getReactionByAccountAndObjectId(
     reactionObjectType: String!

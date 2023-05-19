@@ -1,5 +1,8 @@
 const { Quest } = require("../../models/quests/Quest");
 const { CommunityQuest } = require("../../models/quests/CommunityQuest");
+const {
+  CommunityQuestAccount,
+} = require("../../models/quests/CommunityQuestAccount");
 const { Community } = require("../../models/Community");
 
 // const { Service: _QuestService } = require("../QuestService");
@@ -112,25 +115,23 @@ class CommunityQuestMutationService extends CommunityQuestService {
     if (!existing) {
       throw new Error("CommunityQuest not found");
     }
-    if (existing) {
-      // check if the account can complete the quest
-      const status = await this.getQuestStatus(
-        existing,
-        { communityId, questId },
-        context
-      );
-      if (status !== "CAN_COMPLETE") {
-        throw new Error("Your account cannot complete the quest");
-      }
+
+    // check if the account can complete the quest
+    const status = await this.getQuestStatus(
+      existing,
+      { communityId, questId },
+      context
+    );
+    if (status !== "CAN_COMPLETE") {
+      throw new Error("Your account cannot complete the quest");
     }
 
-    const communityQuest = await CommunityQuest.findOrCreate({
-      communityId,
-      questId,
-      accountIds: [context.account._id],
+    await CommunityQuestAccount.findOrCreate({
+      accountId: context.account._id,
+      communityQuestId: existing._id,
     });
 
-    return communityQuest;
+    return existing;
   }
 }
 

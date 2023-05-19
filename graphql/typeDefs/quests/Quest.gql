@@ -9,10 +9,17 @@ enum QuestRequirementType {
 }
 enum QuestRewardType {
   ASSET_3D
+  SCORE
+  IMAGE
 }
 
+type ImageUnion {
+  _id: ID
+  image: Image
+  type: String # can only be IMAGE
+}
 # add more types here Asset3DUnion | NFTUnion | etc
-union QuestRewardItem = Asset3DUnion
+union QuestRewardItem = Asset3DUnion | ImageUnion
 
 type QuestRequirement {
   _id: ID

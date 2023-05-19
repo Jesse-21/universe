@@ -21,7 +21,7 @@ const questRequirementSchema = mongoose.Schema({
  */
 const questRewardsSchema = mongoose.Schema({
   title: { type: String },
-  type: { type: String, enum: ["ASSET_3D", "SCORE"] }, // e.g Assets, NFTs...
+  type: { type: String, enum: ["ASSET_3D", "SCORE", "IMAGE"] }, // e.g Assets, NFTs...
 
   // in case of score, this is the amount of modifier to apply to the score
   // for asset, -1 then it is unlimited, create a 'copiable' reward e.g a prefab

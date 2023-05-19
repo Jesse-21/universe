@@ -39,7 +39,7 @@ class ScoreService {
     return await ScoreService._getScore(model, inputData);
   }
 
-  static async setScore({ address, scoreType, score = 300, modifier = null }) {
+  async setScore({ address, scoreType, score = 300, modifier = null }) {
     const CacheService = new _CacheService();
 
     const SCORE_KEY = "BebScoreService";
@@ -69,6 +69,24 @@ class ScoreService {
       value: finalScore,
       // custom scores never expire, so has no expiredAt
     });
+  }
+
+  async getCommunityScore({ address, bebdomain }) {
+    const CacheService = new _CacheService();
+
+    const SCORE_KEY = "BebScoreService";
+    const existingScore = await CacheService.get({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+        scoreType: bebdomain,
+      },
+    });
+    if (existingScore) {
+      return existingScore;
+    } else {
+      return 300;
+    }
   }
 }
 

@@ -5,7 +5,6 @@ const { Service: _IndexerRuleService } = require("./IndexerRuleService");
 const { Quest } = require("../models/quests/Quest");
 const { AccountAddress } = require("../models/AccountAddress");
 const { IndexerRule } = require("../models/IndexerRule");
-const { Asset3D } = require("../models/assets/Asset3D");
 
 class QuestService extends QuestRewardService {
   requiredDataByRequirementType(type) {
@@ -20,12 +19,7 @@ class QuestService extends QuestRewardService {
   }
 
   async getQuestReward(questReward) {
-    switch (questReward.type) {
-      case "ASSET_3D":
-        return await Asset3D.findById(questReward.rewardId);
-      default:
-        return null;
-    }
+    return this.getQuestRewardItem(questReward);
   }
 
   checkRequirementDataOrError({ type, data }) {
@@ -125,7 +119,7 @@ class QuestService extends QuestRewardService {
         }
       })
     );
-    return questRewards?.filter((reward) => !!reward?.rewardId);
+    return questRewards;
   }
 
   /**
