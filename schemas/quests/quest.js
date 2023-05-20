@@ -9,7 +9,18 @@ const { schema: keyValueFieldsSchema } = require("../keyValueFields");
  */
 const questRequirementSchema = mongoose.Schema({
   title: { type: String },
-  type: { type: String, enum: ["COMMUNITY_PARTICIPATION", "SCORE"] }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
+  type: {
+    type: String,
+    enum: [
+      "COMMUNITY_PARTICIPATION",
+      "SCORE",
+      "FARCASTER_FOLLOWERS_100",
+      "FARCASTER_FOLLOWERS_1000",
+      "FARCASTER_FOLLOWERS_10000",
+      "FARCASTER_CASTS_100",
+      "FARCASTER_LIKES_100",
+    ],
+  }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW
   // e.g. { key: "apiEndpoint", value: "https://api.bebverse.com/quest/1" } for API
   data: [keyValueFieldsSchema],

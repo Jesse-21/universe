@@ -113,7 +113,9 @@ class CommunityQuestMutationService extends CommunityQuestService {
       quest: questId,
     });
     if (!existing) {
-      throw new Error("CommunityQuest not found");
+      throw new Error(
+        `CommunityQuest not found for questId ${questId}, communityId ${communityId}`
+      );
     }
 
     // check if the account can complete the quest
@@ -122,8 +124,11 @@ class CommunityQuestMutationService extends CommunityQuestService {
       { communityId, questId },
       context
     );
-    if (status !== "CAN_COMPLETE") {
-      throw new Error("Your account cannot complete the quest");
+    if (status !== "CAN_COMPLETE" && status !== "CHECKED_IN") {
+      // If it is CHECKED_IN, it means the account has already completed the quest, for idempontency do nothing
+      throw new Error(
+        `Your account cannot complete the quest status=${status}`
+      );
     }
 
     await CommunityQuestAccount.findOrCreate({

@@ -9,7 +9,6 @@ const schema = mongoose.Schema(
       index: true,
       ref: "Account",
     },
-
     communityQuest: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,

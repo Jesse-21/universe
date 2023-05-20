@@ -78,6 +78,7 @@ class QuestService extends QuestRewardService {
     if (!quest || !context.account) return false;
     const requirement = quest.requirements?.[0];
     if (!requirement) return true;
+    if (requirement.type.includes("FARCASTER")) return true;
     switch (requirement.type) {
       case "COMMUNITY_PARTICIPATION":
         return await this._canCompleteCommunityParticipationQuest(

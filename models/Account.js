@@ -134,7 +134,7 @@ class AccountClass {
    */
   static async findOrCreateByAddressAndChainId({ address, chainId }) {
     /** this function takes care cases where account exists */
-    return Account.createFromAddress({ address, chainId });
+    return await Account.createFromAddress({ address, chainId });
   }
 
   /**
