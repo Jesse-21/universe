@@ -280,7 +280,7 @@ app.get("/uri/:uri", async (req, res) => {
       name: `${rawDomain}.beb`,
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `${rawDomain}.beb was registered on beb.domains or farquest.app! Learn about BEB Scores at: beb.xyz/reputation`,
+      description: `Check the status of ${rawDomain}.beb on beb.domains! Learn about BEB Scores at: beb.xyz/reputation`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       score: addressScore,
