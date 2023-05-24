@@ -14,6 +14,7 @@ const questRequirementSchema = mongoose.Schema({
     enum: [
       "COMMUNITY_PARTICIPATION",
       "SCORE",
+      "FARCASTER_FOLLOWERS_10",
       "FARCASTER_FOLLOWERS_100",
       "FARCASTER_FOLLOWERS_1000",
       "FARCASTER_FOLLOWERS_10000",
