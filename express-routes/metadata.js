@@ -265,7 +265,7 @@ app.get("/uri/:uri", async (req, res) => {
         .style("font-weight", "600")
         .style("text-shadow", "2px 2px #111111")
         .attr("text-rendering", "optimizeSpeed")
-        .text(`BEB Score: ${addressScore}`);
+        .text(`bebOS Score: ${addressScore}`);
     } else {
       console.error(`Could not get score data: ${scoreData}`);
     }
@@ -280,7 +280,7 @@ app.get("/uri/:uri", async (req, res) => {
       name: `${rawDomain}.beb`,
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `Check the status of ${rawDomain}.beb on beb.domains! Learn about BEB Scores at: beb.xyz/reputation`,
+      description: `Check the status of ${rawDomain}.beb on beb.domains! Learn about bebOS Scores at: beb.xyz/reputation`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       score: addressScore,
