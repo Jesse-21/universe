@@ -309,7 +309,7 @@ app.get("/uri/:uri", async (req, res) => {
     if (filter.isProfane(rawDomain) && process.env.MODE !== "self-hosted") {
       data = {
         name: `hidden_domain.beb`,
-        description: `This domain is hidden, see beb.xyz/guidelines for more details!`,
+        description: `This domain is hidden, see beb.domains/guidelines for more details!`,
       };
     }
 
