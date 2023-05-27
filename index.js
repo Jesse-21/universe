@@ -116,7 +116,7 @@ if (process.env.SENTRY_DSN) {
   app.get("/", (_req, res) => {
     res.json({
       message:
-        "Welcome to a bebOS Dimensions Host running github.com/bebverse/universe, see /graphql for the API!",
+        "Welcome to a bebOS Dimensions Host running github.com/bebdomains/universe, see /graphql for the API!",
     });
   });
 

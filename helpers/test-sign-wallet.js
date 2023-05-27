@@ -4,7 +4,7 @@ let wallet;
 [wallet] = provider.getWallets();
 
 const getSignedMessage = async (nonce) => {
-  const msg = `@bebverse/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${nonce.length} ${nonce}`;
+  const msg = `@bebdomains/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${nonce.length} ${nonce}`;
 
   const message = await wallet.signMessage(msg);
   return {
