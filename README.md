@@ -1,4 +1,4 @@
-# Universe, a BEB Dimension Host Implementation
+# Universe, a bebOS Dimension Host Implementation
 
 <img src="./.misc/header.png" width="300" />
 
@@ -6,7 +6,7 @@ Universe is an implementation of a bebOS Dimension Host. Universes are open-sour
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebverse/dimension/issues) if you wish to contribute.
 
-**See our developer documents at [`BEB Dimension GraphQL APIs`](https://docs.beb.xyz/developers).**
+**See our developer documents at [`bebOS Dimension GraphQL APIs`](https://docs.beb.xyz/developers).**
 
 ## Self-hosting Your Universe
 
@@ -54,5 +54,5 @@ Once your environment is configured, run `yarn dev --self-hosted` to have a runn
 
 - [BEBverse](https://beb.xyz)
 - [B7B](https://b7b.xyz)
-- [Register a BEB Dimension](https://beb.domains)
+- [Register a bebOS Dimension](https://beb.domains)
 - [Protocol Documentation](https://docs.beb.xyz)
