@@ -60,9 +60,9 @@ const resolvers = {
         chainId: 1,
       });
 
-      const communityQuest = await CommunityQuest.findOrCreate({
-        communityId: args.communityId,
-        questId: args.questId,
+      const communityQuest = await CommunityQuest.findOne({
+        community: args.communityId,
+        quest: args.questId,
       });
       return await new CommunityQuestService().getQuestStatus(
         communityQuest,

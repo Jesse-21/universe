@@ -1,10 +1,12 @@
 const { Service: _ContentService } = require("./ContentService");
 const { Service: QuestRewardService } = require("./QuestRewardService");
 const { Service: _IndexerRuleService } = require("./IndexerRuleService");
+const { Service: _AlchemyService } = require("./AlchemyService");
 
 const { Quest } = require("../models/quests/Quest");
 const { AccountAddress } = require("../models/AccountAddress");
 const { IndexerRule } = require("../models/IndexerRule");
+const { prod } = require("../helpers/registrar");
 
 class QuestService extends QuestRewardService {
   requiredDataByRequirementType(type) {
@@ -69,6 +71,33 @@ class QuestService extends QuestRewardService {
       return false;
     }
   }
+
+  /**
+   * Check if a VALID_NFT quest can be completed by an account
+   * Under the hood this uses the same logic as claim role
+   * @returns Promise<Boolean>
+   * */
+  async _canCompleteValidNFTQuest(quest, { requirement }, context) {
+    const contractAddress = requirement?.data?.find?.(
+      (data) => data?.key === "contractAddress"
+    )?.value;
+    if (!contractAddress) return false;
+    const AlchemyService = new _AlchemyService({
+      apiKey: prod().NODE_URL,
+      chain: prod().NODE_NETWORK,
+    });
+
+    try {
+      await context.account?.populate?.("addresses");
+      const isOwner = await AlchemyService.isHolderOfCollection({
+        wallet: context.account.addresses?.[0]?.address,
+        contractAddress: contractAddress,
+      });
+      return isOwner;
+    } catch (e) {
+      return false;
+    }
+  }
   /**
    * Check if the quest can be completed by an account
    * @TODO add more than one requirement
@@ -82,6 +111,12 @@ class QuestService extends QuestRewardService {
     switch (requirement.type) {
       case "COMMUNITY_PARTICIPATION":
         return await this._canCompleteCommunityParticipationQuest(
+          quest,
+          { requirement, communityId },
+          context
+        );
+      case "VALID_NFT":
+        return await this._canCompleteValidNFTQuest(
           quest,
           { requirement, communityId },
           context

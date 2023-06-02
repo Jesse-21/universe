@@ -30,7 +30,7 @@ class FarcasterServiceV2 {
 
       const farcaster = apiCallData?.[0]?.body;
       if (!farcaster) return null;
-      return this._cleanProfile(farcaster);
+      return { ...this._cleanProfile(farcaster), address };
     } catch (e) {
       return false;
     }

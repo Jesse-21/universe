@@ -19,7 +19,11 @@ const questRequirementSchema = mongoose.Schema({
       "FARCASTER_FOLLOWERS_1000",
       "FARCASTER_FOLLOWERS_10000",
       "FARCASTER_CASTS_100",
+      "FARCASTER_CASTS_1",
+      "FARCASTER_COMMENT_10",
       "FARCASTER_LIKES_100",
+      "FARCASTER_FARQUEST_TAGGED",
+      "VALID_NFT",
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW
@@ -33,7 +37,7 @@ const questRequirementSchema = mongoose.Schema({
  */
 const questRewardsSchema = mongoose.Schema({
   title: { type: String },
-  type: { type: String, enum: ["ASSET_3D", "SCORE", "IMAGE"] }, // e.g Assets, NFTs...
+  type: { type: String, enum: ["ASSET_3D", "SCORE", "IMAGE", "NFT"] }, // e.g Assets, NFTs...
 
   // in case of score, this is the amount of modifier to apply to the score
   // for asset, -1 then it is unlimited, create a 'copiable' reward e.g a prefab

@@ -210,7 +210,7 @@ const resolvers = {
       );
       if (errorMessage) throw new Error(errorMessage);
       const ScoreService = new _ScoreService();
-      return ScoreService.getCommunityScore({
+      return await ScoreService.getCommunityScore({
         address: args.address,
         bebdomain: args.bebdomain,
       });

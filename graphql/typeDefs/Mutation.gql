@@ -374,7 +374,12 @@ type Mutation {
   claimReward(
     questId: ID!
     communityId: ID!
-  ): CommunityQuestWithAssetsMutationResponse # only owner or admins of community
+  ): CommunityQuestWithAssetsMutationResponse
+  claimRewardByAddress(
+    questId: ID!
+    communityId: ID!
+    address: String!
+  ): CommunityQuestWithAssetsMutationResponse # anyone can claim reward
   #
   # CommunityAsset mutations, require auth
   editCommunityAsset(

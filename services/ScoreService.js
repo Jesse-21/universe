@@ -59,7 +59,7 @@ class ScoreService {
         finalScore = score + modifier;
       }
     }
-    finalScore = Math.min(Math.max(finalScore, 300), 800);
+    finalScore = Math.min(Math.max(finalScore, 300), 850);
     return await CacheService.set({
       key: SCORE_KEY,
       params: {

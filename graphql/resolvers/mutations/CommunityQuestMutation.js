@@ -7,6 +7,11 @@ const {
 const {
   unauthorizedErrorOrAccount,
 } = require("../../../helpers/auth-middleware");
+const {
+  Service: _AlchemyService,
+} = require("../../../services/AlchemyService");
+const { Account } = require("../../../models/Account");
+const { prod } = require("../../../helpers/registrar");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
 
@@ -66,7 +71,7 @@ const resolvers = {
         const CommunityQuestMutationService =
           new _CommunityQuestMutationService();
 
-        const { communityQuest, communityAssets } =
+        const { communityQuest } =
           await CommunityQuestMutationService.claimRewardOrError(
             root,
             {
@@ -77,7 +82,63 @@ const resolvers = {
           );
         return {
           communityQuest,
-          communityAssets,
+          code: "201",
+          success: true,
+          message: "Successfully claimed quest reward",
+        };
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error(e);
+        return {
+          code: "500",
+          success: false,
+          message: e.message,
+        };
+      }
+    },
+
+    claimRewardByAddress: async (root, args, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      try {
+        const AlchemyService = new _AlchemyService({
+          apiKey: prod().NODE_URL, // force use prod for BEB collection
+          chain: prod().NODE_NETWORK, // force use prod for BEB collection
+        });
+        const isOwner = await AlchemyService.isHolderOfCollection({
+          wallet: args.address,
+          contractAddress: prod().REGISTRAR_ADDRESS,
+        });
+        if (!isOwner) {
+          return {
+            code: "500",
+            success: false,
+            message:
+              "You can only claim the reward if you hold a BEB pass in your address.",
+          };
+        }
+        const account = await Account.findOrCreateByAddressAndChainId({
+          address: args.address,
+          chainId: 1,
+        });
+
+        const CommunityQuestMutationService =
+          new _CommunityQuestMutationService();
+
+        const { communityQuest } =
+          await CommunityQuestMutationService.claimRewardOrError(
+            root,
+            {
+              communityId: args.communityId,
+              questId: args.questId,
+            },
+            { ...context, account }
+          );
+        return {
+          communityQuest,
           code: "201",
           success: true,
           message: "Successfully claimed quest reward",

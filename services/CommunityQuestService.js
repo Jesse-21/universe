@@ -7,17 +7,24 @@ const { Service: _QuestService } = require("./QuestService");
 class CommunityQuestService {
   /**
    * Check if a communityQuest can claim the reward
-   * @TODO add more than one requirement
+   * @TODO THIS IS A HACK AND SHOULD BE REFACTORED OR DEPRECATED
    * @returns Promise<Boolean>
    * */
-  async canClaimReward(communityQuest) {
+  async canClaimReward(communityQuest, _, context) {
     if (!communityQuest) return false;
     if (communityQuest.isArchived) return false;
 
     const quest = await Quest.findById(communityQuest.quest);
     const requirement = quest?.requirements?.[0];
-    if (!requirement) return false;
-    switch (requirement.type) {
+    if (requirement?.type.includes("FARCASTER")) {
+      const communityQuestAccount = await CommunityQuestAccount.findOne({
+        communityQuest: communityQuest._id,
+        account: context.account?._id || context.accountId,
+      });
+      if (!communityQuestAccount) return false;
+      return !communityQuestAccount.rewardClaimed;
+    }
+    switch (requirement?.type) {
       case "COMMUNITY_PARTICIPATION": {
         const requiredAmount =
           requirement.data?.find(
@@ -41,7 +48,11 @@ class CommunityQuestService {
   async getQuestStatus(communityQuest, _, context) {
     if (!communityQuest || !context.account) return "IN_PROGRESS";
     if (communityQuest.isArchived) return "COMPLETED";
-    const canClaimReward = await this.canClaimReward(communityQuest);
+    const canClaimReward = await this.canClaimReward(
+      communityQuest,
+      _,
+      context
+    );
     if (canClaimReward) return "CAN_CLAIM_REWARD";
 
     // if account already completed the quest and cannot claim reward

@@ -2,6 +2,19 @@ const { KeyValueCache } = require("../../models/cache/KeyValueCache");
 const { Service: NormalizeCacheService } = require("./NormalizeCacheService");
 
 class CacheService extends NormalizeCacheService {
+  /**
+   * Dupe is a special cache that is used to create multiple values for same keys.
+   * Should only be used if you need to create multiple values for same key.
+   */
+  async setWithDupe({ key, params, value, expiresAt }) {
+    const normalizedKey = this.normalize({ key, params });
+    return KeyValueCache.create({
+      key: normalizedKey,
+      value: JSON.stringify({ value }),
+      expiresAt,
+    });
+  }
+
   async set({ key, params, value, expiresAt }) {
     const normalizedKey = this.normalize({ key, params });
     return KeyValueCache.updateOrCreate({

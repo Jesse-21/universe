@@ -70,6 +70,7 @@ type RoleQuery {
 
 type QuestQuery {
   getQuests(limit: Int, offset: Int, filters: QuestFilter): [Quest]
+  getQuestsInventoryByAddress(limit: Int, offset: Int): [QuestReward]
 }
 type CommunityQuestQuery {
   getCommunityQuestStatus(questId: ID!, communityId: ID!): CommunityQuestStatus

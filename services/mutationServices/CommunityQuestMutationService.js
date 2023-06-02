@@ -12,6 +12,7 @@ const {
   Service: _CommunityAssetsService,
 } = require("../assets/CommunityAssetsService");
 const { Service: _ScoreService } = require("../ScoreService");
+const { Service: _CacheService } = require("../../services/cache/CacheService");
 
 const CommunityAssetsService = new _CommunityAssetsService();
 const ScoreService = new _ScoreService();
@@ -31,6 +32,7 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * @returns Promise<CommunityAsset[]>
    * */
   async _claimRewardByType(reward, { communityId }, context) {
+    const CacheService = new _CacheService();
     if (reward.type === "ASSET_3D") {
       await CommunityAssetsService.addQuantityOrCreateAsset(null, {
         assetId: reward.rewardId,
@@ -49,6 +51,22 @@ class CommunityQuestMutationService extends CommunityQuestService {
         address: address,
         scoreType: community.bebdomain,
         modifier: reward.quantity,
+      });
+    } else if (reward.type === "IMAGE") {
+      await context.account?.populate?.("addresses");
+      const address = context.account?.addresses?.[0]?.address;
+      if (!address) {
+        throw new Error("You must be logged in to claim this reward.");
+      }
+      // for now store in cache
+      const key = "ClaimRewardNFT";
+      return await CacheService.setWithDupe({
+        key: key,
+        params: {
+          address: address,
+        },
+        value: reward._id,
+        // custom scores never expire, so has no expiredAt
       });
     }
 
@@ -85,21 +103,36 @@ class CommunityQuestMutationService extends CommunityQuestService {
       community: communityId,
       quest: questId,
     });
-    const canClaimReward = await this.canClaimReward(communityQuest);
-    if (!canClaimReward)
-      throw new Error("Reward cannot be claimed at this time.");
-
-    const communityAssets = await this._claimReward(
+    if (!communityQuest) {
+      throw new Error("No Quest found");
+    }
+    const canClaimReward = await this.canClaimReward(
       communityQuest,
       { communityId, questId },
       context
     );
+    if (!canClaimReward)
+      throw new Error("Reward cannot be claimed at this time.");
 
-    communityQuest.isArchived = true;
-    await communityQuest.save();
+    const rewards = await this._claimReward(
+      communityQuest,
+      { communityId, questId },
+      context
+    );
+    await CommunityQuestAccount.findOneAndUpdate(
+      {
+        account: context.account._id,
+        communityQuest: communityQuest._id,
+      },
+      {
+        rewardClaimed: true,
+        isNotified: true, // mark as notified
+      }
+    );
+
     return {
       communityQuest,
-      communityAssets,
+      rewards,
     };
   }
 
