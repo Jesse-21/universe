@@ -11,6 +11,7 @@ class FarcasterServiceV2 {
       username: profile.username,
       displayName: profile.displayName,
       farcasterAddress: profile.address,
+      connectedAddress: profile.connectedAddress,
       bio: profile.bio,
       followers: profile.followers,
       following: profile.following,
