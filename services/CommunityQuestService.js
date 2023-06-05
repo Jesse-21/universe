@@ -16,7 +16,10 @@ class CommunityQuestService {
 
     const quest = await Quest.findById(communityQuest.quest);
     const requirement = quest?.requirements?.[0];
-    if (requirement?.type.includes("FARCASTER")) {
+    if (
+      requirement?.type.includes("FARCASTER") ||
+      requirement?.type.includes("VALID_NFT")
+    ) {
       const communityQuestAccount = await CommunityQuestAccount.findOne({
         communityQuest: communityQuest._id,
         account: context.account?._id || context.accountId,
