@@ -77,7 +77,9 @@ class QuestService extends QuestRewardService {
    * Under the hood this uses the same logic as claim role
    * @returns Promise<Boolean>
    * */
+  // DO NOT USE, NOT TESTED, NO WARRANTY
   async _canCompleteValidNFTQuest(quest, { requirement }, context) {
+    // DO NOT USE, NOT TESTED, NO WARRANTY
     const contractAddress = requirement?.data?.find?.(
       (data) => data?.key === "contractAddress"
     )?.value;
@@ -97,6 +99,7 @@ class QuestService extends QuestRewardService {
     } catch (e) {
       return false;
     }
+    // DO NOT USE, NOT TESTED, NO WARRANTY
   }
   /**
    * Check if the quest can be completed by an account
@@ -107,16 +110,14 @@ class QuestService extends QuestRewardService {
     if (!quest || !context.account) return false;
     const requirement = quest.requirements?.[0];
     if (!requirement) return true;
-    if (requirement.type.includes("FARCASTER")) return true;
+    if (
+      requirement.type.includes("FARCASTER") ||
+      requirement.type.includes("VALID_NFT")
+    )
+      return true;
     switch (requirement.type) {
       case "COMMUNITY_PARTICIPATION":
         return await this._canCompleteCommunityParticipationQuest(
-          quest,
-          { requirement, communityId },
-          context
-        );
-      case "VALID_NFT":
-        return await this._canCompleteValidNFTQuest(
           quest,
           { requirement, communityId },
           context
