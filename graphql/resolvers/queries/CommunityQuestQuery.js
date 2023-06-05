@@ -27,9 +27,9 @@ const resolvers = {
 
       await unauthorizedErrorOrAccount(root, args, context);
 
-      const communityQuest = await CommunityQuest.findOrCreate({
-        communityId: args.communityId,
-        questId: args.questId,
+      const communityQuest = await CommunityQuest.findOne({
+        community: args.communityId,
+        quest: args.questId,
       });
       return await new CommunityQuestService().getQuestStatus(
         communityQuest,
@@ -82,9 +82,9 @@ const resolvers = {
 
       await unauthorizedErrorOrAccount(root, args, context);
 
-      const communityQuest = await CommunityQuest.findOrCreate({
-        communityId: args.communityId,
-        questId: args.questId,
+      const communityQuest = await CommunityQuest.findOne({
+        community: args.communityId,
+        quest: args.questId,
       });
       return communityQuest;
     },
