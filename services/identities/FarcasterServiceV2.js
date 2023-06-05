@@ -10,8 +10,7 @@ class FarcasterServiceV2 {
       avatarUrl: profile.avatarUrl,
       username: profile.username,
       displayName: profile.displayName,
-      farcasterAddress: profile.address,
-      connectedAddress: profile.connectedAddress,
+      farcasterAddress: profile.address, // profile.address is not the same as connectedAddress!
       bio: profile.bio,
       followers: profile.followers,
       following: profile.following,
