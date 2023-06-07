@@ -17,6 +17,7 @@ const questRequirementSchema = mongoose.Schema({
       "FARCASTER_FOLLOWERS_10",
       "FARCASTER_FOLLOWERS_100",
       "FARCASTER_FOLLOWERS_1000",
+      "FARCASTER_FOLLOWERS_5000",
       "FARCASTER_FOLLOWERS_10000",
       "FARCASTER_CASTS_100",
       "FARCASTER_CASTS_1",
