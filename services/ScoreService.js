@@ -57,7 +57,7 @@ class ScoreService {
         scoreType: scoreType,
       },
       value: score,
-      expiresAt: null,
+      // custom scores never expire, so has no expiredAt
     });
     return record;
   }
@@ -83,7 +83,7 @@ class ScoreService {
         finalScore = score + modifier;
       }
     }
-    finalScore = Math.min(Math.max(finalScore, 300), 850);
+    finalScore = Math.min(Math.max(finalScore, 0), Number.MAX_SAFE_INTEGER);
     this._setScoreRecord({
       address: cleanAddress,
       scoreType: scoreType,
