@@ -45,7 +45,7 @@ class ScoreService {
    * Set a record for each time an address score changes
    * @returns {Promise<KeyValueCache>}
    */
-  async _setScoreRecord({ address, scoreType, score = 300 }) {
+  async _setScoreRecord({ address, scoreType, score = 0 }) {
     const CacheService = new _CacheService();
 
     const SCORE_KEY = "BebScoreServiceRecord";
@@ -62,7 +62,7 @@ class ScoreService {
     return record;
   }
 
-  async setScore({ address, scoreType, score = 300, modifier = null }) {
+  async setScore({ address, scoreType, score = 0, modifier = null }) {
     const CacheService = new _CacheService();
     const cleanAddress = validateAndConvertAddress(address);
 
@@ -115,7 +115,7 @@ class ScoreService {
     if (existingScore) {
       return existingScore;
     } else {
-      return 300;
+      return 0;
     }
   }
 }
