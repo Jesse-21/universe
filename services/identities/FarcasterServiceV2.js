@@ -14,6 +14,7 @@ class FarcasterServiceV2 {
       bio: profile.bio,
       followers: profile.followers,
       following: profile.following,
+      registeredAt: profile.registeredAt,
     };
   }
   async getProfileByAddress(address) {
