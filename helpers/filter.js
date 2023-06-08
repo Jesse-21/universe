@@ -1,6 +1,6 @@
 const Filter = require("bad-words");
 
-const allowList = ["reputation", "computational", "booby"];
+const allowList = ["reputation", "computational", "booby", "turd"];
 
 class ExtendedFilter extends Filter {
   constructor(options) {
