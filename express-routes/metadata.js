@@ -162,7 +162,7 @@ app.get("/uri/:uri", async (req, res) => {
     if (!owner) {
       const errorData = {
         name: `no_owner_beb_domains.beb`,
-        description: `This domain does not have an owner!`,
+        description: `This domain does not have an owner, try refreshing metadata!`,
       };
       return res.json(errorData);
     }
