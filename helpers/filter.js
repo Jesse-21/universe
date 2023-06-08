@@ -7,6 +7,7 @@ class ExtendedFilter extends Filter {
     super(options);
   }
   isProfane(string) {
+    return false; // disable this filter since it is very inaccurate (e.g. popular-nightingale is profane)
     if (
       allowList.filter((word) => string.toLowerCase().includes(word)).length > 0
     ) {
