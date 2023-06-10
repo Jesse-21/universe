@@ -94,12 +94,15 @@ describe("Account tests", () => {
       expect(foundAccount).toBeFalsy();
     });
 
-    it("should return null if address is invalid", async () => {
-      const foundAccount = await Account.findByAddressAndChainId({
-        address: "invalid address",
-        chainId: mockChainId,
-      });
-      expect(foundAccount).toBe(null);
+    it("should return an error if address is invalid", async () => {
+      try {
+        await Account.findByAddressAndChainId({
+          address: "invalid address",
+          chainId: mockChainId,
+        });
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+      }
     });
   });
 

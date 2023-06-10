@@ -79,9 +79,9 @@ class AccountClass {
     });
     if (existing?.deleted) throw new Error("Account is deleted");
     if (existing) return existing;
-    const createdNonce = await AccountNonce.create({});
-    const createdExp = await AccountExp.create({});
-    const createdAddress = await AccountAddress.create({
+    const createdNonceTmp = new AccountNonce();
+    const createdExpTmp = new AccountExp();
+    const createdAddressTmp = new AccountAddress({
       address,
       chain: {
         chainId,
@@ -90,15 +90,15 @@ class AccountClass {
     });
     const createdAccount = await this.create({
       email,
-      addresses: [createdAddress._id],
+      addresses: [createdAddressTmp._id],
       activities: {},
     });
-    createdAddress.account = createdAccount._id;
-    createdNonce.account = createdAccount._id;
-    createdExp.account = createdAccount._id;
-    await createdAddress.save();
-    await createdNonce.save();
-    await createdExp.save();
+    createdAddressTmp.account = createdAccount._id;
+    createdNonceTmp.account = createdAccount._id;
+    createdExpTmp.account = createdAccount._id;
+    await createdAddressTmp.save();
+    await createdNonceTmp.save();
+    await createdExpTmp.save();
     return createdAccount;
   }
 
@@ -107,14 +107,7 @@ class AccountClass {
    * @returns Promise<Account | null>
    */
   static async findByAddressAndChainId({ address: rawAddress, chainId }) {
-    let address;
-    try {
-      address = validateAndConvertAddress(rawAddress);
-    } catch (e) {
-      Sentry.captureException(e);
-      console.error(e);
-      return null;
-    }
+    const address = validateAndConvertAddress(rawAddress);
 
     const accountAddress = await AccountAddress.aggregate([
       {
@@ -125,7 +118,18 @@ class AccountClass {
     ]);
 
     if (!accountAddress || !accountAddress.length) return null;
-    return this.findById(get(accountAddress, "[0].account"));
+    if (accountAddress.length > 1) {
+      throw new Error(
+        `Multiple accounts found for address ${address} and chainId ${chainId}!`
+      );
+    }
+    const account = await this.findById(get(accountAddress, "[0].account"));
+    if (!account) {
+      throw new Error(
+        `AccountAddress has a null account for address ${address} and chainId ${chainId}!`
+      );
+    }
+    return account;
   }
 
   /**
