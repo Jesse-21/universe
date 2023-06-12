@@ -51,7 +51,7 @@ const { JSDOM } = jsdom;
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 1_000, // 1s
-  max: 1, // limit each IP to 1 requests per windowMs
+  max: 10, // limit each IP to 10 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
@@ -118,7 +118,7 @@ app.get("/domain/:domain", limiter, async (req, res) => {
 const bebLogo =
   '<svg height="100%" fill="rgb(0,0,0,0.6)" version="1" viewBox="100 -50 1280 1280"></svg>';
 
-app.get("/uri/:uri", async (req, res) => {
+app.get("/uri/:uri", limiter, async (req, res) => {
   try {
     const uri = req.params.uri;
 
