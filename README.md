@@ -2,7 +2,7 @@
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a bebOS Dimension Host. Universes are open-source dimension hosts for [BEB, a protocol simplifying crypto apps](https://docs.beb.domains). Universes are accessed by clients such as [B7B](https://github.com/bebdomains/b7b).
+Universe is an implementation of a bebOS Dimension Host. Universes are open-source dimension hosts for [BEB, a protocol making crypto fun](https://docs.beb.domains). Universes are accessed by clients such as [B7B](https://github.com/bebdomains/b7b).
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebdomains/dimension/issues) if you wish to contribute.
 
