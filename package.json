@@ -1,10 +1,10 @@
 {
   "name": "universe",
-  "version": "2.0.76",
+  "version": "2.0.77",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:bebdomains/universe.git",
-  "author": "Beb, Inc. <gm@beb.xyz>",
+  "author": "Beb, Inc. <gm@beb.domains>",
   "scripts": {
     "start": "node ./index.js",
     "dev": "NODE_ENV=development nodemon ./index.js",
