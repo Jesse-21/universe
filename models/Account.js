@@ -71,7 +71,7 @@ class AccountClass {
     if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
       throw new Error("Invalid chain id");
     }
-    const address = validateAndConvertAddress(rawAddress);
+    const address = validateAndConvertAddress(rawAddress, chainId);
 
     const existing = await this.findByAddressAndChainId({
       address,
@@ -107,7 +107,7 @@ class AccountClass {
    * @returns Promise<Account | null>
    */
   static async findByAddressAndChainId({ address: rawAddress, chainId }) {
-    const address = validateAndConvertAddress(rawAddress);
+    const address = validateAndConvertAddress(rawAddress, chainId);
 
     const accountAddress = await AccountAddress.aggregate([
       {

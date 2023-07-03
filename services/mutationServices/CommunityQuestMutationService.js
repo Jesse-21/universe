@@ -1,5 +1,6 @@
 const { Quest } = require("../../models/quests/Quest");
 const { CommunityQuest } = require("../../models/quests/CommunityQuest");
+const { CommunityReward } = require("../../models/quests/CommunityReward");
 const {
   CommunityQuestAccount,
 } = require("../../models/quests/CommunityQuestAccount");
@@ -8,6 +9,9 @@ const { Community } = require("../../models/Community");
 // const { Service: _QuestService } = require("../QuestService");
 const { Service: _CommunityService } = require("../CommunityService");
 const { Service: CommunityQuestService } = require("../CommunityQuestService");
+const {
+  Service: _CommunityRewardService,
+} = require("../CommunityRewardService");
 const {
   Service: _CommunityAssetsService,
 } = require("../assets/CommunityAssetsService");
@@ -133,6 +137,45 @@ class CommunityQuestMutationService extends CommunityQuestService {
     return {
       communityQuest,
       rewards,
+    };
+  }
+
+  /**
+   * Claim a CommunityReward for a community or Error
+   * @returns Promise<{ reward: CommunityReward }>
+   * */
+  async claimCommunityRewardOrError(_, { communityRewardId }, context) {
+    const communityReward = await CommunityReward.findById(communityRewardId);
+    if (!communityReward) {
+      throw new Error("No Community Reward found");
+    }
+    const CommunityRewardService = new _CommunityRewardService();
+    const canClaimReward = await CommunityRewardService.canClaimCommunityReward(
+      communityReward,
+      {},
+      context
+    );
+    if (!canClaimReward)
+      throw new Error("Reward cannot be claimed at this time.");
+
+    const reward = await this._claimRewardByType(
+      communityReward.reward,
+      { communityId: communityReward.community },
+      context
+    );
+    // await CommunityQuestAccount.findOneAndUpdate(
+    //   {
+    //     account: context.account._id,
+    //     communityQuest: communityQuest._id,
+    //   },
+    //   {
+    //     rewardClaimed: true,
+    //     isNotified: true, // mark as notified
+    //   }
+    // );
+
+    return {
+      reward,
     };
   }
 

@@ -70,7 +70,6 @@ type RoleQuery {
 
 type QuestQuery {
   getQuests(limit: Int, offset: Int, filters: QuestFilter): [Quest]
-  getQuestsInventoryByAddress(limit: Int, offset: Int): [QuestReward]
 }
 type CommunityQuestQuery {
   getCommunityQuestStatus(questId: ID!, communityId: ID!): CommunityQuestStatus
@@ -139,6 +138,7 @@ type Query {
   ): AccountReaction
   getCurrentAccountAvailableRoles(communityId: ID!): [Role]
   getAccountNotifications: [Notification] # @deprecated
+  getInventoryByAddress(limit: Int, offset: Int): [QuestReward] # Get all the rewards for an address, could be from claiming a CommunityReward or Quest
   getCommunities(
     limit: Int
     offset: Int

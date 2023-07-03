@@ -122,11 +122,13 @@ class AlchemyService {
    * @docs https://docs.alchemy.com/alchemy/enhanced-apis/nft-api/getownersforcollection
    * @returns Promise<{owners: String[]}>
    */
-  async getOwnersForCollection({ contractAddress }) {
+  async getOwnersForCollection({ contractAddress, withTokenBalances }) {
     const opts = {
       timeout: TIMEOUT_MS,
     };
-    const route = `${this.getNFTBaseRoute()}/getOwnersForCollection`;
+    const route =
+      `${this.getNFTBaseRoute()}/getOwnersForCollection` +
+      (withTokenBalances ? "?withTokenBalances=true" : "");
     const params = {
       contractAddress,
     };

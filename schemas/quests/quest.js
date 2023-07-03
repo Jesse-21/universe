@@ -19,12 +19,17 @@ const questRequirementSchema = mongoose.Schema({
       "FARCASTER_FOLLOWERS_1000",
       "FARCASTER_FOLLOWERS_5000",
       "FARCASTER_FOLLOWERS_10000",
+      "FARCASTER_CASTS_250",
       "FARCASTER_CASTS_100",
       "FARCASTER_CASTS_1",
       "FARCASTER_COMMENT_10",
+      "FARCASTER_LIKES_10",
       "FARCASTER_LIKES_100",
+      "FARCASTER_LIKES_500",
       "FARCASTER_FARQUEST_TAGGED",
       "VALID_NFT",
+      "VALID_NFT_3",
+      "VALID_NFT_5",
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW

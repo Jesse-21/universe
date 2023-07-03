@@ -180,6 +180,11 @@ type WithCountMutationResponse implements MutationResponse {
   count: Int
 }
 
+enum AuthType {
+  PASSKEY
+  SIGNATURE
+  MAGIC_LINK
+}
 type Mutation {
   # Account mutations
   createAccountFromAddress(
@@ -191,6 +196,7 @@ type Mutation {
     address: String!
     chainId: Int!
     signature: String!
+    type: AuthType
   ): AuthBySignatureResponse
   updateCurrentAccount(
     email: String
@@ -380,6 +386,10 @@ type Mutation {
     communityId: ID!
     address: String!
   ): CommunityQuestWithAssetsMutationResponse # anyone can claim reward
+  claimCommunityRewardByAddress(
+    communityRewardId: ID!
+    address: String!
+  ): CommunityQuestWithAssetsMutationResponse # anyone can claim CommunityReward
   #
   # CommunityAsset mutations, require auth
   editCommunityAsset(
