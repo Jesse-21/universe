@@ -50,6 +50,7 @@ const questRewardsSchema = mongoose.Schema({
   quantity: { type: Number, default: 1 },
 
   rewardId: { type: mongoose.Schema.Types.ObjectId, index: true },
+  category: { type: String }, // can add a category e.g. consumable, etc
 });
 
 /**

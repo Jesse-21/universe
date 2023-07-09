@@ -2,6 +2,9 @@ const { Quest } = require("../../models/quests/Quest");
 const { CommunityQuest } = require("../../models/quests/CommunityQuest");
 const { CommunityReward } = require("../../models/quests/CommunityReward");
 const {
+  CommunityRewardAccount,
+} = require("../../models/quests/CommunityRewardAccount");
+const {
   CommunityQuestAccount,
 } = require("../../models/quests/CommunityQuestAccount");
 const { Community } = require("../../models/Community");
@@ -142,7 +145,7 @@ class CommunityQuestMutationService extends CommunityQuestService {
 
   /**
    * Claim a CommunityReward for a community or Error
-   * @returns Promise<{ reward: CommunityReward }>
+   * @returns Promise<{ reward: QuestReward, communityReward: CommunityReward }>
    * */
   async claimCommunityRewardOrError(_, { communityRewardId }, context) {
     const communityReward = await CommunityReward.findById(communityRewardId);
@@ -150,9 +153,15 @@ class CommunityQuestMutationService extends CommunityQuestService {
       throw new Error("No Community Reward found");
     }
     const CommunityRewardService = new _CommunityRewardService();
+    const community = await Community.findById(
+      communityReward.community
+    ).select("bebdomain");
+    await context.account?.populate?.("addresses");
+    const address = context.account?.addresses?.[0]?.address;
+
     const canClaimReward = await CommunityRewardService.canClaimCommunityReward(
       communityReward,
-      {},
+      { bebdomain: community?.bebdomain, address },
       context
     );
     if (!canClaimReward)
@@ -163,19 +172,25 @@ class CommunityQuestMutationService extends CommunityQuestService {
       { communityId: communityReward.community },
       context
     );
-    // await CommunityQuestAccount.findOneAndUpdate(
-    //   {
-    //     account: context.account._id,
-    //     communityQuest: communityQuest._id,
-    //   },
-    //   {
-    //     rewardClaimed: true,
-    //     isNotified: true, // mark as notified
-    //   }
-    // );
+    if (communityReward.type === "EXCHANGE") {
+      // deduce the score from the user
+      await ScoreService.setScore({
+        address: address,
+        scoreType: community.bebdomain,
+        modifier: -communityReward.score,
+      });
+    }
+    const communityRewardAccount = await CommunityRewardAccount.findOrCreate({
+      accountId: context.account._id,
+      communityRewardId: communityReward._id,
+    });
+    communityRewardAccount.rewardClaimedCount =
+      communityRewardAccount.rewardClaimedCount + 1;
+    await communityRewardAccount.save();
 
     return {
       reward,
+      communityReward,
     };
   }
 

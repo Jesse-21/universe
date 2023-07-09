@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema(
   {
     isNotified: { type: Boolean, default: false },
-    rewardClaimed: { type: Boolean, default: false },
+    rewardClaimedCount: { type: Number, default: 0 },
     account: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,
