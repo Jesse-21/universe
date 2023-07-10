@@ -3,6 +3,8 @@ type AccountAddress {
   address: String!
   chain: Chain
   account: Account
+  passKeyId: String
+  counter: Int
 }
 type Address {
   _id: ID

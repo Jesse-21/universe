@@ -182,11 +182,15 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       length = 2 * length;
     }
 
-    const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
-    const scoreData = await axios.get(scoreDataUrl);
     let addressScore = null;
-    if (scoreData.data.score) {
-      addressScore = parseInt(scoreData.data.score);
+    if (length < 10) {
+      // only compute score for premium domains, to improve metadata generation speed
+      const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
+      const scoreData = await axios.get(scoreDataUrl);
+
+      if (scoreData.data.score) {
+        addressScore = parseInt(scoreData.data.score);
+      }
     }
 
     const textColor = "#fff";
@@ -231,8 +235,8 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     svgContainer
       .append("rect")
       .attr("x", 0)
-      .attr("y", 345)
-      .attr("height", 155)
+      .attr("y", addressScore ? 345 : 422)
+      .attr("height", addressScore ? 155 : 77)
       .attr("width", 500)
       .attr("fill-opacity", 0.5)
       .attr("fill", "#111111");
@@ -240,7 +244,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     svgContainer
       .append("text")
       .attr("x", 250)
-      .attr("y", 405)
+      .attr("y", addressScore ? 405 : 475)
       .attr("font-size", `${dynamicfontsize}px`)
       .attr("font-family", "Helvetica, sans-serif")
       .attr("fill", textColor)
@@ -251,7 +255,6 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       .text(`${rawDomain}.beb`);
 
     if (addressScore) {
-      addressScore = parseInt(scoreData.data.score);
       svgContainer
         .append("text")
         .attr("x", 250)
@@ -264,8 +267,6 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
         .style("text-shadow", "2px 2px #111111")
         .attr("text-rendering", "optimizeSpeed")
         .text(`bebOS Score: ${addressScore}`);
-    } else {
-      console.error(`Could not get score data: ${scoreData}`);
     }
 
     const svg = body.select(".container").html();
@@ -278,7 +279,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       name: `${rawDomain}.beb`,
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `Check the status of ${rawDomain}.beb on beb.domains! Learn about bebOS Scores at: beb.xyz/reputation`,
+      description: `Check the status of ${rawDomain}.beb on beb.domains! Learn your bebOS Score at: beb.xyz/reputation`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       score: addressScore,

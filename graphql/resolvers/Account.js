@@ -16,6 +16,28 @@ const {
 } = require("../../helpers/auth-middleware");
 
 const resolvers = {
+  AccountAddress: {
+    passKeyId: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "accountAddress"
+      );
+      if (!hasAccess) return null;
+      return parent?.passKeyId;
+    },
+    counter: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "accountAddress"
+      );
+      if (!hasAccess) return null;
+      return parent?.counter;
+    },
+  },
   Account: {
     address: async (parent) => {
       const address = await AccountAddress.findById(
