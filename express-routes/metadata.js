@@ -51,7 +51,7 @@ const { JSDOM } = jsdom;
 // Rate limiting middleware
 const lightLimiter = rateLimit({
   windowMs: 1_000, // 1s
-  max: 50, // limit each IP to 50 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
@@ -60,7 +60,7 @@ const lightLimiter = rateLimit({
 
 const heavyLimiter = rateLimit({
   windowMs: 10_000, // 10s
-  max: 20, // limit each IP to 20 requests per windowMs
+  max: 40, // limit each IP to 40 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
