@@ -237,7 +237,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       .style("font-weight", "900")
       .style(
         "text-shadow",
-        "-2px 0 #111111, 0 2px #111111, 2px 0 #111111, 0 -2px #111111, 2px 2px 0px #111111"
+        "-1px 0 #111111, 0 1px #111111, 1px 0 #111111, 0 -1px #111111, 1px 2px 0px #111111"
       )
       .text(`${rawDomain}.beb`);
 
