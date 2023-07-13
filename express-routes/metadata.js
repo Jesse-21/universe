@@ -235,7 +235,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       .attr("fill", textColor)
       .attr("text-anchor", "middle")
       .style("font-weight", "900")
-      .style("text-shadow", "1px 1px #111111")
+      .style("text-shadow", "2px 2px #111111")
       .attr("text-rendering", "optimizeSpeed")
       .text(`${rawDomain}.beb`);
 
