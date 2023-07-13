@@ -3,7 +3,6 @@ const Sentry = require("@sentry/node");
 const axios = require("axios").default;
 const d3 = import("d3");
 const jsdom = require("jsdom");
-const svgToMiniDataURI = require("mini-svg-data-uri");
 var Prando = require("prando");
 const { validateName } = require("../helpers/validate-community-name");
 const keccak256 = require("web3-utils").keccak256;
@@ -227,7 +226,10 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       .text(`${rawDomain}.beb`);
 
     const svg = body.select(".container").html();
-    const image = svgToMiniDataURI(svg);
+
+    const image = `data:image/svg+xml;base64,${Buffer.from(svg).toString(
+      "base64"
+    )}`;
     if (process.env.NODE_ENV === "development") {
       console.log(svg);
     }
