@@ -4,6 +4,7 @@ const { Service: _IndexerRuleService } = require("./IndexerRuleService");
 const { Service: _AlchemyService } = require("./AlchemyService");
 
 const { Quest } = require("../models/quests/Quest");
+const { CommunityQuest } = require("../models/quests/CommunityQuest");
 const { AccountAddress } = require("../models/AccountAddress");
 const { IndexerRule } = require("../models/IndexerRule");
 const { prod } = require("../helpers/registrar");
@@ -215,7 +216,12 @@ class QuestService extends QuestRewardService {
       requirements,
     });
     quest.rewards = await this.createQuestRewards({ rewards });
-    return await quest.save();
+    await quest.save();
+    await CommunityQuest.findOrCreate({
+      communityId: community,
+      questId: quest._id,
+    });
+    return quest;
   }
 }
 

@@ -36,7 +36,9 @@ const getCharacterSet = (name) => {
 
 const background = async (tier) => {
   const response = await axios.get(
-    `https://bebverse-public.s3.us-west-1.amazonaws.com/${tier.toLowerCase()}.svg`,
+    `https://beb-public.s3.us-west-1.amazonaws.com/beb_animated${
+      tier == "premium" ? "_premium" : ""
+    }.svg`,
     { responseType: "text" }
   );
   const data = response.data;
@@ -182,36 +184,14 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       length = 2 * length;
     }
 
-    let addressScore = null;
-    if (length < 10) {
-      // only compute score for premium domains, to improve metadata generation speed
-      const scoreDataUrl = "https://beb.xyz/api/score/" + owner + "?nft=true";
-      const scoreData = await axios.get(scoreDataUrl);
-
-      if (scoreData.data.score) {
-        addressScore = parseInt(scoreData.data.score);
-      }
-    }
-
     const textColor = "#fff";
     const colorMap = {
-      free: "Free",
-      bronze: "Bronze",
-      gold: "Gold",
-      platinum: "Platinum",
-      nova: "Nova",
+      free: "free",
+      premium: "premium",
     };
     let color = colorMap.free;
-    if (addressScore && length < 10) {
-      if (addressScore < 450) {
-        color = colorMap.bronze;
-      } else if (addressScore < 550) {
-        color = colorMap.gold;
-      } else if (addressScore < 700) {
-        color = colorMap.platinum;
-      } else {
-        color = colorMap.nova;
-      }
+    if (length < 10) {
+      color = colorMap.premium;
     }
 
     const dynamicfontsize = parseInt(80 * Math.pow(base, length));
@@ -219,6 +199,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
 
     const backgroundImage = `
     <svg width="500" height="500">
+      <image href="https://beb-public.s3.us-west-1.amazonaws.com/beb_gradient_background.jpg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
       <image href="${backgroundCard}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
     </svg>
   `;
@@ -233,41 +214,17 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       .html(backgroundImage + bebLogo);
 
     svgContainer
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", addressScore ? 345 : 422)
-      .attr("height", addressScore ? 155 : 77)
-      .attr("width", 500)
-      .attr("fill-opacity", 0.5)
-      .attr("fill", "#111111");
-
-    svgContainer
       .append("text")
       .attr("x", 250)
-      .attr("y", addressScore ? 405 : 475)
+      .attr("y", 475)
       .attr("font-size", `${dynamicfontsize}px`)
-      .attr("font-family", "Helvetica, sans-serif")
+      .attr("font-family", "Inter, sans-serif")
       .attr("fill", textColor)
       .attr("text-anchor", "middle")
-      .style("font-weight", "800")
+      .style("font-weight", "900")
       .style("text-shadow", "2px 2px #111111")
       .attr("text-rendering", "optimizeSpeed")
       .text(`${rawDomain}.beb`);
-
-    if (addressScore) {
-      svgContainer
-        .append("text")
-        .attr("x", 250)
-        .attr("y", 475)
-        .attr("font-size", `48px`)
-        .attr("font-family", "Helvetica, sans-serif")
-        .attr("fill", textColor)
-        .attr("text-anchor", "middle")
-        .style("font-weight", "600")
-        .style("text-shadow", "2px 2px #111111")
-        .attr("text-rendering", "optimizeSpeed")
-        .text(`bebOS Score: ${addressScore}`);
-    }
 
     const svg = body.select(".container").html();
     const image = svgToMiniDataURI(svg);
@@ -282,7 +239,6 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       description: `Check the status of ${rawDomain}.beb on beb.domains, and try our apps such as farquest.app and beb.xyz! Find your bebOS Score at: beb.xyz/reputation`,
       host: "https://protocol.beb.xyz/graphql",
       image,
-      score: addressScore,
       attributes: [
         {
           trait_type: "Length",
