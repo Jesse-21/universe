@@ -1,12 +1,12 @@
-# Universe, a bebOS Dimension Host Implementation
+# Universe, a beb.quest Dimension Host Implementation
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a bebOS Dimension Host. Universes are open-source dimension hosts for [BEB, a protocol making crypto fun](https://docs.beb.quest). Universes are accessed by clients such as [B7B](https://github.com/bebprotocol/b7b).
+Universe is an implementation of a beb.quest Dimension Host. Universes are open-source dimension hosts for [BEB, a protocol making crypto fun](https://docs.beb.quest). Universes are accessed by clients such as [B7B](https://github.com/bebprotocol/b7b).
 
 This is an early work that is subject to heavy changes, see our [Github Issues](https://github.com/bebprotocol/dimension/issues) if you wish to contribute.
 
-**See our developer documents at [`bebOS Dimension GraphQL APIs`](https://docs.beb.quest/developers).**
+**See our developer documents at [`beb.quest Dimension GraphQL APIs`](https://docs.beb.quest/developers).**
 
 ## Self-hosting Your Universe
 
@@ -30,7 +30,7 @@ When opening a Pull Request and you are not already a core contributor to [@bebp
 
 Welcome to the setup guide for Universe! To start, you'll need [node.js](https://github.com/nvm-sh/nvm), [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable), and [mongodb](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) configured locally.
 
-Once you have node.js, yarn and mongodb, you'll need to fill the following environment variables to have a fully operational bebOS instance on localhost:
+Once you have node.js, yarn and mongodb, you'll need to fill the following environment variables to have a fully operational beb.quest instance on localhost:
 
 ### .env file setup
 
@@ -54,5 +54,5 @@ Once your environment is configured, run `yarn dev --self-hosted` to have a runn
 
 - [BEBverse](https://beb.xyz)
 - [B7B](https://b7b.xyz)
-- [Register a bebOS Dimension](https://beb.quest)
+- [Register a beb.quest Dimension](https://beb.quest)
 - [Protocol Documentation](https://docs.beb.quest)
