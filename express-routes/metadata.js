@@ -169,7 +169,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     if (!metadata) {
       const errorData = {
         name: `no_metadata_refresh_beb_domains.beb`,
-        description: `This domain does not have metadata, navigate to beb.domains to refresh!`,
+        description: `This domain does not have metadata, navigate to beb.quest to refresh!`,
       };
       return res.json(errorData);
     }
@@ -254,7 +254,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       name: `${rawDomain}.beb`,
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `Check the status of ${rawDomain}.beb on beb.domains, and try our apps such as farquest.app and beb.xyz!`,
+      description: `Check the status of ${rawDomain}.beb on beb.quest, and try our apps such as farquest.app and beb.xyz!`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       attributes: [
@@ -282,7 +282,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     if (filter.isProfane(rawDomain) && process.env.MODE !== "self-hosted") {
       data = {
         name: `hidden_domain.beb`,
-        description: `This domain is hidden, see beb.domains/guidelines for more details!`,
+        description: `This domain is hidden, see beb.quest/guidelines for more details!`,
       };
     }
 

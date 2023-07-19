@@ -54,5 +54,5 @@ Once your environment is configured, run `yarn dev --self-hosted` to have a runn
 
 - [BEBverse](https://beb.xyz)
 - [B7B](https://b7b.xyz)
-- [Register a bebOS Dimension](https://beb.domains)
+- [Register a bebOS Dimension](https://beb.quest)
 - [Protocol Documentation](https://docs.beb.quest)
