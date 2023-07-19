@@ -1,9 +1,9 @@
 {
   "name": "universe",
-  "version": "2.0.93",
+  "version": "2.0.94",
   "main": "README.md",
   "license": "AGPL-3.0",
-  "repository": "git@github.com:bebdomains/universe.git",
+  "repository": "git@github.com:bebprotocol/universe.git",
   "author": "Beb, Inc. <gm@beb.domains>",
   "scripts": {
     "start": "node ./index.js",
