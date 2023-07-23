@@ -9,7 +9,7 @@ class KeyValueCacheClass {
   }
 
   /**
-   * Update or create accountCommunity with props
+   * create a cache entry or update existing cache entry with new value and expiresAt
    * @returns Promise<AccountCommunity> || null
    */
   static async updateOrCreate({ key, value, expiresAt }) {

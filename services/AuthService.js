@@ -132,6 +132,10 @@ class AuthService {
         throw new Error("Account already exists");
       }
 
+      /*
+       * @TODO this part should be deprecated as we no longer support registering only with PassKey
+       * use AccountRecovererService.addRecoverer instead
+       */
       const body = JSON.parse(signature);
       const clientDataJSON = body.response.clientDataJSON;
       const attestationObject = body.response.attestationObject;
@@ -195,6 +199,46 @@ class AuthService {
       throw new Error("Could not parse PassKey signature");
     }
   }
+  /**
+   * Authenticate an account with encrypted wallet json and signature
+   * @TODO we need to verify the validity of the email
+   * @returns Promise<String>
+   */
+  async createOrGetSignatureFromEncryptedWalletJson({
+    email,
+    wallet,
+    chainId,
+  }) {
+    try {
+      const walletDecrypted = JSON.parse(wallet);
+      const address = walletDecrypted.address;
+      let account;
+      const existing = await Account.findOne({
+        walletEmail: email,
+      });
+      if (existing) {
+        account = existing;
+      } else {
+        account = await Account.createFromAddress({
+          address: address,
+          chainId,
+          walletEmail: email,
+          encyrptedWalletJson: wallet,
+        });
+      }
+
+      const accountNonce = await AccountNonce.findOne({
+        account: account._id,
+      });
+
+      if (!accountNonce) throw new Error("AccountNonce not found");
+
+      return accountNonce.getMessageToSign();
+    } catch (e) {
+      throw new Error("Could not authenticate with wallet");
+    }
+  }
+
   /**
    * Authenticate an account
    * @returns Promise<Account, AccountNonce, AccessTokenString>

@@ -67,7 +67,13 @@ class AccountClass {
    * Create an account from address
    * @returns Promise<Account>
    */
-  static async createFromAddress({ address: rawAddress, chainId, email }) {
+  static async createFromAddress({
+    address: rawAddress,
+    chainId,
+    email,
+    walletEmail,
+    encyrptedWalletJson,
+  }) {
     if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
       throw new Error("Invalid chain id");
     }
@@ -92,6 +98,8 @@ class AccountClass {
       email,
       addresses: [createdAddressTmp._id],
       activities: {},
+      walletEmail,
+      encyrptedWalletJson,
     });
     createdAddressTmp.account = createdAccount._id;
     createdNonceTmp.account = createdAccount._id;
@@ -99,6 +107,24 @@ class AccountClass {
     await createdAddressTmp.save();
     await createdNonceTmp.save();
     await createdExpTmp.save();
+
+    try {
+      await this.findByAddressAndChainId({
+        address,
+        chainId,
+      });
+    } catch (e) {
+      // This means we created a duplicate account
+      // This is a rare case, but it can happen
+      // We should delete the account we just created
+      // and return the existing account
+      await createdAccount.delete();
+      await createdAddressTmp.delete();
+      await createdNonceTmp.delete();
+      await createdExpTmp.delete();
+      throw e;
+    }
+
     return createdAccount;
   }
 

@@ -24,7 +24,6 @@ class AccountService {
    */
   async _getCachedRoleIds(account) {
     const getRoleIds = async () => {
-      //  get all account roles
       const claimedRoles = await this.getRoles(account);
       const claimedRolesIds = claimedRoles
         .filter((role) => role?._id)

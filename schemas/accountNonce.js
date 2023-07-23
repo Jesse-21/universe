@@ -9,6 +9,11 @@ const { getRandomUint256 } = require("../helpers/get-random-uint256");
  */
 const schema = mongoose.Schema(
   {
+    salt: {
+      type: Number,
+      immutable: true,
+      default: crypto.randomInt(1, 10000),
+    },
     /** nonce for account sign in */
     nonce: { type: String, default: `${crypto.randomInt(1, 10000)}` },
     /** nonce for account transaction */
