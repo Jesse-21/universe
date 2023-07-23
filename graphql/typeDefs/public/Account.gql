@@ -9,6 +9,13 @@ type AccountNonce {
   nonce: String
   transactionNonce: String
 }
+type AccountInvite {
+  useCount: Int
+  maxUseCount: Int
+  expiresAt: String
+  code: String
+  account: Account
+}
 input AccountThreadsFilterInput {
   isAccepted: Boolean
 }
@@ -32,5 +39,6 @@ type Account {
   ): [AccountThread]
   accountCommunities(limit: Int, offset: Int): [AccountCommunity]
   identities: AccountIdentity
+  invite: AccountInvite
   hasPremiumRole: Boolean # true if account is a beb domain holder AND claimed the role
 }
