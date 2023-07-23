@@ -41,6 +41,30 @@ const resolvers = {
         };
       }
     },
+    createAccountFromEncryptedJson: async (root, args, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      try {
+        const account = await Account.createFromEncryptedWalletJson(args);
+        return {
+          code: "201",
+          success: true,
+          message: "Successfully created account",
+          account,
+        };
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error(e);
+        return {
+          code: "500",
+          success: false,
+          message: e.message,
+        };
+      }
+    },
     updateCurrentAddress: async (root, args, context, info) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },

@@ -192,6 +192,11 @@ type Mutation {
     chainId: Int!
     email: String
   ): AccountMutationResponse
+  createAccountFromEncryptedJson(
+    encyrptedWalletJson: String!
+    email: String!
+    chainId: Int!
+  ): AccountMutationResponse
   authBySignature(
     address: String!
     chainId: Int!

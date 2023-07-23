@@ -254,7 +254,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
       name: `${rawDomain}.beb`,
       owner,
       external_url: `https://${rawDomain}.beb.xyz`,
-      description: `Check the status of ${rawDomain}.beb on beb.quest, and try our apps such as farquest.app and beb.xyz!`,
+      description: `Check the status of ${rawDomain}.beb on beb.quest, and try our apps such as farquest.app 👁️`,
       host: "https://protocol.beb.xyz/graphql",
       image,
       attributes: [

@@ -63,6 +63,41 @@ class AccountClass {
     if (!existing) throw new Error("Invalid Image Id");
     return true;
   }
+
+  /**
+   * Create an account with encrypted wallet json and signature
+   * @TODO we need to verify the validity of the email
+   * @returns Promise<Account>
+   */
+  static async createFromEncryptedWalletJson({
+    email,
+    encyrptedWalletJson,
+    chainId,
+  }) {
+    try {
+      const walletDecrypted = JSON.parse(encyrptedWalletJson);
+      const address = walletDecrypted.address;
+      let account;
+      const existing = await this.findOne({
+        walletEmail: email,
+      });
+      if (existing) {
+        account = existing;
+      } else {
+        account = await this.createFromAddress({
+          address: address,
+          chainId,
+          walletEmail: email,
+          encyrptedWalletJson: encyrptedWalletJson,
+        });
+      }
+
+      return account;
+    } catch (e) {
+      throw new Error("Could not create with wallet");
+    }
+  }
+
   /**
    * Create an account from address
    * @returns Promise<Account>
