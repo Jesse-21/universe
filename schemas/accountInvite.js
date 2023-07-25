@@ -1,6 +1,5 @@
 /* eslint-disable no-inline-comments */
 const mongoose = require("mongoose");
-const crypto = require("crypto");
 
 /**
  * Nonce is used to avoid repeat attack
@@ -23,7 +22,7 @@ const schema = mongoose.Schema(
     },
     code: {
       type: String,
-      default: `${crypto.randomInt(100000, 1000000)}`,
+      required: true,
     },
     account: {
       type: mongoose.Schema.Types.ObjectId,

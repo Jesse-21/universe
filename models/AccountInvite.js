@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const { schema } = require("../schemas/accountInvite");
 
+const crypto = require("crypto");
+
 class AccountInviteClass {
   static ping() {
     console.log("model: AccountInviteClass");
@@ -21,6 +23,7 @@ class AccountInviteClass {
       useCount,
       maxUseCount,
       expiresAt,
+      code: `${crypto.randomInt(100000, 1000000)}`,
     });
   }
 }
