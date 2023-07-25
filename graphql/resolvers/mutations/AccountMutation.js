@@ -41,19 +41,22 @@ const resolvers = {
         };
       }
     },
-    createAccountFromEncryptedJson: async (root, args, context, info) => {
+    authByEncryptedWalletJson: async (root, args, context, info) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },
         { max: RATE_LIMIT_MAX, window: "10s" }
       );
       if (errorMessage) throw new Error(errorMessage);
       try {
-        const account = await Account.createFromEncryptedWalletJson(args);
+        const { account, accessToken } =
+          await AuthService.authByEncryptedWalletJson(args);
+
         return {
           code: "201",
           success: true,
           message: "Successfully created account",
           account,
+          accessToken,
         };
       } catch (e) {
         Sentry.captureException(e);

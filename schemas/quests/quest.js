@@ -31,6 +31,7 @@ const questRequirementSchema = mongoose.Schema({
       "VALID_NFT",
       "VALID_NFT_3",
       "VALID_NFT_5",
+      "SHARE",
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW

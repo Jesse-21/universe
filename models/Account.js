@@ -76,25 +76,23 @@ class AccountClass {
   }) {
     try {
       const walletDecrypted = JSON.parse(encyrptedWalletJson);
-      const address = walletDecrypted.address;
-      let account;
+      const address = "0x" + walletDecrypted.address;
+
       const existing = await this.findOne({
         walletEmail: email,
       });
-      if (existing) {
-        account = existing;
-      } else {
-        account = await this.createFromAddress({
-          address: address,
-          chainId,
-          walletEmail: email,
-          encyrptedWalletJson: encyrptedWalletJson,
-        });
-      }
+      if (existing) return existing;
+      const account = await this.createFromAddress({
+        address: address,
+        chainId,
+        walletEmail: email,
+        encyrptedWalletJson: encyrptedWalletJson,
+      });
 
       return account;
     } catch (e) {
-      throw new Error("Could not create with wallet");
+      console.log(e);
+      throw new Error(e.message);
     }
   }
 

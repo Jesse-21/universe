@@ -10,6 +10,7 @@ type AccountNonce {
   transactionNonce: String
 }
 type AccountInvite {
+  _id: ID
   useCount: Int
   maxUseCount: Int
   expiresAt: String
@@ -24,6 +25,8 @@ type Account {
   email: String
   username: String
   location: String
+  encyrptedWalletJson: String
+  walletEmail: String
   bio: Content
   profileImage: Image
   address: AccountAddress

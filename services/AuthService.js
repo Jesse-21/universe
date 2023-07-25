@@ -1,5 +1,7 @@
 const { Magic } = require("@magic-sdk/admin");
 const fido2 = require("fido2-lib");
+const { bufferToHex } = require("ethereumjs-util");
+const { recoverPersonalSignature } = require("@metamask/eth-sig-util");
 const base64url = require("base64url");
 const mongoose = require("mongoose");
 
@@ -228,6 +230,51 @@ class AuthService {
         accountId: account._id,
         communityId: mongoose.Types.ObjectId(process.env.DEFAULT_COMMUNITY_ID),
         joined: true,
+      });
+    }
+
+    /** step3: regenerate nonce and access token */
+    return this._generateNonceAndAccessToken({ account });
+  }
+
+  /**
+   * Used for first time user tries to create an account with encrypted json
+   * @returns Promise<Account, AccessTokenString,AccountNonce>
+   */
+  async authByEncryptedWalletJson({
+    email,
+    encyrptedWalletJson,
+    chainId,
+    signature,
+  }) {
+    const existing = await Account.findOne({
+      walletEmail: email,
+    });
+    const parsedJson = JSON.parse(encyrptedWalletJson);
+    const address = "0x" + parsedJson.address;
+    let account;
+    if (existing) {
+      // authenticate with signature
+      account = await this.authBySignature({ address, chainId, signature });
+    } else {
+      // first time authenticating, create account
+      // don't need nonce because only the first time works
+      /** step1: decrypt message to make sure it is from account */
+      const msg = encyrptedWalletJson;
+      const msgBufferHex = bufferToHex(Buffer.from(msg, "utf8"));
+      const verifyAgainstAddress = recoverPersonalSignature({
+        data: msgBufferHex,
+        signature,
+      });
+
+      if (verifyAgainstAddress.toLowerCase() !== address.toLowerCase())
+        throw new Error("Unauthorized");
+
+      /** step2: Create an account */
+      account = await Account.createFromEncryptedWalletJson({
+        email,
+        encyrptedWalletJson,
+        chainId,
       });
     }
 

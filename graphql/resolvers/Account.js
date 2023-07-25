@@ -6,6 +6,7 @@ const { AccountRelationship } = require("../../models/AccountRelationship");
 const { AccountThread } = require("../../models/AccountThread");
 const { AccountCommunity } = require("../../models/AccountCommunity");
 const { AccountExp } = require("../../models/AccountExp");
+const { AccountInvite } = require("../../models/AccountInvite");
 
 const {
   Service: _AccountQueryService,
@@ -99,11 +100,37 @@ const resolvers = {
       if (!hasAccess) return null;
       return parent?.email;
     },
+    walletEmail: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "account"
+      );
+      if (!hasAccess) return null;
+      return parent?.walletEmail;
+    },
+    encyrptedWalletJson: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "account"
+      );
+      if (!hasAccess) return null;
+      return parent?.encyrptedWalletJson;
+    },
     identities: async (parent) => {
       const AccountQueryService = new _AccountQueryService();
       return AccountQueryService.identities(parent);
     },
-    /**
+    invite: async (parent) => {
+      const invite = await AccountInvite.findOrCreate({
+        accountId: parent._id,
+      });
+      return invite;
+    },
+    /**,
      * 🚨 Temporary hack resolver to check if account is a domain holder
      */
     hasPremiumRole: async (parent) => {

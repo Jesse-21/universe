@@ -23,7 +23,7 @@ const schema = mongoose.Schema(
     },
     code: {
       type: String,
-      default: `${crypto.randomBytes(8).toString("base64")}`,
+      default: `${crypto.randomInt(100000, 1000000)}`,
     },
     account: {
       type: mongoose.Schema.Types.ObjectId,

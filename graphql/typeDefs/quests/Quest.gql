@@ -23,6 +23,7 @@ enum QuestRequirementType {
   FARCASTER_FOLLOWERS_100
   FARCASTER_FOLLOWERS_10
   SCORE
+  SHARE
 }
 enum QuestRewardType {
   ASSET_3D

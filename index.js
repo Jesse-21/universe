@@ -8,6 +8,7 @@ const { GraphQLFileLoader } = require("@graphql-tools/graphql-file-loader");
 
 const { connectDB } = require("./connectdb");
 const { router: imageRouter } = require("./express-routes/image");
+const { router: referralRouter } = require("./express-routes/referral");
 const { router: utilsRouter } = require("./express-routes/utils");
 const { router: communityRouter } = require("./express-routes/community");
 const { router: metadataRouter } = require("./express-routes/metadata");
@@ -142,6 +143,7 @@ if (process.env.SENTRY_DSN) {
   app.use("/utils", utilsRouter);
   app.use("/ens/", ensRouter);
   app.use("/score", scoreRouter);
+  app.use("/referral", referralRouter);
 
   require("yargs").command(
     "$0",
