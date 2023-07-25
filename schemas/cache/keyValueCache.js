@@ -8,7 +8,7 @@ const schema = mongoose.Schema(
     value: { type: String },
     expiresAt: {
       type: Date,
-      default: new Date(Date.now() + 5 * 60 * 1000), // default to 5 minutes from now
+      default: () => new Date(Date.now() + 5 * 60 * 1000), // default to 5 minutes from now
     }, // the cache expiration date. Null means no expiration
   },
   { timestamps: true }

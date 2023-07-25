@@ -12,7 +12,7 @@ const schema = mongoose.Schema(
       index: true,
     },
     // the last time account has seen a thread
-    userLastSeen: { type: Date, default: new Date() },
+    userLastSeen: { type: Date, default: () => new Date() },
     account: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Account",
