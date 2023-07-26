@@ -42,7 +42,10 @@ app.get("/get-riddle", async (req, res) => {
     });
   try {
     const CacheService = new _CacheService();
-    const riddle = riddlesJson[Math.floor(Math.random() * riddlesJson.length)];
+    let riddle = riddlesJson[Math.floor(Math.random() * riddlesJson.length)];
+    while (riddle.length >= 200) {
+      riddle = riddlesJson[Math.floor(Math.random() * riddlesJson.length)];
+    }
     const cachedRiddle = await CacheService.getOrCallbackAndSet(
       () => riddle.riddle,
       {
