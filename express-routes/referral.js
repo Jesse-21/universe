@@ -3,6 +3,10 @@ const Sentry = require("@sentry/node");
 const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
 
+const {
+  validateAndConvertAddress,
+} = require("../helpers/validate-and-convert-address");
+
 const CacheService = new _CacheService();
 
 const REFERRAL_KEY = "ReferralService";
@@ -25,7 +29,7 @@ app.post("/:referralCode", limiter, async (req, res) => {
     await CacheService.set({
       key: REFERRAL_KEY,
       params: {
-        address,
+        address: validateAndConvertAddress(address),
       },
       value: `${referralCode}:${hash}`,
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 36), // 36 hour cache to prevent overwrites

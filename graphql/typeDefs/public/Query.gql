@@ -29,6 +29,10 @@ input CommunitiesFilter {
 input AccountChannelFilter {
   communityId: ID
 }
+type WalletAccountSigninResponse {
+  message: String
+  encyrptedWalletJson: String
+}
 
 ### Query on different models
 # This helps Apollo Cache during typePolicies reconciliation
@@ -49,6 +53,9 @@ type SearchQuery {
 type AccountQuery {
   _id: ID
   searchAccountByUsernameOrAddressOrEns(query: String): [Account]
+  getWalletAccountSigninMessage(
+    walletEmail: String!
+  ): WalletAccountSigninResponse
   searchAccountByIdentity(query: String): [Account]
   getAccountSigninMessage(address: String!, chainId: Int!): String
 }

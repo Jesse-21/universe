@@ -62,6 +62,33 @@ class AuthService {
   }
 
   /**
+   * Get a wallet account's message to sign with nonce
+   * @returns Promise<encyrptedWalletJson: String, message: String>
+   */
+  async getWalletAccountMessageToSign({ walletEmail }) {
+    const account = await Account.findOne({
+      walletEmail,
+    });
+    if (!account) {
+      return {
+        message: "Account not found",
+        encyrptedWalletJson: null,
+      };
+    }
+    if (account.deleted) throw new Error("Account is deleted");
+
+    const accountNonce = await AccountNonce.findOne({ account: account._id });
+
+    if (!accountNonce) throw new Error("AccountNonce not found");
+
+    const msg = accountNonce.getMessageToSign();
+    return {
+      message: msg,
+      encyrptedWalletJson: account.encyrptedWalletJson,
+    };
+  }
+
+  /**
    * Verify an account's signature with nonce
    * @returns Promise<Account, AccountNonce>
    */

@@ -7,6 +7,16 @@ const resolvers = {
   AccountQuery: {
     _id: () => "AccountQuery",
     /** Get Account by search query */
+    getWalletAccountSigninMessage: async (root, args = {}, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      return await AuthService.getWalletAccountMessageToSign({
+        walletEmail: args.walletEmail,
+      });
+    },
     searchAccountByUsernameOrAddressOrEns: async (
       root,
       args = {},
