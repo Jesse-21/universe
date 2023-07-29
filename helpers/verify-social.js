@@ -12,7 +12,9 @@ const verifyTwitter = async (url, text) => {
       timeout: TIMEOUT,
     }
   );
+
   const html = data.html;
+
   return html.includes(text);
 };
 
