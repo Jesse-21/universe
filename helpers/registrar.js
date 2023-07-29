@@ -1,5 +1,6 @@
 const BebRegistryBetaController = require("./abi/beb-controller-abi.json");
 const BebRegistrar = require("./abi/beb-registrar-abi.json");
+const BebFactoryContract = require("./abi/beb-account-factory-0.json");
 
 const dev = () => {
   return {
@@ -10,6 +11,10 @@ const dev = () => {
     PRICE_ORACLE_ADDRESS: "0xAc20A90F71EFcB606232d640476E6aB30b426251",
     BETA_CONTROLLER_ABI: BebRegistryBetaController.abi,
     REGISTRAR_ABI: BebRegistrar.abi,
+    // version 0 / SimpleAccountFactory.sol
+    FACTORY_CONTRACT_ADDRESS: "0xf6DdB44376Cc2f3Ed90625357991e10200eb3701",
+    ENTRYPOINT_ADDRESS: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+    FACTORY_ABI: BebFactoryContract.abi,
   };
 };
 

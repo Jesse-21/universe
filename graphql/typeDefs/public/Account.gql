@@ -8,6 +8,7 @@ type AccountNonce {
   _id: ID
   nonce: String
   transactionNonce: String
+  salt: Int
 }
 type AccountInvite {
   _id: ID
@@ -32,6 +33,7 @@ type Account {
   address: AccountAddress
   relationship(to: ID): AccountRelationship
   nonces: AccountNonce
+  backpackAddress: String
   sections: [AccountSection]
   activities: AccountActivity
   accountExp: AccountExp

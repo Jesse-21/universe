@@ -4,8 +4,11 @@ const {
   Service: FarcasterServiceV2,
 } = require("../identities/FarcasterServiceV2");
 const { AccountCommunity } = require("../../models/AccountCommunity");
+const { AccountNonce } = require("../../models/AccountNonce");
 const { AccountCommunityRole } = require("../../models/AccountCommunityRole");
-
+const { Service: _CacheService } = require("../cache/CacheService");
+const { dev } = require("../../helpers/registrar");
+const { ethers } = require("ethers");
 const {
   resolveEnsDataFromAddress,
 } = require("../../helpers/resolve-ens-data-from-address");
@@ -39,6 +42,52 @@ class AccountQueryService extends AccountService {
     });
 
     return !!domainHolderRole;
+  }
+  async backpackAddress(account) {
+    const populated = await account?.populate?.("addresses");
+    const ownerAddress = populated?.addresses?.[0]?.address;
+
+    if (!account || !ownerAddress) return null;
+    const CacheService = new _CacheService();
+    const cached = await CacheService.get({
+      key: `BackpackAddress`,
+      params: {
+        account: account._id,
+      },
+    });
+    if (cached) return cached;
+
+    const config = dev();
+    const provider = new ethers.providers.AlchemyProvider(
+      config.NODE_NETWORK,
+      config.NODE_URL
+    );
+
+    const accountFactoryContract = new ethers.Contract(
+      config.FACTORY_CONTRACT_ADDRESS,
+      config.FACTORY_ABI,
+      provider
+    );
+    const accountNonce = await AccountNonce.findOne({
+      account: account._id,
+    });
+    const salt = accountNonce?.salt;
+    if (!salt) return null;
+
+    const create2Address = await accountFactoryContract.getAddress(
+      ownerAddress,
+      salt
+    );
+    CacheService.set({
+      key: `BackpackAddress`,
+      params: {
+        account: account._id,
+      },
+      value: create2Address,
+      expiresAt: null,
+    });
+
+    return create2Address;
   }
   identities(account) {
     try {

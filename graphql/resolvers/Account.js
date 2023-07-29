@@ -120,6 +120,10 @@ const resolvers = {
       if (!hasAccess) return null;
       return parent?.encyrptedWalletJson;
     },
+    backpackAddress: async (parent) => {
+      const AccountQueryService = new _AccountQueryService();
+      return await AccountQueryService.backpackAddress(parent);
+    },
     identities: async (parent) => {
       const AccountQueryService = new _AccountQueryService();
       return AccountQueryService.identities(parent);
