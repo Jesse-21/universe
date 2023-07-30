@@ -11,6 +11,7 @@ class ScoreService {
   }
 
   static async getScore(data, { scoreType = "beb" }) {
+    return 0;
     // const inputData = [
     //   num_transactions,
     //   transaction_frequency,
