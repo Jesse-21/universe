@@ -1,4 +1,5 @@
-const tf = require("@tensorflow/tfjs-node");
+// Disable due to expensive overhead
+// const tf = require("@tensorflow/tfjs-node");
 const { Service: _CacheService } = require("../services/cache/CacheService");
 const {
   validateAndConvertAddress,

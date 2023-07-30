@@ -17,7 +17,6 @@ COPY package.json /bebxyz_server
 
 # Install any needed packages specified in package.json
 RUN yarn install --ignore-scripts
-RUN npm rebuild @tensorflow/tfjs-node --build-from-source
 
 # Copying the rest of the code to the working directory
 COPY . /bebxyz_server
