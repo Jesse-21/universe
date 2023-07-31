@@ -30,6 +30,13 @@ input PositionInput {
   z: Int
 }
 
+input RequestPaymasterInput {
+  initCode: String
+  sender: String
+  nonce: String
+  callData: String
+}
+
 input IndexerRuleNFTInput {
   address: String
   tokenId: String

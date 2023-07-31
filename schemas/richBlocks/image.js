@@ -1,6 +1,6 @@
 /* eslint-disable no-inline-comments */
 const mongoose = require("mongoose");
-
+const { schema: keyValueFieldsSchema } = require("../keyValueFields");
 /**
  * An image that can be a pointer url to an NFT, POAP, etc
  */
@@ -13,6 +13,7 @@ const schema = mongoose.Schema({
   verificationChainId: { type: Number },
   verificationContractAddress: { type: String },
   verificationExternalUrl: { type: String }, // the external url for image verification, can be Opensea, Poap, Etherscan...
+  metadata: [keyValueFieldsSchema],
 });
 
 module.exports = { schema };

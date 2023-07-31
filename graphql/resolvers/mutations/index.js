@@ -33,6 +33,7 @@ const { resolvers: ChannelMutation } = require("./ChannelMutation");
 const {
   resolvers: AccountChannelMutation,
 } = require("./AccountChannelMutation");
+const { resolvers: PaymasterMutation } = require("./PaymasterMutation");
 
 const resolvers = merge(
   AccountSectionMutation,
@@ -52,7 +53,8 @@ const resolvers = merge(
   CommunityRoomMutation,
   CommunityAssetMutation,
   ChannelMutation,
-  AccountChannelMutation
+  AccountChannelMutation,
+  PaymasterMutation
 );
 
 module.exports = { resolvers };

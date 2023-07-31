@@ -52,6 +52,7 @@ const questRewardsSchema = mongoose.Schema({
   quantity: { type: Number, default: 1 },
 
   rewardId: { type: mongoose.Schema.Types.ObjectId, index: true },
+  isSponsored: { type: Boolean, default: false }, // in case of onchain reward, weither the tx is sponsored or not through paymaster
   category: { type: String }, // can add a category e.g. consumable, etc
 });
 

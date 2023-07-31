@@ -173,18 +173,37 @@ type CommunityAssetMutationResponse implements MutationResponse {
   communityAsset: CommunityAsset
   communityAssetMetadata: CommunityAssetMetadata
 }
+type PaymasterMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  maxPriorityFeePerGas: String
+  preVerificationGas: String
+  callGasLimit: String
+  verificationGasLimit: String
+  paymasterAndData: String
+  maxFeePerGas: String
+  initCode: String
+  sender: String
+  nonce: String
+  callData: String
+}
+
 type WithCountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
   count: Int
 }
-
+enum PaymasterRequestType {
+  CREATE_BACKPACK
+}
 enum AuthType {
   PASSKEY
   SIGNATURE
   MAGIC_LINK
 }
+
 type Mutation {
   # Account mutations
   createAccountFromAddress(
@@ -408,4 +427,9 @@ type Mutation {
   # CommunityRoom mutations, requires auth
   getPeers(communityId: ID!): CommunityRoomMutationResponse
   setPeer(communityId: ID!, peerId: String): CommunityRoomMutationResponse
+  # Paymaster mutations, requires auth
+  requestGasAndPaymasterAndData(
+    type: PaymasterRequestType!
+    userOp: RequestPaymasterInput
+  ): PaymasterMutationResponse
 }

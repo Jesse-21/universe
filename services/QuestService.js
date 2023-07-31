@@ -142,6 +142,7 @@ class QuestService extends QuestRewardService {
             rewardId: reward.rewardId,
             quantity: reward.quantity,
             title: reward.title,
+            isSponsored: reward.isSponsored,
           };
         } else {
           const rewardItem = await this.createQuestRewardItem({
@@ -153,6 +154,7 @@ class QuestService extends QuestRewardService {
             rewardId: rewardItem?._id,
             quantity: reward.quantity,
             title: reward.title,
+            isSponsored: reward.isSponsored,
           };
         }
       })

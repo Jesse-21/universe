@@ -12,10 +12,10 @@ class AlchemyService {
   }
 
   getBaseRoute() {
-    return `https://eth-${this.chain}.alchemyapi.io/v2/${this.apiKey}`;
+    return `https://eth-${this.chain}.g.alchemy.com/v2/${this.apiKey}`;
   }
   getNFTBaseRoute() {
-    return `https://eth-${this.chain}.alchemyapi.io/nft/v2/${this.apiKey}`;
+    return `https://eth-${this.chain}.g.alchemy.com/nft/v2/${this.apiKey}`;
   }
 
   /**

@@ -16,6 +16,7 @@ const {
   isAuthorizedToAccessResource,
 } = require("../../helpers/auth-middleware");
 
+const AccountQueryService = new _AccountQueryService();
 const resolvers = {
   AccountAddress: {
     passKeyId: async (parent, args, context) => {
@@ -121,11 +122,12 @@ const resolvers = {
       return parent?.encyrptedWalletJson;
     },
     backpackAddress: async (parent) => {
-      const AccountQueryService = new _AccountQueryService();
       return await AccountQueryService.backpackAddress(parent);
     },
+    backpackClaimed: async (parent) => {
+      return await AccountQueryService.backpackClaimed(parent);
+    },
     identities: async (parent) => {
-      const AccountQueryService = new _AccountQueryService();
       return AccountQueryService.identities(parent);
     },
     invite: async (parent) => {
@@ -138,7 +140,6 @@ const resolvers = {
      * 🚨 Temporary hack resolver to check if account is a domain holder
      */
     hasPremiumRole: async (parent) => {
-      const AccountQueryService = new _AccountQueryService();
       return await AccountQueryService.hasPremiumRole(parent);
     },
   },

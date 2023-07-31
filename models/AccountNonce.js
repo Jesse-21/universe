@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 // https://mongoosejs.com/docs/advanced_schemas.html
 const crypto = require("crypto");
+const { ethers } = require("ethers");
 const { recoverPersonalSignature } = require("@metamask/eth-sig-util");
 const { bufferToHex } = require("ethereumjs-util");
 
@@ -49,6 +50,18 @@ class AccountNonceClass {
   async generateNewTransactionNonce() {
     this.transactionNonce = `${getRandomUint256()}`;
     await this.save();
+  }
+
+  /**
+   * Get the default AccountAddress mongo _id
+   * @returns string
+   */
+  get salt() {
+    let bytes = ethers.utils.toUtf8Bytes(this._id);
+    let hash = ethers.utils.keccak256(bytes);
+    // Use the entire hash to create a 256-bit salt.
+    let salt = ethers.BigNumber.from(hash);
+    return salt.toString();
   }
 }
 

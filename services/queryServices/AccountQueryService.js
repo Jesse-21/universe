@@ -7,11 +7,12 @@ const { AccountCommunity } = require("../../models/AccountCommunity");
 const { AccountNonce } = require("../../models/AccountNonce");
 const { AccountCommunityRole } = require("../../models/AccountCommunityRole");
 const { Service: _CacheService } = require("../cache/CacheService");
-const { dev } = require("../../helpers/registrar");
+const { config: walletConfig } = require("../../helpers/constants/wallet");
 const { ethers } = require("ethers");
 const {
   resolveEnsDataFromAddress,
 } = require("../../helpers/resolve-ens-data-from-address");
+const { isDeployedContract } = require("../../helpers/is-deployed-contract");
 
 class AccountQueryService extends AccountService {
   /**
@@ -43,51 +44,82 @@ class AccountQueryService extends AccountService {
 
     return !!domainHolderRole;
   }
-  async backpackAddress(account) {
-    const populated = await account?.populate?.("addresses");
-    const ownerAddress = populated?.addresses?.[0]?.address;
 
-    if (!account || !ownerAddress) return null;
+  async backpackClaimed(account) {
     const CacheService = new _CacheService();
+    const config = walletConfig();
     const cached = await CacheService.get({
-      key: `BackpackAddress`,
+      key: `BackpackClaimed`,
       params: {
         account: account._id,
       },
     });
     if (cached) return cached;
-
-    const config = dev();
-    const provider = new ethers.providers.AlchemyProvider(
-      config.NODE_NETWORK,
-      config.NODE_URL
-    );
-
-    const accountFactoryContract = new ethers.Contract(
-      config.FACTORY_CONTRACT_ADDRESS,
-      config.FACTORY_ABI,
-      provider
-    );
-    const accountNonce = await AccountNonce.findOne({
-      account: account._id,
+    const _backpackAddress = await this.backpackAddress(account);
+    if (!_backpackAddress) return false;
+    const isClaimed = await isDeployedContract(_backpackAddress, {
+      network: config.CHAIN_ID,
+      apiKey: config.API_KEY,
     });
-    const salt = accountNonce?.salt;
-    if (!salt) return null;
-
-    const create2Address = await accountFactoryContract.getAddress(
-      ownerAddress,
-      salt
-    );
     CacheService.set({
-      key: `BackpackAddress`,
+      key: `BackpackClaimed`,
       params: {
         account: account._id,
       },
-      value: create2Address,
+      value: isClaimed,
       expiresAt: null,
     });
+    return isClaimed;
+  }
 
-    return create2Address;
+  async backpackAddress(account) {
+    try {
+      const populated = await account?.populate?.("addresses");
+      const ownerAddress = populated?.addresses?.[0]?.address;
+
+      if (!account || !ownerAddress) return null;
+      const CacheService = new _CacheService();
+      const cached = await CacheService.get({
+        key: `BackpackAddress`,
+        params: {
+          account: account._id,
+        },
+      });
+      if (cached) return cached;
+
+      const config = walletConfig();
+      const provider = new ethers.providers.AlchemyProvider(
+        config.CHAIN_ID,
+        config.API_KEY
+      );
+
+      const accountFactoryContract = new ethers.Contract(
+        config.FACTORY_CONTRACT_ADDRESS,
+        config.FACTORY_ABI,
+        provider
+      );
+      const accountNonce = await AccountNonce.findOne({
+        account: account._id,
+      });
+      const salt = accountNonce.salt;
+
+      const create2Address = await accountFactoryContract.getAddress(
+        ownerAddress,
+        salt
+      );
+      CacheService.set({
+        key: `BackpackAddress`,
+        params: {
+          account: account._id,
+        },
+        value: create2Address,
+        expiresAt: null,
+      });
+
+      return create2Address;
+    } catch (e) {
+      return null;
+    }
   }
   identities(account) {
     try {

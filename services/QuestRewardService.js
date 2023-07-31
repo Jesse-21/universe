@@ -33,6 +33,28 @@ class QuestRewardService {
           });
           break;
         }
+        case "NFT": {
+          if (
+            !rewardData.verificationContractAddress ||
+            !rewardData.verificationTokenId
+          ) {
+            throw new Error(
+              "NFT requires a verificationContractAddress and a verificationTokenId"
+            );
+          }
+          asset = await Image.create({
+            src: rewardData.src,
+            isVerified: true,
+            verificationOrigin: "NFT",
+            verificationTokenId: rewardData.verificationTokenId,
+            verificationChainId: rewardData.verificationChainId,
+            verificationContractAddress: rewardData.verificationContractAddress,
+            verificationExternalUrl: rewardData.verificationExternalUrl,
+            name: rewardData.name,
+            metadata: rewardData.metadata,
+          });
+          break;
+        }
         default:
           return null;
       }
@@ -54,6 +76,10 @@ class QuestRewardService {
         break;
       }
       case "IMAGE": {
+        asset = await Image.findById(rewardId);
+        break;
+      }
+      case "NFT": {
         asset = await Image.findById(rewardId);
         break;
       }
