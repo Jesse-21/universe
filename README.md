@@ -3,7 +3,7 @@
 <img src="./.misc/header.png" width="300" />
 
 Universe is an implementation of a beb.quest Host. Universes are open-source
-dimension hosts for
+hosts for
 [beb.quest, a protocol making crypto exploration fun](https://beb.quest).
 
 This is an early work that is subject to heavy changes, see our
