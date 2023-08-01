@@ -3,6 +3,7 @@ const Sentry = require("@sentry/node");
 const TIMEOUT_MS = 10_000;
 const constants = require("./constants/aa");
 const { Service: WalletService } = require("./WalletService");
+const { Service: _CacheService } = require("./cache/CacheService");
 const {
   Service: _AccountQueryService,
 } = require("./queryServices/AccountQueryService");
@@ -65,6 +66,31 @@ class PaymasterService extends WalletService {
     return res?.data.result;
   }
 
+  async _cachedOrGetPaymasterData({ userOperation, ...props }) {
+    const CacheService = new _CacheService();
+    const existing = await CacheService.get({
+      key: "PaymasterService",
+      params: {
+        userOperation,
+      },
+    });
+    if (existing) return existing;
+    const paymasterData = await this._getPaymasterAndData({
+      userOperation,
+      ...props,
+    });
+    CacheService.set({
+      key: "PaymasterService",
+      params: {
+        userOperation,
+      },
+      expiresAt: Date.now() + 1000 * 60 * 10, // 10 minute
+      value: paymasterData,
+    });
+
+    return paymasterData;
+  }
+
   /** On testnet so not needing permission/auth for now */
   handleCreateBackpackPaymaster = async ({
     id = 1, // request id to send to alchemy
@@ -99,7 +125,7 @@ class PaymasterService extends WalletService {
       callData,
     };
 
-    const paymasterData = await this._getPaymasterAndData({
+    const paymasterData = await this._cachedOrGetPaymasterData({
       userOperation,
       id,
     });

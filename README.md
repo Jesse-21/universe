@@ -1,11 +1,10 @@
-# Universe, a beb.quest Dimension Host Implementation
+# Universe, a beb.quest Host Implementation
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a beb.quest Dimension Host. Universes are
-open-source dimension hosts for
-[BEB, a protocol making crypto fun](https://docs.beb.quest). Universes are
-accessed by clients such as [B7B](https://github.com/bebprotocol/b7b).
+Universe is an implementation of a beb.quest Host. Universes are open-source
+dimension hosts for
+[beb.quest, a protocol making crypto exploration fun](https://beb.quest).
 
 This is an early work that is subject to heavy changes, see our
 [Github Issues](https://github.com/bebprotocol/dimension/issues) if you wish to
@@ -67,14 +66,6 @@ localhost:
 NODE_ENV=production
 MONGO_URL=mongodb+srv://... # your local mongo url
 JWT_SECRET=change-this
-```
-
-### Optional environment variables
-
-```
-BLOCK_INITIALIZE=true # Block the initialization of communities on your universe
-GLOBAL_MODERATOR_ID=abc123... # An account id that can moderate all dimensions
-IMGUR_CLIENT_ID=123... # Enable imgur image uploads on all dimensions https://apidocs.imgur.com
 ```
 
 Once your environment is configured, run `yarn dev --self-hosted` to have a

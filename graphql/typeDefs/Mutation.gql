@@ -197,6 +197,7 @@ type WithCountMutationResponse implements MutationResponse {
 }
 enum PaymasterRequestType {
   CREATE_BACKPACK
+  SPONSORED_ITEM
 }
 enum AuthType {
   PASSKEY
@@ -430,6 +431,7 @@ type Mutation {
   # Paymaster mutations, requires auth
   requestGasAndPaymasterAndData(
     type: PaymasterRequestType!
+    typeId: ID
     userOp: RequestPaymasterInput
   ): PaymasterMutationResponse
 }
