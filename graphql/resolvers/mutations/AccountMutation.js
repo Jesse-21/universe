@@ -68,6 +68,36 @@ const resolvers = {
         };
       }
     },
+    addEncryptedWalletJson: async (root, args, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      try {
+        const auth = await unauthorizedErrorOrAccount(root, args, context);
+        if (!auth.account) return auth;
+
+        const updated = await auth.account.addEncryptedWalletJson(
+          args.encyrptedWalletJson
+        );
+
+        return {
+          code: "200",
+          success: true,
+          message: "Succesfully updated account",
+          account: updated,
+        };
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error(e);
+        return {
+          code: "500",
+          success: false,
+          message: e.message,
+        };
+      }
+    },
     updateCurrentAddress: async (root, args, context, info) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },

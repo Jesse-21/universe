@@ -85,6 +85,8 @@ class QuestService extends QuestRewardService {
       (data) => data?.key === "contractAddress"
     )?.value;
     if (!contractAddress) return false;
+    const count =
+      requirement?.data?.find?.((data) => data?.key === "count")?.value || 1;
     const AlchemyService = new _AlchemyService({
       apiKey: prod().NODE_URL,
       chain: prod().NODE_NETWORK,
@@ -92,9 +94,10 @@ class QuestService extends QuestRewardService {
 
     try {
       await context.account?.populate?.("addresses");
-      const isOwner = await AlchemyService.isHolderOfCollection({
-        wallet: context.account.addresses?.[0]?.address,
-        contractAddress: contractAddress,
+      const isOwner = await AlchemyService.verifyOwnership({
+        address: context.account.addresses?.[0]?.address,
+        contractAddresses: [contractAddress],
+        count,
       });
       return isOwner;
     } catch (e) {

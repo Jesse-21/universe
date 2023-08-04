@@ -1,12 +1,14 @@
 // All on Goerli
 const FactoryContractJson = require("../../helpers/abi/beb-account-factory-0.json");
+const AccountContractJson = require("../../helpers/abi/beb-account.json");
+const LootContractJson = require("../../helpers/abi/beb-loot.json");
 
 /** Factory & Entry Point */
 // version 0 / SimpleAccountFactory.sol
 
 // on OP testnet
-// https://goerli-optimism.etherscan.io/address/0xaf8aab777c6f972187fdb6ea10ebcc12f72aca9c
-const factoryContractAddress = "0xaF8Aab777c6F972187fDB6EA10EbCc12f72ACa9c";
+// https://goerli-optimism.etherscan.io/address/0x8Bb6F0f24eD6Fbace7e10222Ec6A802E85e21A36
+const factoryContractAddress = "0x8Bb6F0f24eD6Fbace7e10222Ec6A802E85e21A36"; // SimpleRecovererAccountFactory
 const entryPointAddress = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
 /** */
 
@@ -23,6 +25,8 @@ const bebOnboardingLootContractAddress =
 
 module.exports = {
   FactoryContractJson,
+  AccountContractJson,
+  LootContractJson,
   factoryContractAddress,
   entryPointAddress,
   defaultPaymasterPolicyId,

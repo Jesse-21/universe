@@ -126,16 +126,12 @@ class CommunityQuestMutationService extends CommunityQuestService {
       { communityId, questId },
       context
     );
-    await CommunityQuestAccount.findOneAndUpdate(
-      {
-        account: context.account._id,
-        communityQuest: communityQuest._id,
-      },
-      {
-        rewardClaimed: true,
-        isNotified: true, // mark as notified
-      }
-    );
+    await CommunityQuestAccount.createOrUpdate({
+      accountId: context.account._id,
+      communityQuestId: communityQuest._id,
+      rewardClaimed: true,
+      isNotified: true, // mark as notified
+    });
 
     return {
       communityQuest,

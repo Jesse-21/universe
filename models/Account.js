@@ -253,6 +253,18 @@ class AccountClass {
     return { account, accountNonce, accessToken };
   }
 
+  /**
+   * add an encrypted json wallet to an existing account
+   * @returns Promise<Account>
+   */
+  async addEncryptedWalletJson(encyrptedWalletJson) {
+    if (this.encyrptedWalletJson) {
+      throw new Error("Account already has an encrypted wallet json");
+    }
+    this.encyrptedWalletJson = encyrptedWalletJson;
+    return await this.save();
+  }
+
   async updateMe(fields) {
     const _fields = pick(fields, [
       "email",

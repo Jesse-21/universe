@@ -28,6 +28,38 @@ class CommunityQuestAccountClass {
 
     return communityQuestAccount;
   }
+
+  static async createOrUpdate({
+    accountId,
+    communityQuestId,
+    rewardClaimed,
+    isNotified,
+  }) {
+    /** step1: mandatory sanitize check */
+    if (!accountId || !communityQuestId) {
+      throw new Error("Missing required parameters");
+    }
+    /** step2: check for existing */
+    const existing = await this.findOne({
+      account: accountId,
+      communityQuest: communityQuestId,
+    });
+    if (existing) {
+      existing.rewardClaimed = rewardClaimed;
+      existing.isNotified = isNotified;
+      return await existing.save();
+    }
+
+    /** step2: create the CommunityQuest */
+    const communityQuestAccount = await this.create({
+      account: accountId,
+      communityQuest: communityQuestId,
+      rewardClaimed,
+      isNotified,
+    });
+
+    return communityQuestAccount;
+  }
 }
 
 schema.loadClass(CommunityQuestAccountClass);

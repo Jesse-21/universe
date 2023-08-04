@@ -48,27 +48,29 @@ class AccountQueryService extends AccountService {
   async backpackClaimed(account) {
     const CacheService = new _CacheService();
     const config = walletConfig();
-    const cached = await CacheService.get({
-      key: `BackpackClaimed`,
-      params: {
-        account: account._id,
-      },
-    });
-    if (cached) return cached;
+    // const cached = await CacheService.get({
+    //   key: `BackpackClaimed`,
+    //   params: {
+    //     account: account._id,
+    //   },
+    // });
+    // if (cached) return cached;
     const _backpackAddress = await this.backpackAddress(account);
     if (!_backpackAddress) return false;
     const isClaimed = await isDeployedContract(_backpackAddress, {
       network: config.CHAIN_ID,
       apiKey: config.API_KEY,
     });
-    CacheService.set({
-      key: `BackpackClaimed`,
-      params: {
-        account: account._id,
-      },
-      value: isClaimed,
-      expiresAt: null,
-    });
+    if (isClaimed) {
+      CacheService.set({
+        key: `BackpackClaimed`,
+        params: {
+          account: account._id,
+        },
+        value: isClaimed,
+        expiresAt: null,
+      });
+    }
     return isClaimed;
   }
 
@@ -79,13 +81,13 @@ class AccountQueryService extends AccountService {
 
       if (!account || !ownerAddress) return null;
       const CacheService = new _CacheService();
-      const cached = await CacheService.get({
-        key: `BackpackAddress`,
-        params: {
-          account: account._id,
-        },
-      });
-      if (cached) return cached;
+      // const cached = await CacheService.get({
+      //   key: `BackpackAddress`,
+      //   params: {
+      //     account: account._id,
+      //   },
+      // });
+      // if (cached) return cached;
 
       const config = walletConfig();
       const provider = new ethers.providers.AlchemyProvider(

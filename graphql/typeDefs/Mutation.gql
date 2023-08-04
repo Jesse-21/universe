@@ -212,6 +212,7 @@ type Mutation {
     chainId: Int!
     email: String
   ): AccountMutationResponse
+  addEncryptedWalletJson(encyrptedWalletJson: String!): AccountMutationResponse
   authByEncryptedWalletJson(
     encyrptedWalletJson: String!
     email: String!
@@ -432,6 +433,7 @@ type Mutation {
   requestGasAndPaymasterAndData(
     type: PaymasterRequestType!
     typeId: ID
+    params: String
     userOp: RequestPaymasterInput
   ): PaymasterMutationResponse
 }

@@ -3,8 +3,8 @@ const {
   CommunityQuestAccount,
 } = require("../models/quests/CommunityQuestAccount");
 
-const { Service: _QuestService } = require("./QuestService");
-class CommunityQuestService {
+const { Service: QuestService } = require("./QuestService");
+class CommunityQuestService extends QuestService {
   /**
    * Check if a communityQuest can claim the reward
    * @TODO THIS IS A HACK AND SHOULD BE REFACTORED OR DEPRECATED
@@ -16,16 +16,21 @@ class CommunityQuestService {
 
     const quest = await Quest.findById(communityQuest.quest);
     const requirement = quest?.requirements?.[0];
-    if (
-      requirement?.type.includes("FARCASTER") ||
-      requirement?.type.includes("VALID_NFT")
-    ) {
-      const communityQuestAccount = await CommunityQuestAccount.findOne({
-        communityQuest: communityQuest._id,
-        account: context.account?._id || context.accountId,
-      });
-      if (!communityQuestAccount) return false;
-      return !communityQuestAccount.rewardClaimed;
+    const communityQuestAccount = await CommunityQuestAccount.findOne({
+      communityQuest: communityQuest._id,
+      account: context.account?._id || context.accountId,
+    });
+    if (communityQuestAccount?.rewardClaimed) return false; // already claimed
+
+    if (requirement?.type.includes("FARCASTER")) {
+      return !!communityQuestAccount;
+    } else if (requirement?.type.includes("VALID_NFT")) {
+      const canClaim = await this._canCompleteValidNFTQuest(
+        quest,
+        { requirement },
+        context
+      );
+      return canClaim;
     }
     switch (requirement?.type) {
       case "COMMUNITY_PARTICIPATION": {
@@ -68,8 +73,7 @@ class CommunityQuestService {
     }
 
     const quest = await Quest.findById(communityQuest.quest);
-    const QuestService = new _QuestService();
-    const canCompleteQuest = await QuestService.canCompleteQuest(
+    const canCompleteQuest = await this.canCompleteQuest(
       quest,
       { communityId: communityQuest.community },
       context

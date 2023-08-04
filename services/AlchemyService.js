@@ -179,7 +179,7 @@ class AlchemyService {
    * Verify if address owns at least one token of contractAddresses[]
    * @returns Promise<{Boolean}>
    */
-  async verifyOwnership({ contractAddresses, address }) {
+  async verifyOwnership({ contractAddresses, address, count = 1 }) {
     if (!address || !contractAddresses) return false;
     try {
       const result = await this.getNFTs({
@@ -189,7 +189,8 @@ class AlchemyService {
           : [contractAddresses],
       });
       const found = result?.ownedNfts?.[0];
-      return !!found;
+      if (count <= 1) return !!found;
+      return result?.totalCount >= count;
     } catch (e) {
       Sentry.captureException(e, "AlchemyService.getOwnersForToken");
       return false;

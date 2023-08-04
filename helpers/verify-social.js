@@ -15,7 +15,7 @@ const verifyTwitter = async (url, text) => {
 
   const html = data.html;
 
-  return html.includes(text);
+  return html.includes("@bebprotocol");
 };
 
 module.exports = {

@@ -11,10 +11,15 @@ const { Account } = require("../models/Account");
 const { AccountNonce } = require("../models/AccountNonce");
 
 class PaymasterService extends WalletService {
-  constructor({ apiKey, chain = "opt-goerli" }) {
-    super();
+  constructor({ apiKey, chain = "opt-goerli", chainId = 420 }) {
+    super({
+      apiKey,
+      chain,
+      chainId,
+    });
     this.apiKey = apiKey;
     this.chain = chain;
+    this.chainId = chainId;
     if (this.chain === "homestead") {
       this.chain = "mainnet";
     }
@@ -36,34 +41,40 @@ class PaymasterService extends WalletService {
   }) {
     const route = `${this.getBaseRoute()}`;
 
-    const res = await axios.post(
-      `${route}`,
-      {
-        id,
-        jsonrpc: "2.0",
-        method: "alchemy_requestGasAndPaymasterAndData",
-        params: [
-          {
-            policyId: policyId,
-            entryPoint: entryPoint,
-            dummySignature: dummySignature,
-            userOperation,
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const res = await axios.post(
+        `${route}`,
+        {
+          id,
+          jsonrpc: "2.0",
+          method: "alchemy_requestGasAndPaymasterAndData",
+          params: [
+            {
+              policyId: policyId,
+              entryPoint: entryPoint,
+              dummySignature: dummySignature,
+              userOperation,
+            },
+          ],
         },
-        timeout: TIMEOUT_MS,
-      }
-    );
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: TIMEOUT_MS,
+        }
+      );
 
-    if (res?.data?.error) {
-      Sentry.captureException(JSON.stringify(res?.data?.error));
-      throw new Error(JSON.stringify(res?.data?.error));
+      if (res?.data?.error) {
+        Sentry.captureException(JSON.stringify(res?.data?.error));
+        throw new Error(JSON.stringify(res?.data?.error));
+      }
+      return res?.data.result;
+    } catch (e) {
+      console.log("error", e.response?.data?.error);
+      Sentry.captureException(e);
+      throw e;
     }
-    return res?.data.result;
   }
 
   async _cachedOrGetPaymasterData({ userOperation, ...props }) {
@@ -84,7 +95,7 @@ class PaymasterService extends WalletService {
       params: {
         userOperation,
       },
-      expiresAt: Date.now() + 1000 * 60 * 10, // 10 minute
+      expiresAt: Date.now() + 1000 * 60 * 2, // 2 minutes
       value: paymasterData,
     });
 
@@ -92,27 +103,22 @@ class PaymasterService extends WalletService {
   }
 
   /** On testnet so not needing permission/auth for now */
-  handleCreateBackpackPaymaster = async ({
+  async _handleCreateBackpackPaymaster({
     id = 1, // request id to send to alchemy
-    // the initial sender is the owner of the backpack, but not the counterfactual address of the backpack.
-    sender,
-  }) => {
-    const account = await Account.findOrCreateByAddressAndChainId({
-      address: sender,
-      chainId: 1,
-    });
-    const AccountQueryService = new _AccountQueryService();
-    const backpackAddress = await AccountQueryService.backpackAddress(account);
+    userOp = {},
+    accountId,
+    backpackAddress,
+  }) {
     if (!backpackAddress) {
       throw new Error("No backpack address found");
     }
     const accountNonce = await AccountNonce.findOne({
-      account: account._id,
+      account: accountId,
     });
     const salt = accountNonce.salt;
 
     const initCode = this.getInitCode({
-      ownerAddress: sender,
+      ownerAddress: userOp.sender,
       salt,
     });
 
@@ -133,7 +139,74 @@ class PaymasterService extends WalletService {
       ...paymasterData,
       ...userOperation,
     };
-  };
+  }
+
+  async _handleSponsoredItemPaymaster({
+    id = 1, // request id to send to alchemy
+    params = [],
+    backpackAddress,
+  }) {
+    const sponsoredLootAddress = constants.bebOnboardingLootContractAddress;
+
+    const callData = this.getCallData({
+      abi: constants.LootContractJson.abi,
+      functionName: "mint",
+      contractAddress: sponsoredLootAddress,
+      params,
+    });
+    const nonce = await this.getBackpackNonce(backpackAddress);
+
+    const userOperation = {
+      sender: backpackAddress,
+      nonce: nonce.toHexString(),
+      initCode: "0x",
+      callData,
+    };
+
+    const paymasterData = await this._cachedOrGetPaymasterData({
+      userOperation,
+      id,
+    });
+    return {
+      ...paymasterData,
+      ...userOperation,
+    };
+  }
+
+  async handlePaymaster({ userOp, type, typeId, params = "" }) {
+    if (!userOp.sender) {
+      throw new Error("No sender found");
+    }
+    const account = await Account.findOrCreateByAddressAndChainId({
+      address: userOp.sender,
+      chainId: 1,
+    });
+    const AccountQueryService = new _AccountQueryService();
+    const backpackAddress = await AccountQueryService.backpackAddress(account);
+
+    // @TODO generate unique Ids
+    try {
+      if (type === "CREATE_BACKPACK") {
+        return this._handleCreateBackpackPaymaster({
+          userOp,
+          backpackAddress,
+          accountId: account?._id,
+        });
+      } else if (type === "SPONSORED_ITEM") {
+        const paramsArray = params.split(",") || [];
+        return this._handleSponsoredItemPaymaster({
+          userOp,
+          backpackAddress,
+          params: paramsArray,
+        });
+      } else {
+        throw new Error("Invalid type");
+      }
+    } catch (e) {
+      Sentry.captureException(e);
+      throw e;
+    }
+  }
 }
 
 module.exports = { Service: PaymasterService };

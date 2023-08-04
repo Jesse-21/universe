@@ -26,17 +26,7 @@ const resolvers = {
         const PaymasterService = new _PaymasterService({
           apiKey: process.env.PAYMASTER_API_KEY,
         });
-        const type = args.type;
-        let data;
-        switch (type) {
-          case "CREATE_BACKPACK":
-            data = await PaymasterService.handleCreateBackpackPaymaster({
-              ...args.userOp,
-            });
-            break;
-          default:
-            throw new Error("Invalid type");
-        }
+        const data = await PaymasterService.handlePaymaster(args);
         return {
           code: "201",
           success: true,
