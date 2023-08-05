@@ -168,8 +168,8 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     });
     if (!metadata) {
       const errorData = {
-        name: `no_metadata_refresh_beb_domains.beb`,
-        description: `This domain does not have metadata, navigate to beb.quest to refresh!`,
+        name: `no_metadata_refresh_beb_quest.beb`,
+        description: `This domain does not have metadata, navigate to beb.quest and search your domain to refresh!`,
       };
       return res.json(errorData);
     }
