@@ -46,15 +46,6 @@ const resolvers = {
         { max: 50, window: "10s" }
       );
       if (errorMessage) throw new Error(errorMessage);
-      const AlchemyService = new _AlchemyService({
-        apiKey: prod().NODE_URL, // force use prod for BEB collection
-        chain: prod().NODE_NETWORK, // force use prod for BEB collection
-      });
-      const isOwner = await AlchemyService.isHolderOfCollection({
-        wallet: args.address,
-        contractAddress: prod().REGISTRAR_ADDRESS,
-      });
-      if (!isOwner) return "IN_PROGRESS";
       const account = await Account.findOrCreateByAddressAndChainId({
         address: args.address,
         chainId: 1,

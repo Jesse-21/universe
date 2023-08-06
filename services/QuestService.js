@@ -78,15 +78,22 @@ class QuestService extends QuestRewardService {
    * Under the hood this uses the same logic as claim role
    * @returns Promise<Boolean>
    * */
-  // DO NOT USE, NOT TESTED, NO WARRANTY
   async _canCompleteValidNFTQuest(quest, { requirement }, context) {
-    // DO NOT USE, NOT TESTED, NO WARRANTY
-    const contractAddress = requirement?.data?.find?.(
-      (data) => data?.key === "contractAddress"
-    )?.value;
+    const dataMapping = {};
+    requirement?.data?.forEach((dataItem) => {
+      if (dataItem?.key) {
+        dataMapping[dataItem.key] = dataItem.value;
+      }
+    });
+
+    const {
+      contractAddress,
+      count = 1,
+      attributeType = null,
+      attributeValue = null,
+    } = dataMapping;
     if (!contractAddress) return false;
-    const count =
-      requirement?.data?.find?.((data) => data?.key === "count")?.value || 1;
+
     const AlchemyService = new _AlchemyService({
       apiKey: prod().NODE_URL,
       chain: prod().NODE_NETWORK,
@@ -98,12 +105,13 @@ class QuestService extends QuestRewardService {
         address: context.account.addresses?.[0]?.address,
         contractAddresses: [contractAddress],
         count,
+        attributeType,
+        attributeValue,
       });
       return isOwner;
     } catch (e) {
       return false;
     }
-    // DO NOT USE, NOT TESTED, NO WARRANTY
   }
   /**
    * Check if the quest can be completed by an account
