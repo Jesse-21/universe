@@ -83,6 +83,7 @@ class CommunityQuestService extends QuestService {
   }
 
   async checkIfCommunityQuestClaimedByAddress(communityQuest, _, context) {
+    if (!communityQuest) return false;
     // if account already completed the quest and cannot claim reward
     const communityQuestAccount = await CommunityQuestAccount.findOne({
       communityQuest: communityQuest._id,
