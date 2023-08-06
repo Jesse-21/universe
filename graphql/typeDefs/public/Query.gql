@@ -85,6 +85,11 @@ type CommunityQuestQuery {
     communityId: ID!
     address: String!
   ): CommunityQuestStatus
+  checkIfCommunityQuestClaimedByAddress(
+    questId: ID!
+    communityId: ID!
+    address: String!
+  ): Boolean
   getCommunityQuest(questId: ID!, communityId: ID!): CommunityQuest
   getCommunityRewards(
     limit: Int

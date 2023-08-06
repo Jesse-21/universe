@@ -81,6 +81,16 @@ class CommunityQuestService extends QuestService {
     if (canCompleteQuest) return "CAN_COMPLETE";
     return "IN_PROGRESS";
   }
+
+  async checkIfCommunityQuestClaimedByAddress(communityQuest, _, context) {
+    // if account already completed the quest and cannot claim reward
+    const communityQuestAccount = await CommunityQuestAccount.findOne({
+      communityQuest: communityQuest._id,
+      account: context.account?._id || context.accountId,
+    });
+    if (communityQuestAccount?.rewardClaimed) return true;
+    return false;
+  }
 }
 
 module.exports = { Service: CommunityQuestService };

@@ -40,10 +40,41 @@ const resolvers = {
         context
       );
     },
+    checkIfCommunityQuestClaimedByAddress: async (
+      root,
+      args,
+      context,
+      info
+    ) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: 200, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      const account = await Account.findByAddressAndChainId({
+        address: args.address,
+        chainId: 1,
+      });
+      if (!account) return false;
+
+      const communityQuest = await CommunityQuest.findOne({
+        community: args.communityId,
+        quest: args.questId,
+      });
+
+      return await new CommunityQuestService().checkIfCommunityQuestClaimedByAddress(
+        communityQuest,
+        {
+          communityId: args.communityId,
+          questId: args.questId,
+        },
+        { ...context, account }
+      );
+    },
     getCommunityQuestStatusByAddress: async (root, args, context, info) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },
-        { max: 50, window: "10s" }
+        { max: RATE_LIMIT_MAX, window: "10s" }
       );
       if (errorMessage) throw new Error(errorMessage);
       const account = await Account.findOrCreateByAddressAndChainId({
