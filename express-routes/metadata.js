@@ -67,16 +67,7 @@ const { JSDOM } = jsdom;
 // Rate limiting middleware
 const lightLimiter = rateLimit({
   windowMs: 1_000, // 1s
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: "Too many requests, please try again later.",
-  handler: (req, res, next) => {
-    res.status(429).send("Too many requests, please try again later.");
-  },
-});
-
-const heavyLimiter = rateLimit({
-  windowMs: 10_000, // 10s
-  max: 40, // limit each IP to 40 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
@@ -143,7 +134,7 @@ app.get("/domain/:domain", lightLimiter, async (req, res) => {
 const bebLogo =
   '<svg height="100%" fill="rgb(0,0,0,0.6)" version="1" viewBox="100 -50 1280 1280"></svg>';
 
-app.get("/uri/:uri", heavyLimiter, async (req, res) => {
+app.get("/uri/:uri", lightLimiter, async (req, res) => {
   try {
     const uri = req.params.uri;
 
