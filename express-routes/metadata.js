@@ -182,15 +182,7 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
     let rng = new Prando(rawDomain);
 
     const RegistrarService = new _RegistrarService();
-    const owner = await RegistrarService.getOwner(rawDomain);
     const expiresAt = await RegistrarService.expiresAt(rawDomain);
-    if (!owner) {
-      const errorData = {
-        name: `no_owner_beb_domains.beb`,
-        description: `This domain does not have an owner, try refreshing metadata!`,
-      };
-      return res.json(errorData);
-    }
 
     let length = [...rawDomain].length;
     let base = 0.95;
@@ -252,7 +244,6 @@ app.get("/uri/:uri", heavyLimiter, async (req, res) => {
 
     let data = {
       name: `${rawDomain}.beb`,
-      owner,
       external_url: `https://${rawDomain}.beb.xyz`,
       description: `Check the status of ${rawDomain}.beb on beb.quest, and try our first game at farquest.app 👁️`,
       host: "https://protocol.beb.xyz/graphql",

@@ -2,6 +2,7 @@ const ethers = require("ethers");
 
 const Sentry = require("@sentry/node");
 const { Service: _AlchemyService } = require("./AlchemyService");
+const { Service: _CacheService } = require("./cache/CacheService");
 const {
   Service: _FarcasterService,
 } = require("./identities/FarcasterServiceV2");
@@ -60,18 +61,23 @@ class RegistrarService {
     if (!domain) return null;
     const tokenId = this.getTokenIdFromLabel(domain);
     try {
-      if (tld === "eth") {
-        const data = await this.AlchemyService.getOwnersForToken({
-          tokenId,
-          contractAddress: "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+      const CacheService = new _CacheService();
+      const cachedOwner = await CacheService.get({
+        key: `RegistrarService.getOwner`,
+        params: { domain },
+      });
+      if (cachedOwner) return cachedOwner;
+      const owner = await this.registrar.ownerOf(tokenId);
+      if (owner) {
+        CacheService.set({
+          key: `RegistrarService.getOwner`,
+          params: { domain },
+          value: owner,
+          // 1 day
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now,
         });
-        return data?.owners?.[0];
-      } else if (tld === "fc") {
-        const FarcasterService = new _FarcasterService();
-        const profile = await FarcasterService.getProfileByUsername(domain);
-        return profile?.address;
       }
-      return await this.registrar.ownerOf(tokenId);
+      return owner;
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
@@ -93,11 +99,33 @@ class RegistrarService {
    * Get community expires date
    * @returns {Promise<string>}
    */
-  async expiresAt(bebdomain) {
-    if (!bebdomain) return null;
-    const tokenId = this.getTokenIdFromLabel(bebdomain);
-    const nameDuration = await this.registrar.nameExpires(tokenId);
-    return nameDuration.toString();
+  async expiresAt(domain) {
+    if (!domain) return null;
+    const tokenId = this.getTokenIdFromLabel(domain);
+    try {
+      const CacheService = new _CacheService();
+      const cachedDuration = await CacheService.get({
+        key: `RegistrarService.expiresAt`,
+        params: { domain },
+      });
+      if (cachedDuration) return cachedDuration;
+      const nameDuration = await this.registrar.nameExpires(tokenId);
+      if (nameDuration) {
+        CacheService.set({
+          key: `RegistrarService.expiresAt`,
+          params: { domain },
+          value: nameDuration.toString(),
+          // 1 day
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now,
+        });
+      }
+      return nameDuration?.toString();
+    } catch (e) {
+      Sentry.captureException(e);
+      console.error(e);
+      // tokenId is not registered
+      return null;
+    }
   }
 
   /**
