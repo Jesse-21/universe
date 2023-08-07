@@ -32,6 +32,7 @@ const questRequirementSchema = mongoose.Schema({
       "VALID_NFT_3",
       "VALID_NFT_5",
       "SHARE",
+      "MULTICHOICE_SINGLE_QUIZ", // one question multi choice
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW
@@ -62,6 +63,8 @@ const questRewardsSchema = mongoose.Schema({
 const schema = mongoose.Schema(
   {
     description: contentSchema,
+    startsAt: { type: Date }, // when the quest starts, null if never
+    endsAt: { type: Date }, // when the quest expires, null if never
     title: { type: String },
     community: {
       type: mongoose.Schema.Types.ObjectId,

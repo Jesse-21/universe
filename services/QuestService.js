@@ -16,6 +16,8 @@ class QuestService extends QuestRewardService {
         // @params indexer rule id determines the rule to check when an account checks in
         // @params requiredParticipationCount determines the number of accounts check in needed to complete the quest
         return ["richBlockId", "requiredParticipationCount"];
+      case "MULTICHOICE_SINGLE_QUIZ":
+        return ["question", "answers", "correctAnswer"];
       default:
         return [];
     }
@@ -116,8 +118,10 @@ class QuestService extends QuestRewardService {
   /**
    * Check if the quest can be completed by an account
    * @TODO add more than one requirement
+   * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
    * @returns Promise<Boolean>
    * */
+  // * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
   async canCompleteQuest(quest, { communityId }, context) {
     if (!quest || !context.account) return false;
     const requirement = quest.requirements?.[0];
@@ -138,6 +142,7 @@ class QuestService extends QuestRewardService {
         return false;
     }
   }
+  // * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
 
   /**
    * Create Quest Rewards or use existing Assets
@@ -211,6 +216,8 @@ class QuestService extends QuestRewardService {
     requirements = [],
     rewards = [],
     community,
+    startsAt,
+    endsAt,
   } = {}) {
     const ContentService = new _ContentService();
     const content = ContentService.makeContent({
@@ -224,6 +231,8 @@ class QuestService extends QuestRewardService {
       imageUrl,
       schedule,
       community,
+      startsAt,
+      endsAt,
     });
     quest.requirements = await this.createQuestRequirements({
       requirements,
