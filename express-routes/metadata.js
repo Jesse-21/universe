@@ -1,9 +1,7 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
-const axios = require("axios").default;
 const d3 = import("d3");
 const jsdom = require("jsdom");
-var Prando = require("prando");
 const { validateName } = require("../helpers/validate-community-name");
 const keccak256 = require("web3-utils").keccak256;
 const utf8ToHex = require("web3-utils").utf8ToHex;
@@ -169,8 +167,6 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
     const fakeDom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
 
     let body = (await d3).select(fakeDom.window.document).select("body");
-
-    let rng = new Prando(rawDomain);
 
     const RegistrarService = new _RegistrarService();
     const expiresAt = await RegistrarService.expiresAt(rawDomain);
