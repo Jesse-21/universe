@@ -23,7 +23,7 @@ class AccountInviteClass {
       useCount,
       maxUseCount,
       expiresAt,
-      code: `${crypto.randomInt(100000, 1000000)}`,
+      code: `${crypto.randomInt(10000000, 100000000)}`,
     });
   }
 }
