@@ -2,7 +2,7 @@ const { SearchService, AuthService } = require("../../../services");
 const { getGraphQLRateLimiter } = require("graphql-rate-limit");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 250;
+const RATE_LIMIT_MAX = 1_000;
 const resolvers = {
   AccountQuery: {
     _id: () => "AccountQuery",

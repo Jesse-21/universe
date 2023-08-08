@@ -13,7 +13,7 @@ const {
 } = require("../../../services/mutationServices/CommunityMutationService");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 1_000;
 const CommunityMutationService = new _CommunityMutationService();
 
 const resolvers = {

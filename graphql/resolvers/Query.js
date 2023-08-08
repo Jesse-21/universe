@@ -42,7 +42,7 @@ const {
 } = require("../../helpers/get-address-from-ens");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 250;
+const RATE_LIMIT_MAX = 1_000;
 
 const resolvers = {
   Query: {
