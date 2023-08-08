@@ -6,6 +6,7 @@ const TIMEOUT = 10000;
 
 /** verify if tweet contains text */
 const verifyTwitter = async (url, text) => {
+  if (!url) return false;
   const { data } = await axios.get(
     `https://publish.twitter.com/oembed?url=${url}`,
     {
