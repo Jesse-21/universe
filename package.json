@@ -1,6 +1,6 @@
 {
   "name": "universe",
-  "version": "2.1.23",
+  "version": "2.1.24",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:bebprotocol/universe.git",
@@ -18,7 +18,7 @@
     "migrate:prod:down": "migrate down -f .migrate-prod --env .env.migration"
   },
   "dependencies": {
-    "@apollo/server": "^4.3.0",
+    "@apollo/server": "^4.9.1",
     "@apollo/server-plugin-response-cache": "^4.1.0",
     "@ensdomains/ens-validation": "^0.1.0",
     "@ensdomains/eth-ens-namehash": "^2.0.15",
