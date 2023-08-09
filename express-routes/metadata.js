@@ -6,7 +6,6 @@ const { validateName } = require("../helpers/validate-community-name");
 const keccak256 = require("web3-utils").keccak256;
 const utf8ToHex = require("web3-utils").utf8ToHex;
 const { ethers } = require("ethers");
-const filter = require("../helpers/filter");
 const { Service: _RegistrarService } = require("../services/RegistrarService");
 const rateLimit = require("express-rate-limit");
 
@@ -231,9 +230,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
 
     let data = {
       name: `${rawDomain}.beb`,
-      external_url: `https://${rawDomain}.beb.xyz`,
       description: `Check the status of ${rawDomain}.beb on beb.quest, and try our first game at farquest.app 👁️`,
-      host: "https://protocol.beb.xyz/graphql",
       image,
       attributes: [
         {
@@ -256,13 +253,6 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
         },
       ],
     };
-
-    if (filter.isProfane(rawDomain) && process.env.MODE !== "self-hosted") {
-      data = {
-        name: `hidden_domain.beb`,
-        description: `This domain is hidden, see beb.quest/guidelines for more details!`,
-      };
-    }
 
     return res.json(data);
   } catch (e) {
