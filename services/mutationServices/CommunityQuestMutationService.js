@@ -105,7 +105,7 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * Claim the reward of a Quest for a community or Error
    * @returns Promise<{ communityQuest: CommunityQuest, communityAssets: CommunityAsset[] }>
    * */
-  async claimRewardOrError(_, { communityId, questId }, context) {
+  async claimRewardOrError(_, { communityId, questId, questData }, context) {
     const communityQuest = await CommunityQuest.findOne({
       community: communityId,
       quest: questId,
@@ -115,7 +115,7 @@ class CommunityQuestMutationService extends CommunityQuestService {
     }
     const canClaimReward = await this.canClaimReward(
       communityQuest,
-      { communityId, questId },
+      { communityId, questId, questData },
       context
     );
     if (!canClaimReward)

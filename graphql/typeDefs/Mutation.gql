@@ -407,11 +407,13 @@ type Mutation {
   claimReward(
     questId: ID!
     communityId: ID!
+    questData: [QuestInput]
   ): CommunityQuestWithAssetsMutationResponse
   claimRewardByAddress(
     questId: ID!
     communityId: ID!
     address: String!
+    questData: [QuestInput]
   ): CommunityQuestWithAssetsMutationResponse # anyone can claim reward
   claimCommunityRewardByAddress(
     communityRewardId: ID!

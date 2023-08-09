@@ -10,11 +10,12 @@ class CommunityQuestService extends QuestService {
    * @TODO THIS IS A HACK AND SHOULD BE REFACTORED OR DEPRECATED
    * @returns Promise<Boolean>
    * */
-  async canClaimReward(communityQuest, _, context) {
+  async canClaimReward(communityQuest, { questData = [] }, context) {
     if (!communityQuest) return false;
     if (communityQuest.isArchived) return false;
 
     const quest = await Quest.findById(communityQuest.quest);
+    if (!quest || (quest.startsAt && quest.startsAt > new Date())) return false;
     const requirement = quest?.requirements?.[0];
     const communityQuestAccount = await CommunityQuestAccount.findOne({
       communityQuest: communityQuest._id,
@@ -39,6 +40,14 @@ class CommunityQuestService extends QuestService {
             (data) => data.key === "requiredParticipationCount"
           )?.value || 1;
         return communityQuest.accounts?.length >= requiredAmount;
+      }
+      case "MULTICHOICE_SINGLE_QUIZ": {
+        const answer = questData.find((input) => input.key === "answer")?.value;
+        if (!answer) return false;
+        const correctAnswer = requirement.data?.find(
+          (d) => d.key === "correctAnswer"
+        )?.value;
+        return answer.toLowerCase() === correctAnswer?.toLowerCase();
       }
       default: {
         return false;

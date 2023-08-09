@@ -77,6 +77,7 @@ const resolvers = {
             {
               communityId: args.communityId,
               questId: args.questId,
+              questData: args.questData,
             },
             context
           );
@@ -134,6 +135,7 @@ const resolvers = {
             {
               communityId: args.communityId,
               questId: args.questId,
+              questData: args.questData,
             },
             { ...context, account }
           );

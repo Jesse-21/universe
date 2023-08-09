@@ -3,6 +3,11 @@ input RichContentBlockInput {
   blockId: ID!
 }
 
+input QuestInput {
+  key: String
+  value: String
+}
+
 input ContentInput {
   raw: String
   json: String

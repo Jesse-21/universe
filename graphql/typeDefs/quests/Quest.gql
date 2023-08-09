@@ -24,6 +24,7 @@ enum QuestRequirementType {
   FARCASTER_FOLLOWERS_10
   SCORE
   SHARE
+  MULTICHOICE_SINGLE_QUIZ
 }
 enum QuestRewardType {
   ASSET_3D
@@ -62,4 +63,6 @@ type Quest {
   imageUrl: String
   requirements: [QuestRequirement]
   rewards: [QuestReward]
+  startsAt: String
+  endsAt: String
 }
