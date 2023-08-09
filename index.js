@@ -61,7 +61,7 @@ if (process.env.SENTRY_DSN) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    introspection: true,
+    introspection: process.env.NODE_ENV === "development",
     cache: "bounded",
     csrfPrevention: true,
     formatError: (e) => {
