@@ -46,7 +46,6 @@ const resolvers = merge(
   Account,
   AccountSection,
   AccountThread,
-  AccountInventory,
   AccountRelationship,
   AccountCommunityRole,
   Thread,
@@ -63,6 +62,7 @@ const resolvers = merge(
   Quest,
   ChannelResolvers,
   ChannelRecipientResolvers,
+  AccountInventory,
   /** Community Resolvers */
   CommunityResolvers,
   /** mutation resolvers */
