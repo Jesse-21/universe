@@ -7,6 +7,7 @@ const {
 const {
   CommunityQuestAccount,
 } = require("../../models/quests/CommunityQuestAccount");
+const { AccountInventory } = require("../../models/AccountInventory");
 const { Community } = require("../../models/Community");
 
 // const { Service: _QuestService } = require("../QuestService");
@@ -19,7 +20,6 @@ const {
   Service: _CommunityAssetsService,
 } = require("../assets/CommunityAssetsService");
 const { Service: _ScoreService } = require("../ScoreService");
-const { Service: _CacheService } = require("../../services/cache/CacheService");
 
 const CommunityAssetsService = new _CommunityAssetsService();
 const ScoreService = new _ScoreService();
@@ -39,7 +39,6 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * @returns Promise<CommunityAsset[]>
    * */
   async _claimRewardByType(reward, { communityId }, context) {
-    const CacheService = new _CacheService();
     if (reward.type === "ASSET_3D") {
       await CommunityAssetsService.addQuantityOrCreateAsset(null, {
         assetId: reward.rewardId,
@@ -53,27 +52,24 @@ class CommunityQuestMutationService extends CommunityQuestService {
       if (!address) {
         throw new Error("You must be logged in to claim this reward.");
       }
-      const community = await Community.findById(communityId);
+      // use default scoreType for now
+      const scoreType =
+        process.env.NODE_ENV === "development" ? "beta" : "playground";
       await ScoreService.setScore({
         address: address,
-        scoreType: community.bebdomain,
+        scoreType,
         modifier: reward.quantity,
       });
     } else if (reward.type === "IMAGE") {
-      await context.account?.populate?.("addresses");
-      const address = context.account?.addresses?.[0]?.address;
-      if (!address) {
+      if (!context.account) {
         throw new Error("You must be logged in to claim this reward.");
       }
-      // for now store in cache
-      const key = "ClaimRewardNFT";
-      return await CacheService.setWithDupe({
-        key: key,
-        params: {
-          address: address,
-        },
-        value: reward._id,
-        // custom scores never expire, so has no expiredAt
+
+      await AccountInventory.createOrUpdate({
+        accountId: context.account._id,
+        rewardId: reward.rewardId,
+        rewardType: reward.type,
+        modifier: reward.quantity,
       });
     }
 

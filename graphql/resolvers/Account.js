@@ -7,6 +7,7 @@ const { AccountThread } = require("../../models/AccountThread");
 const { AccountCommunity } = require("../../models/AccountCommunity");
 const { AccountExp } = require("../../models/AccountExp");
 const { AccountInvite } = require("../../models/AccountInvite");
+const { AccountInventory } = require("../../models/AccountInventory");
 
 const {
   Service: _AccountQueryService,
@@ -90,6 +91,14 @@ const resolvers = {
         await AccountThread.findAndSortByLatestThreadMessage(parent._id, args);
 
       return accountThreads;
+    },
+    inventory: async (parent, args) => {
+      const inventoryItems = await AccountInventory.findAndSort({
+        ...args,
+        filters: { account: parent._id },
+      });
+
+      return inventoryItems;
     },
     email: async (parent, args, context) => {
       const hasAccess = isAuthorizedToAccessResource(

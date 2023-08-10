@@ -37,12 +37,16 @@ const { resolvers: QuestsResolvers } = require("./resolvers/queries");
 const {
   resolvers: CommunityResolvers,
 } = require("./resolvers/community/index.js");
+const {
+  resolvers: AccountInventory,
+} = require("./resolvers/AccountInventory.js");
 
 /** main resolvers */
 const resolvers = merge(
   Account,
   AccountSection,
   AccountThread,
+  AccountInventory,
   AccountRelationship,
   AccountCommunityRole,
   Thread,

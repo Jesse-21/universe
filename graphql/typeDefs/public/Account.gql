@@ -44,7 +44,15 @@ type Account {
     filters: AccountThreadsFilterInput
   ): [AccountThread]
   accountCommunities(limit: Int, offset: Int): [AccountCommunity]
+  inventory(limit: Int, offset: Int): [AccountInventoryItem]
   identities: AccountIdentity
   invite: AccountInvite
   hasPremiumRole: Boolean # true if account is a beb domain holder AND claimed the role
+}
+type AccountInventoryItem {
+  _id: ID
+  account: Account
+  reward: QuestRewardItem
+  rewardType: QuestRewardType
+  quantity: Int
 }
