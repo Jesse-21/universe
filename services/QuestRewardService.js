@@ -30,6 +30,8 @@ class QuestRewardService {
             verificationContractAddress: rewardData.verificationContractAddress,
             verificationExternalUrl: rewardData.verificationExternalUrl,
             name: rewardData.name,
+            metadata: rewardData.metadata,
+            description: rewardData.description,
           });
           break;
         }
@@ -52,6 +54,7 @@ class QuestRewardService {
             verificationExternalUrl: rewardData.verificationExternalUrl,
             name: rewardData.name,
             metadata: rewardData.metadata,
+            description: rewardData.description,
           });
           break;
         }

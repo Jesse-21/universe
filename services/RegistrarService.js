@@ -61,22 +61,7 @@ class RegistrarService {
     if (!domain) return null;
     const tokenId = this.getTokenIdFromLabel(domain);
     try {
-      const CacheService = new _CacheService();
-      const cachedOwner = await CacheService.get({
-        key: `RegistrarService.getOwner`,
-        params: { domain },
-      });
-      if (cachedOwner) return cachedOwner;
       const owner = await this.registrar.ownerOf(tokenId);
-      if (owner) {
-        CacheService.set({
-          key: `RegistrarService.getOwner`,
-          params: { domain },
-          value: owner,
-          // 1 day
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now,
-        });
-      }
       return owner;
     } catch (e) {
       Sentry.captureException(e);
