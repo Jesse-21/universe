@@ -12,6 +12,7 @@ const { router: referralRouter } = require("./express-routes/referral");
 const { router: utilsRouter } = require("./express-routes/utils");
 const { router: communityRouter } = require("./express-routes/community");
 const { router: metadataRouter } = require("./express-routes/metadata");
+const { router: farcasterRouter } = require("./express-routes/farcaster");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
@@ -144,6 +145,7 @@ if (process.env.SENTRY_DSN) {
   app.use("/ens/", ensRouter);
   app.use("/score", scoreRouter);
   app.use("/referral", referralRouter);
+  app.use("/farcaster", farcasterRouter);
 
   require("yargs").command(
     "$0",
