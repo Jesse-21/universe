@@ -40,7 +40,7 @@ const schema = mongoose.Schema(
     host: {
       type: String,
       index: true,
-      default: "https://protocol.beb.xyz/graphql",
+      default: "https://protocol.beb.quest/graphql",
     },
     /** the hashed token Id from the registrar */
     tokenId: {

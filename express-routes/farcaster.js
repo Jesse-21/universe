@@ -1,8 +1,10 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
-const fetch = require("node-fetch");
+
 const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
+
+const { getAllRecentCasts, getCast, getCasts } = require("../helpers/warpcast");
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -15,46 +17,15 @@ const CacheService = new _CacheService();
 
 const FARCASTER_KEY = "farcaster-express-endpoint";
 
-const fetchRetry = async (url, options, retries = 3) => {
-  let error;
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, options);
-      return response;
-    } catch (e) {
-      error = e;
-    }
-    // wait N seconds exponentially
-    await new Promise((r) => setTimeout(r, 2 ** (i + 1) * 1000));
-  }
-  throw error;
-};
-
-const getAllRecentCasts = async ({ token }) => {
-  const response = await fetchRetry(
-    `https://api.warpcast.com/v2/recent-casts?limit=1000`,
-    {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      timeout: 5_000,
-    }
-  );
-  const json = await response.json();
-  return { casts: json?.result?.casts };
-};
-
-app.get("/feed", limiter, async (_req, res) => {
+app.get("/v1/feed", limiter, async (_req, res) => {
   try {
     let data = await CacheService.get({
-      key: FARCASTER_KEY,
-      params: {},
+      key: `${FARCASTER_KEY}`,
+      params: { key: "feed" },
     });
     if (data) {
       return res.json({
-        casts: data.casts,
+        result: { casts: data.casts },
       });
     }
 
@@ -63,14 +34,91 @@ app.get("/feed", limiter, async (_req, res) => {
     });
 
     await CacheService.set({
-      key: FARCASTER_KEY,
+      key: `${FARCASTER_KEY}`,
+      params: { key: "feed" },
+      value: data,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
+    });
+
+    return res.json({
+      result: { casts: data.casts },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+  }
+});
+
+app.get("/v1/cast", limiter, async (req, res) => {
+  try {
+    let hash = req.query.hash;
+    if (!hash) {
+      return res.status(400).json({
+        error: "Missing hash",
+      });
+    }
+    let data = await CacheService.get({
+      key: `${FARCASTER_KEY}`,
+      params: { hash },
+    });
+    if (data) {
+      return res.json({
+        result: { cast: data.cast },
+      });
+    }
+
+    data = await getCast({
+      token: process.env.FARQUEST_FARCASTER_APP_TOKEN,
+      hash,
+    });
+
+    await CacheService.set({
+      key: `${FARCASTER_KEY}`,
+      params: { hash },
+      value: data,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
+    });
+
+    return res.json({
+      result: { cast: data.cast },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+  }
+});
+
+app.get("/v1/casts", limiter, async (req, res) => {
+  try {
+    const fid = req.query.fid;
+    const limit = req.query.limit || 10;
+    const cursor = req.query.cursor || null;
+    let data = await CacheService.get({
+      key: `${FARCASTER_KEY}`,
+      params: { fid, limit, cursor },
+    });
+    if (data) {
+      return res.json({
+        result: { casts: data.casts, next: data.next },
+      });
+    }
+
+    data = await getCasts({
+      token: process.env.FARQUEST_FARCASTER_APP_TOKEN,
+      fid,
+      limit,
+      cursor,
+    });
+
+    await CacheService.set({
+      key: `${FARCASTER_KEY}`,
       params: {},
       value: data,
       expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
     });
 
     return res.json({
-      casts: data.casts,
+      result: { casts: data.casts, next: data.next },
     });
   } catch (e) {
     Sentry.captureException(e);
