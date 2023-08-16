@@ -49,11 +49,11 @@ app.get("/v1/feed", limiter, async (req, res) => {
       key: `${FARCASTER_KEY}`,
       params: { route: "feed", cursor },
     });
-    // if (data) {
-    //   return res.json({
-    //     result: { casts: data.casts },
-    //   });
-    // }
+    if (data) {
+      return res.json({
+        result: { casts: data.casts },
+      });
+    }
 
     data = await getAllRecentCasts({
       token:
