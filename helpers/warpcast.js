@@ -23,17 +23,15 @@ const fetchRetry = async (url, options, retries = 3) => {
 };
 
 const getAllRecentCasts = async ({ token, limit }) => {
-  const response = await fetchRetry(
-    `https://api.warpcast.com/v2/recent-casts?limit=${limit}`,
-    {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      timeout: 5_000,
-    }
-  );
+  let url = `https://api.warpcast.com/v2/recent-casts?limit=${limit}`;
+  const response = await fetchRetry(url, {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    timeout: 5_000,
+  });
   const json = await response.json();
   if (json?.errors) {
     throw new WarpcastError(json?.errors);
@@ -54,7 +52,29 @@ const getCast = async ({ token, hash }) => {
     }
   );
   const json = await response.json();
+  if (json?.errors) {
+    throw new WarpcastError(json?.errors);
+  }
   return { cast: json?.result?.cast };
+};
+
+const getAllCastsInThread = async ({ token, threadHash }) => {
+  const response = await fetchRetry(
+    `https://api.warpcast.com/v2/all-casts-in-thread?threadHash=${threadHash}`,
+    {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      timeout: 5_000,
+    }
+  );
+  const json = await response.json();
+  if (json?.errors) {
+    throw new WarpcastError(json?.errors);
+  }
+  return { casts: json?.result?.casts };
 };
 
 const getCasts = async ({ token, fid, limit, cursor }) => {
@@ -451,4 +471,5 @@ module.exports = {
   getUser,
   getUserByUsername,
   getMentionAndReplyNotifications,
+  getAllCastsInThread,
 };

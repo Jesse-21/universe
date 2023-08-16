@@ -6,6 +6,7 @@ const { Service: _CacheService } = require("../services/cache/CacheService");
 
 const {
   getAllRecentCasts,
+  getAllCastsInThread,
   getCast,
   getCasts,
   postCasts,
@@ -41,32 +42,37 @@ const WARPCAST_SIGNIN_READY = false; // We need warpcast signin since we are usi
 
 app.get("/v1/feed", limiter, async (req, res) => {
   try {
+    const limit = req.query.limit || 20;
+    const cursor = req.query.cursor || null;
+
     let data = await CacheService.get({
       key: `${FARCASTER_KEY}`,
-      params: { route: "feed" },
+      params: { route: "feed", cursor },
     });
-    if (data) {
-      return res.json({
-        result: { casts: data.casts },
-      });
-    }
+    // if (data) {
+    //   return res.json({
+    //     result: { casts: data.casts },
+    //   });
+    // }
 
     data = await getAllRecentCasts({
       token:
         req.headers["WARPCAST_TOKEN"] ||
         process.env.FARQUEST_FARCASTER_APP_TOKEN,
-      limit: 250,
+      limit,
+      cursor,
     });
 
     await CacheService.set({
       key: `${FARCASTER_KEY}`,
-      params: { route: "feed" },
+      params: { route: "feed", cursor },
       value: data,
       expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
     });
 
     return res.json({
       result: { casts: data.casts },
+      // cursor: data.next,
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -111,6 +117,50 @@ app.get("/v1/cast", limiter, async (req, res) => {
 
     return res.json({
       result: { cast: data.cast },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
+  try {
+    let threadHash = req.query.threadHash;
+    if (!threadHash) {
+      return res.status(400).json({
+        error: "Missing threadHash",
+      });
+    }
+    let data = await CacheService.get({
+      key: `${FARCASTER_KEY}`,
+      params: { threadHash, route: "all-casts-in-thread" },
+    });
+    if (data) {
+      return res.json({
+        result: { casts: data.casts },
+      });
+    }
+
+    data = await getAllCastsInThread({
+      token:
+        req.headers["WARPCAST_TOKEN"] ||
+        process.env.FARQUEST_FARCASTER_APP_TOKEN,
+      threadHash,
+    });
+
+    await CacheService.set({
+      key: `${FARCASTER_KEY}`,
+      params: { threadHash, route: "all-casts-in-thread" },
+      value: data,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
+    });
+
+    return res.json({
+      result: { casts: data.casts },
     });
   } catch (e) {
     Sentry.captureException(e);
