@@ -72,7 +72,7 @@ app.get("/v1/feed", limiter, async (req, res) => {
 
     return res.json({
       result: { casts: data.casts },
-      // cursor: data.next,
+      next: { cursor: null },
     });
   } catch (e) {
     Sentry.captureException(e);
