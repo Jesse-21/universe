@@ -183,17 +183,17 @@ app.get("/v1/casts", limiter, async (req, res) => {
       });
     }
 
-    let data = await CacheService.get({
-      key: `${FARCASTER_KEY}`,
-      params: { fid, limit, cursor, route: "casts" },
-    });
-    if (data) {
-      return res.json({
-        result: { casts: data.casts, next: data.next },
-      });
-    }
+    // let data = await CacheService.get({
+    //   key: `${FARCASTER_KEY}`,
+    //   params: { fid, limit, cursor, route: "casts" },
+    // });
+    // if (data) {
+    //   return res.json({
+    //     result: { casts: data.casts, next: data.next },
+    //   });
+    // }
 
-    data = await getCasts({
+    let data = await getCasts({
       token:
         req.headers["WARPCAST_TOKEN"] ||
         process.env.FARQUEST_FARCASTER_APP_TOKEN,
@@ -210,7 +210,8 @@ app.get("/v1/casts", limiter, async (req, res) => {
     });
 
     return res.json({
-      result: { casts: data.casts, next: data.next },
+      result: { casts: data.casts },
+      next: data.next,
     });
   } catch (e) {
     Sentry.captureException(e);
