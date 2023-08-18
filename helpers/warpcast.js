@@ -58,6 +58,26 @@ const getCast = async ({ token, hash }) => {
   return { cast: json?.result?.cast };
 };
 
+const getCustodyAddress = async ({ token, fid }) => {
+  const response = await fetchRetry(
+    `https://api.warpcast.com/v2/custody-address?fid=${fid}`,
+    {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      timeout: 5_000,
+    }
+  );
+  const json = await response.json();
+
+  if (json?.errors) {
+    throw new WarpcastError(json?.errors);
+  }
+  return { custodyAddress: json?.result?.custodyAddress };
+};
+
 const getAllCastsInThread = async ({ token, threadHash }) => {
   const response = await fetchRetry(
     `https://api.warpcast.com/v2/all-casts-in-thread?threadHash=${threadHash}`,
@@ -472,4 +492,5 @@ module.exports = {
   getUserByUsername,
   getMentionAndReplyNotifications,
   getAllCastsInThread,
+  getCustodyAddress,
 };

@@ -25,6 +25,7 @@ const {
   getUser,
   getUserByUsername,
   getMentionAndReplyNotifications,
+  getCustodyAddress,
 } = require("../helpers/warpcast");
 
 // Rate limiting middleware
@@ -117,6 +118,50 @@ app.get("/v1/cast", limiter, async (req, res) => {
 
     return res.json({
       result: { cast: data.cast },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v1/custody-address", limiter, async (req, res) => {
+  try {
+    let fid = req.query.fid;
+    if (!fid) {
+      return res.status(400).json({
+        error: "Missing fid",
+      });
+    }
+    let data = await CacheService.get({
+      key: `${FARCASTER_KEY}`,
+      params: { fid, route: "custody-address" },
+    });
+    if (data) {
+      return res.json({
+        result: { custodyAddress: data.custodyAddress },
+      });
+    }
+
+    data = await getCustodyAddress({
+      token:
+        req.headers["WARPCAST_TOKEN"] ||
+        process.env.FARQUEST_FARCASTER_APP_TOKEN,
+      fid,
+    });
+
+    await CacheService.set({
+      key: `${FARCASTER_KEY}`,
+      params: { fid, route: "custody-address" },
+      value: data,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 1 month cache
+    });
+
+    return res.json({
+      result: { custodyAddress: data.custodyAddress },
     });
   } catch (e) {
     Sentry.captureException(e);
