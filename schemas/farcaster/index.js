@@ -21,6 +21,7 @@ const messagesSchema = new mongoose.Schema(
     signatureScheme: Number,
     signer: { type: String, required: true },
     raw: { type: String, required: true },
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -39,6 +40,7 @@ const castsSchema = new mongoose.Schema(
     embeds: String,
     mentions: [Number],
     mentionsPositions: [Number],
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -53,6 +55,7 @@ const reactionsSchema = new mongoose.Schema(
     targetHash: String,
     targetFid: Number,
     targetUrl: String,
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -66,6 +69,7 @@ const signersSchema = new mongoose.Schema(
     custodyAddress: { type: String, required: true },
     signer: { type: String, required: true },
     name: String,
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -77,6 +81,7 @@ const verificationsSchema = new mongoose.Schema(
     fid: { type: Number, required: true },
     hash: { type: String, required: true, unique: true },
     claim: { type: String, required: true },
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -89,6 +94,7 @@ const userDataSchema = new mongoose.Schema(
     hash: { type: String, required: true, unique: true },
     type: { type: Number, required: true },
     value: { type: String, required: true },
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -97,6 +103,7 @@ const fidsSchema = new mongoose.Schema(
   {
     fid: { type: Number, required: true, unique: true },
     custodyAddress: { type: String, required: true },
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -106,6 +113,7 @@ const fnamesSchema = new mongoose.Schema(
     fname: { type: String, required: true, unique: true },
     custodyAddress: { type: String, required: true },
     expiresAt: { type: Date, required: true },
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -119,6 +127,7 @@ const linksSchema = new mongoose.Schema(
     deletedAt: Date,
     type: { type: String, required: true },
     displayTimestamp: Date,
+    external: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
