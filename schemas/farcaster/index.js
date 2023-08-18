@@ -3,123 +3,135 @@ const mongoose = require("mongoose");
 // HubSubscriptions
 const hubSubscriptionsSchema = new mongoose.Schema({
   host: { type: String, required: true, unique: true },
-  last_event_id: Number,
+  lastEventId: Number,
 });
 
 // Messages
-const messagesSchema = new mongoose.Schema({
-  id: Number,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  deletedAt: Date,
-  prunedAt: Date,
-  revokedAt: Date,
-  timestamp: { type: Date, required: true },
-  messageType: Number,
-  fid: { type: Number, required: true },
-  hash: { type: String, required: true, unique: true },
-  hashScheme: Number,
-  signature: { type: String, required: true },
-  signatureScheme: Number,
-  signer: { type: String, required: true },
-  raw: { type: String, required: true },
-});
+const messagesSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    prunedAt: Date,
+    revokedAt: Date,
+    timestamp: { type: Date, required: true },
+    messageType: Number,
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    hashScheme: Number,
+    signature: { type: String, required: true },
+    signatureScheme: Number,
+    signer: { type: String, required: true },
+    raw: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
 // Casts
-const castsSchema = new mongoose.Schema({
-  id: Number,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  deletedAt: Date,
-  timestamp: { type: Date, required: true },
-  fid: { type: Number, required: true },
-  hash: { type: String, required: true, unique: true },
-  parentHash: String,
-  parentFid: Number,
-  parentUrl: String,
-  text: { type: String, required: true },
-  embeds: String,
-  mentions: [Number],
-  mentionsPositions: [Number],
-});
+const castsSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    parentHash: String,
+    parentFid: Number,
+    parentUrl: String,
+    text: { type: String },
+    embeds: String,
+    mentions: [Number],
+    mentionsPositions: [Number],
+  },
+  { timestamps: true }
+);
 
-// MessagesMetadata
-const messagesMetadataSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  meta: String,
-  mentions: [Number],
-  mentionsPositions: [Number],
-  relays: [String],
-  encodes: String,
-  encodesPositions: [Number],
-});
+const reactionsSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    reactionType: Number,
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    targetHash: String,
+    targetFid: Number,
+    targetUrl: String,
+  },
+  { timestamps: true }
+);
 
-// MessagesReactions
-const messagesReactionsSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  reactions: String,
-  authors: [String],
-});
+const signersSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    custodyAddress: { type: String, required: true },
+    signer: { type: String, required: true },
+    name: String,
+  },
+  { timestamps: true }
+);
 
-// Relays
-const relaysSchema = new mongoose.Schema({
-  id: Number,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  deletedAt: Date,
-  timestamp: { type: Date, required: true },
-  fid: { type: Number, required: true },
-  hash: { type: String, required: true, unique: true },
-  text: { type: String, required: true },
-  embeds: String,
-  mentions: [Number],
-  mentionsPositions: [Number],
-});
+const verificationsSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    claim: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
-// CastsMetadata
-const castsMetadataSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  meta: String,
-  mentions: [Number],
-  mentionsPositions: [Number],
-  relays: [String],
-  encodes: String,
-  encodesPositions: [Number],
-});
+const userDataSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    fid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    type: { type: Number, required: true },
+    value: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
-// CastsReactions
-const castsReactionsSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  reactions: String,
-  authors: [String],
-});
+const fidsSchema = new mongoose.Schema(
+  {
+    fid: { type: Number, required: true, unique: true },
+    custodyAddress: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
-// RelaysMetadata
-const relaysMetadataSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  meta: String,
-  mentions: [Number],
-  mentionsPositions: [Number],
-  encodes: String,
-  encodesPositions: [Number],
-});
+const fnamesSchema = new mongoose.Schema(
+  {
+    fname: { type: String, required: true, unique: true },
+    custodyAddress: { type: String, required: true },
+    expiresAt: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
 
-// RelaysReactions
-const relaysReactionsSchema = new mongoose.Schema({
-  hash: { type: String, required: true, unique: true },
-  reactions: String,
-  authors: [String],
-});
+const linksSchema = new mongoose.Schema(
+  {
+    fid: { type: Number, required: true },
+    targetFid: { type: Number, required: true },
+    hash: { type: String, required: true, unique: true },
+    timestamp: { type: Date, required: true },
+    deletedAt: Date,
+    type: { type: String, required: true },
+    displayTimestamp: Date,
+  },
+  { timestamps: true }
+);
 
 module.exports = {
   hubSubscriptionsSchema,
   messagesSchema,
   castsSchema,
-  messagesMetadataSchema,
-  messagesReactionsSchema,
-  relaysSchema,
-  castsMetadataSchema,
-  castsReactionsSchema,
-  relaysMetadataSchema,
-  relaysReactionsSchema,
+  reactionsSchema,
+  signersSchema,
+  verificationsSchema,
+  userDataSchema,
+  fidsSchema,
+  fnamesSchema,
+  linksSchema,
 };

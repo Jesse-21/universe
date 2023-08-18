@@ -4,13 +4,13 @@ const {
   hubSubscriptionsSchema,
   messagesSchema,
   castsSchema,
-  messagesMetadataSchema,
-  messagesReactionsSchema,
-  relaysSchema,
-  castsMetadataSchema,
-  castsReactionsSchema,
-  relaysMetadataSchema,
-  relaysReactionsSchema,
+  reactionsSchema,
+  signersSchema,
+  verificationsSchema,
+  userDataSchema,
+  fidsSchema,
+  fnamesSchema,
+  linksSchema,
 } = require("../../schemas/farcaster");
 
 class HubSubscriptionsClass {
@@ -21,7 +21,7 @@ class HubSubscriptionsClass {
 hubSubscriptionsSchema.loadClass(HubSubscriptionsClass);
 const HubSubscriptions =
   mongoose.models.HubSubscriptions ||
-  mongoose.model("HubSubscriptions", hubSubscriptionsSchema);
+  mongoose.model("farcaster.HubSubscriptions", hubSubscriptionsSchema);
 
 class MessagesClass {
   static ping() {
@@ -30,7 +30,8 @@ class MessagesClass {
 }
 messagesSchema.loadClass(MessagesClass);
 const Messages =
-  mongoose.models.Messages || mongoose.model("Messages", messagesSchema);
+  mongoose.models.Messages ||
+  mongoose.model("farcaster.Messages", messagesSchema);
 
 class CastsClass {
   static ping() {
@@ -38,85 +39,89 @@ class CastsClass {
   }
 }
 castsSchema.loadClass(CastsClass);
-const Casts = mongoose.models.Casts || mongoose.model("Casts", castsSchema);
+const Casts =
+  mongoose.models.Casts || mongoose.model("farcaster.Casts", castsSchema);
 
-class MessagesMetadataClass {
+class ReactionsClass {
   static ping() {
-    console.log("model: MessagesMetadataClass");
+    console.log("model: ReactionsClass");
   }
 }
-messagesMetadataSchema.loadClass(MessagesMetadataClass);
-const MessagesMetadata =
-  mongoose.models.MessagesMetadata ||
-  mongoose.model("MessagesMetadata", messagesMetadataSchema);
+reactionsSchema.loadClass(ReactionsClass);
+const Reactions =
+  mongoose.models.Reactions ||
+  mongoose.model("farcaster.Reactions", reactionsSchema);
 
-class MessagesReactionsClass {
+class SignersClass {
   static ping() {
-    console.log("model: MessagesReactionsClass");
+    console.log("model: SignersClass");
   }
 }
-messagesReactionsSchema.loadClass(MessagesReactionsClass);
-const MessagesReactions =
-  mongoose.models.MessagesReactions ||
-  mongoose.model("MessagesReactions", messagesReactionsSchema);
+signersSchema.loadClass(SignersClass);
+const Signers =
+  mongoose.models.Signers || mongoose.model("farcaster.Signers", signersSchema);
 
-class RelaysClass {
+class VerificationsClass {
   static ping() {
-    console.log("model: RelaysClass");
+    console.log("model: VerificationsClass");
   }
 }
-relaysSchema.loadClass(RelaysClass);
-const Relays = mongoose.models.Relays || mongoose.model("Relays", relaysSchema);
+verificationsSchema.loadClass(VerificationsClass);
 
-class CastsMetadataClass {
+const Verifications =
+  mongoose.models.Verifications ||
+  mongoose.model("farcaster.Verifications", verificationsSchema);
+
+class UserDataClass {
   static ping() {
-    console.log("model: CastsMetadataClass");
+    console.log("model: UserDataClass");
   }
 }
-castsMetadataSchema.loadClass(CastsMetadataClass);
-const CastsMetadata =
-  mongoose.models.CastsMetadata ||
-  mongoose.model("CastsMetadata", castsMetadataSchema);
 
-class CastsReactionsClass {
+userDataSchema.loadClass(UserDataClass);
+const UserData =
+  mongoose.models.UserData ||
+  mongoose.model("farcaster.UserData", userDataSchema);
+
+class FidsClass {
   static ping() {
-    console.log("model: CastsReactionsClass");
+    console.log("model: FidsClass");
   }
 }
-castsReactionsSchema.loadClass(CastsReactionsClass);
-const CastsReactions =
-  mongoose.models.CastsReactions ||
-  mongoose.model("CastsReactions", castsReactionsSchema);
 
-class RelaysMetadataClass {
+fidsSchema.loadClass(FidsClass);
+const Fids =
+  mongoose.models.Fids || mongoose.model("farcaster.Fids", fidsSchema);
+
+class FnamesClass {
   static ping() {
-    console.log("model: RelaysMetadataClass");
+    console.log("model: FnamesClass");
   }
 }
-relaysMetadataSchema.loadClass(RelaysMetadataClass);
-const RelaysMetadata =
-  mongoose.models.RelaysMetadata ||
-  mongoose.model("RelaysMetadata", relaysMetadataSchema);
 
-class RelaysReactionsClass {
+fnamesSchema.loadClass(FnamesClass);
+const Fnames =
+  mongoose.models.Fnames || mongoose.model("farcaster.Fnames", fnamesSchema);
+
+class LinksClass {
   static ping() {
-    console.log("model: RelaysReactionsClass");
+    console.log("model: LinksClass");
   }
 }
-relaysReactionsSchema.loadClass(RelaysReactionsClass);
-const RelaysReactions =
-  mongoose.models.RelaysReactions ||
-  mongoose.model("RelaysReactions", relaysReactionsSchema);
+
+linksSchema.loadClass(LinksClass);
+const Links =
+  mongoose.models.Links || mongoose.model("farcaster.Links", linksSchema);
 
 module.exports = {
   HubSubscriptions,
   Messages,
   Casts,
-  MessagesMetadata,
-  MessagesReactions,
-  Relays,
-  CastsMetadata,
-  CastsReactions,
-  RelaysMetadata,
-  RelaysReactions,
+  Reactions,
+  Signers,
+  Verifications,
+  UserData,
+  Fids,
+  Fnames,
+  Links,
 };
