@@ -101,15 +101,11 @@ class AccountRecovererService {
    * @param {Account} account
    * @returns Promise<AccountRecoverer>
    */
-  async _addFarcasterSignerRecoverer(
-    account,
-    { encyrptedWalletJson, address }
-  ) {
+  async _addFarcasterSignerRecoverer(account, { address }) {
     return {
       type: "FARCASTER_SIGNER",
       id: address,
       pubKey: address,
-      encyrptedWalletJson,
     };
   }
 
@@ -143,10 +139,7 @@ class AccountRecovererService {
    * @param {Account} account
    * @returns Promise<Account>
    */
-  async addRecoverer(
-    account,
-    { signature, type, address, encyrptedWalletJson }
-  ) {
+  async addRecoverer(account, { signature, type, address }) {
     if (!account) throw new Error("Account not found");
 
     if (this._accepableRecovererTypes.indexOf(type) === -1) {
@@ -159,7 +152,6 @@ class AccountRecovererService {
       } else if (type === "FARCASTER_SIGNER") {
         recoverer = await this._addFarcasterSignerRecoverer(account, {
           address,
-          encyrptedWalletJson,
         });
       }
 

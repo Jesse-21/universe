@@ -7,6 +7,14 @@ const { Service: _CacheService } = require("../services/cache/CacheService");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
+  getFarcasterCastByHash,
+  getFarcasterAllCastsInThread,
+  getFarcasterCasts,
+  getFarcasterFollowing,
+  getFarcasterFollowers,
+  getFarcasterCastReactions,
+  getFarcasterCastLikes,
+  getFarcasterCastRecasters,
 } = require("../helpers/farcaster");
 
 const {
@@ -133,6 +141,29 @@ app.get("/v1/cast", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/cast", limiter, async (req, res) => {
+  try {
+    let hash = req.query.hash;
+    if (!hash) {
+      return res.status(400).json({
+        error: "Missing hash",
+      });
+    }
+
+    const cast = await getFarcasterCastByHash(hash);
+
+    return res.json({
+      result: { cast },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get("/v1/custody-address", limiter, async (req, res) => {
   try {
     let fid = req.query.fid;
@@ -221,6 +252,29 @@ app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
+  try {
+    let threadHash = req.query.threadHash;
+    if (!threadHash) {
+      return res.status(400).json({
+        error: "Missing threadHash",
+      });
+    }
+
+    const casts = await getFarcasterAllCastsInThread(threadHash);
+
+    return res.json({
+      result: { casts },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get("/v1/casts", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
@@ -233,17 +287,17 @@ app.get("/v1/casts", limiter, async (req, res) => {
       });
     }
 
-    // let data = await CacheService.get({
-    //   key: `${FARCASTER_KEY}`,
-    //   params: { fid, limit, cursor, route: "casts" },
-    // });
-    // if (data) {
-    //   return res.json({
-    //     result: { casts: data.casts, next: data.next },
-    //   });
-    // }
+    let data = await CacheService.get({
+      key: `${FARCASTER_KEY}`,
+      params: { fid, limit, cursor, route: "casts" },
+    });
+    if (data) {
+      return res.json({
+        result: { casts: data.casts, next: data.next },
+      });
+    }
 
-    let data = await getCasts({
+    data = await getCasts({
       token:
         req.headers["WARPCAST_TOKEN"] ||
         process.env.FARQUEST_FARCASTER_APP_TOKEN,
@@ -256,12 +310,39 @@ app.get("/v1/casts", limiter, async (req, res) => {
       key: `${FARCASTER_KEY}`,
       params: { fid, limit, cursor, route: "casts" },
       value: data,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
+      expiresAt: new Date(Date.now() + 1000 * 60 * 1), // 1 minute cache
     });
 
     return res.json({
       result: { casts: data.casts },
       next: data.next,
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/casts", limiter, async (req, res) => {
+  try {
+    const fid = req.query.fid;
+    const limit = Math.min(req.query.limit || 10, 100);
+    const cursor = parseInt(req.query.cursor || 0);
+
+    if (!fid) {
+      return res.status(400).json({
+        error: "fid is invalid",
+      });
+    }
+
+    let casts = await getFarcasterCasts(fid, limit, cursor);
+
+    return res.json({
+      result: { casts },
+      next: casts.length == limit ? cursor + limit : null,
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -385,6 +466,35 @@ app.get("/v1/cast-reactions", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/cast-reactions", limiter, async (req, res) => {
+  try {
+    const castHash = req.query.castHash;
+    const limit = Math.min(req.query.limit || 100, 250);
+    const cursor = req.query.cursor || 0;
+
+    if (!castHash) {
+      return res.status(400).json({
+        error: "castHash is invalid",
+      });
+    }
+
+    const reactions = await getFarcasterCastReactions(castHash, limit, cursor);
+
+    return res.json({
+      result: {
+        reactions,
+        next: reactions.length == limit ? cursor + limit : null,
+      },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get("/v1/cast-likes", limiter, async (req, res) => {
   try {
     const castHash = req.query.castHash;
@@ -425,6 +535,32 @@ app.get("/v1/cast-likes", limiter, async (req, res) => {
 
     return res.json({
       result: { likes: data.likes, next: data.next },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/cast-likes", limiter, async (req, res) => {
+  try {
+    const castHash = req.query.castHash;
+    const limit = Math.min(req.query.limit || 100, 250);
+    const cursor = req.query.cursor || 0;
+
+    if (!castHash) {
+      return res.status(400).json({
+        error: "castHash is invalid",
+      });
+    }
+
+    const likes = await getFarcasterCastLikes(castHash, limit, cursor);
+
+    return res.json({
+      result: { likes, next: likes.length == limit ? cursor + limit : null },
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -657,6 +793,32 @@ app.get("/v1/cast-recasters", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/cast-recasters", limiter, async (req, res) => {
+  try {
+    const castHash = req.query.castHash;
+    const limit = Math.min(req.query.limit || 100, 250);
+    const cursor = req.query.cursor || null;
+
+    if (!castHash) {
+      return res.status(400).json({
+        error: "castHash is invalid",
+      });
+    }
+
+    const users = await getFarcasterCastRecasters(castHash, limit, cursor);
+
+    return res.json({
+      result: { users, next: users.length == limit ? cursor + limit : null },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.put("/v1/recasts", limiter, async (req, res) => {
   try {
     const castHash = req.query.castHash;
@@ -765,6 +927,32 @@ app.get("/v1/followers", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/followers", limiter, async (req, res) => {
+  try {
+    const fid = req.query.fid;
+    const limit = Math.min(req.query.limit || 100, 250);
+    const cursor = req.query.cursor || 0;
+
+    if (!fid) {
+      return res.status(400).json({
+        error: "fid is invalid",
+      });
+    }
+
+    const users = await getFarcasterFollowers(fid, limit, cursor);
+
+    return res.json({
+      result: { users, next: users.length == limit ? cursor + limit : null },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.put("/v1/following", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
@@ -863,6 +1051,32 @@ app.get("/v1/following", limiter, async (req, res) => {
 
     return res.json({
       result: { users: data.users, next: data.next },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/following", limiter, async (req, res) => {
+  try {
+    const fid = req.query.fid;
+    const limit = Math.min(req.query.limit || 100, 250);
+    const cursor = req.query.cursor || 0;
+
+    if (!fid) {
+      return res.status(400).json({
+        error: "fid is invalid",
+      });
+    }
+
+    const users = await getFarcasterFollowing(fid, limit, cursor);
+
+    return res.json({
+      result: { users, next: users.length == limit ? cursor + limit : null },
     });
   } catch (e) {
     Sentry.captureException(e);

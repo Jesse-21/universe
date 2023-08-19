@@ -44,6 +44,8 @@ const castsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+castsSchema.index({ hash: 1 });
+castsSchema.index({ parentHash: 1 });
 
 const reactionsSchema = new mongoose.Schema(
   {

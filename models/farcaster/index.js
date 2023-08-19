@@ -122,6 +122,12 @@ const UserDataType = {
   USER_DATA_TYPE_USERNAME: 6,
 };
 
+const ReactionType = {
+  REACTION_TYPE_NONE: 0,
+  REACTION_TYPE_LIKE: 1,
+  REACTION_TYPE_RECAST: 2,
+};
+
 module.exports = {
   HubSubscriptions,
   Messages,
@@ -134,4 +140,5 @@ module.exports = {
   Fnames,
   Links,
   UserDataType,
+  ReactionType,
 };
