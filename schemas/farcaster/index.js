@@ -99,6 +99,9 @@ const userDataSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userDataSchema.index({ fid: 1 });
+userDataSchema.index({ value: 1, type: 1 });
+
 const fidsSchema = new mongoose.Schema(
   {
     fid: { type: Number, required: true, unique: true },
@@ -107,6 +110,8 @@ const fidsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+fidsSchema.index({ fid: 1 });
 
 const fnamesSchema = new mongoose.Schema(
   {
@@ -117,6 +122,8 @@ const fnamesSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+fnamesSchema.index({ custodyAddress: 1 });
 
 const linksSchema = new mongoose.Schema(
   {
@@ -131,6 +138,9 @@ const linksSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+linksSchema.index({ fid: 1, type: 1 });
+linksSchema.index({ targetFid: 1, type: 1 });
 
 module.exports = {
   hubSubscriptionsSchema,

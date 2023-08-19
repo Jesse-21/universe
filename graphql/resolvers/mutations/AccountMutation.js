@@ -5,7 +5,11 @@ const { Account } = require("../../../models/Account");
 
 const { Post } = require("../../../models/Post");
 
-const { AuthService, AccountService } = require("../../../services");
+const {
+  AuthService,
+  AccountService,
+  AccountRecovererService,
+} = require("../../../services");
 
 const {
   unauthorizedErrorOrAccount,
@@ -195,6 +199,36 @@ const resolvers = {
           success: true,
           message: "Succesfully updated account",
           account,
+        };
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error(e);
+        return {
+          code: "500",
+          success: false,
+          message: e.message,
+        };
+      }
+    },
+    addRecoverer: async (root, args, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      const auth = await unauthorizedErrorOrAccount(root, args, context);
+      if (!auth.account) return auth;
+
+      try {
+        const updatedAccount = await AccountRecovererService.addRecoverer(
+          auth.account,
+          args
+        );
+        return {
+          code: "200",
+          success: true,
+          message: "Succesfully added recoverer",
+          account: updatedAccount,
         };
       } catch (e) {
         Sentry.captureException(e);

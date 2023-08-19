@@ -203,6 +203,7 @@ enum AuthType {
   PASSKEY
   SIGNATURE
   MAGIC_LINK
+  WARPCAST
 }
 
 type Mutation {
@@ -211,6 +212,12 @@ type Mutation {
     address: String!
     chainId: Int!
     email: String
+  ): AccountMutationResponse
+  addRecoverer(
+    address: String
+    encyrptedWalletJson: String
+    signature: String
+    type: String
   ): AccountMutationResponse
   addEncryptedWalletJson(encyrptedWalletJson: String!): AccountMutationResponse
   authByEncryptedWalletJson(

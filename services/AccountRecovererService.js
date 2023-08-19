@@ -4,6 +4,8 @@ const fido2 = require("fido2-lib");
 const base64url = require("base64url");
 
 class AccountRecovererService {
+  _accepableRecovererTypes = ["PASSKEY", "FARCASTER_SIGNER"];
+
   _bufferToAB(buf) {
     var ab = new ArrayBuffer(buf.length);
     var view = new Uint8Array(ab);
@@ -93,6 +95,24 @@ class AccountRecovererService {
       challenge,
     };
   }
+
+  /**
+   * Add a Farcaster signer recoverer to an account
+   * @param {Account} account
+   * @returns Promise<AccountRecoverer>
+   */
+  async _addFarcasterSignerRecoverer(
+    account,
+    { encyrptedWalletJson, address }
+  ) {
+    return {
+      type: "FARCASTER_SIGNER",
+      id: address,
+      pubKey: address,
+      encyrptedWalletJson,
+    };
+  }
+
   /**
    * Generate a short lived challenge in cache, which is used to initiate the recoverer
    * @param {Account} account
@@ -123,12 +143,26 @@ class AccountRecovererService {
    * @param {Account} account
    * @returns Promise<Account>
    */
-  async addRecoverer(account, { signature, type }) {
+  async addRecoverer(
+    account,
+    { signature, type, address, encyrptedWalletJson }
+  ) {
     if (!account) throw new Error("Account not found");
-    // only support passkey for now
-    if (type !== "PASSKEY") throw new Error("Invalid recoverer type");
+
+    if (this._accepableRecovererTypes.indexOf(type) === -1) {
+      throw new Error("Invalid recoverer type");
+    }
     try {
-      const recoverer = await this._addPasskeyRecoverer(account, { signature });
+      let recoverer;
+      if (type === "PASSKEY") {
+        recoverer = await this._addPasskeyRecoverer(account, { signature });
+      } else if (type === "FARCASTER_SIGNER") {
+        recoverer = await this._addFarcasterSignerRecoverer(account, {
+          address,
+          encyrptedWalletJson,
+        });
+      }
+
       if (account.recoverers) {
         account.recoverers.push(recoverer);
       } else {

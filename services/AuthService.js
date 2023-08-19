@@ -9,8 +9,7 @@ const { Account } = require("../models/Account");
 const { AccountAddress } = require("../models/AccountAddress");
 const { AccountCommunity } = require("../models/AccountCommunity");
 const { AccountNonce } = require("../models/AccountNonce");
-
-const { Service: _AccountService } = require("./AccountService");
+const { getCustodyAddress, getCurrentUser } = require("../helpers/warpcast");
 
 const { generateNewAccessTokenFromAccount } = require("../helpers/jwt");
 
@@ -148,6 +147,29 @@ class AuthService {
   }
 
   /**
+   * Authenticate an account with magic link
+   * @returns Promise<Account>
+   */
+  async authByWarpcast({ address, token, fid, chainId }) {
+    /** step1: get custody address. If this fails it means the token is invalid. */
+    try {
+      const { user } = await getCurrentUser({ token });
+      if (!user || user.fid !== fid) throw new Error("Invalid token");
+
+      const { custodyAddress } = await getCustodyAddress({ fid, token });
+
+      const account = await Account.findOrCreateByAddressAndChainId({
+        address: custodyAddress,
+        chainId,
+      });
+      if (account?.deleted) throw new Error("Account is deleted");
+      return account;
+    } catch (e) {
+      throw new Error("Invalid token");
+    }
+  }
+
+  /**
    * Authenticate an account with PassKey
    * @returns Promise<Account>
    */
@@ -239,6 +261,13 @@ class AuthService {
       account = await this.authByPassKey({
         signature,
         email: address,
+        chainId,
+      });
+    } else if (type === "WARPCAST") {
+      account = await this.authByWarpcast({
+        address,
+        token: signature,
+        fid: address,
         chainId,
       });
     } else {

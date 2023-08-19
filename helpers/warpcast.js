@@ -405,6 +405,24 @@ const getFollowing = async ({ token, fid, limit, cursor }) => {
   };
 };
 
+const getCurrentUser = async ({ token }) => {
+  const response = await fetchRetry(`https://api.warpcast.com/v2/me`, {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    timeout: 5_000,
+  });
+  const json = await response.json();
+  if (json?.errors) {
+    throw new WarpcastError(json?.errors);
+  }
+  return {
+    user: json?.result?.user,
+  };
+};
+
 const getUser = async ({ token, fid }) => {
   const response = await fetchRetry(
     `https://api.warpcast.com/v2/user?fid=${fid}`,
@@ -493,4 +511,5 @@ module.exports = {
   getMentionAndReplyNotifications,
   getAllCastsInThread,
   getCustodyAddress,
+  getCurrentUser,
 };

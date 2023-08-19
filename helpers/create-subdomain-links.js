@@ -1,5 +1,5 @@
 const dev = {
-  COOKIE_DOMAIN: ".bebhq.net",
+  COOKIE_DOMAIN: ".localhost",
   URL_PREFIX: "http://",
   URL_SUFFIX: ":3000",
 };

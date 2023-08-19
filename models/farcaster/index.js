@@ -113,6 +113,15 @@ linksSchema.loadClass(LinksClass);
 const Links =
   mongoose.models.Links || mongoose.model("farcaster.Links", linksSchema);
 
+const UserDataType = {
+  USER_DATA_TYPE_NONE: 0,
+  USER_DATA_TYPE_PFP: 1,
+  USER_DATA_TYPE_DISPLAY: 2,
+  USER_DATA_TYPE_BIO: 3,
+  USER_DATA_TYPE_URL: 5,
+  USER_DATA_TYPE_USERNAME: 6,
+};
+
 module.exports = {
   HubSubscriptions,
   Messages,
@@ -124,4 +133,5 @@ module.exports = {
   Fids,
   Fnames,
   Links,
+  UserDataType,
 };

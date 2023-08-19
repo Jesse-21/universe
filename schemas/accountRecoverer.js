@@ -32,6 +32,10 @@ const schema = mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // used in wallet signers with email
+  encyrptedWalletJson: {
+    type: String,
+  },
   // only used in PassKey
   challenge: challenSchema,
 });

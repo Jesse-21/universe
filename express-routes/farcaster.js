@@ -5,6 +5,11 @@ const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
 
 const {
+  getFarcasterUserByFid,
+  getFarcasterUserByUsername,
+} = require("../helpers/farcaster");
+
+const {
   getAllRecentCasts,
   getAllCastsInThread,
   getCast,
@@ -914,6 +919,30 @@ app.get("/v1/user", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/user", limiter, async (req, res) => {
+  try {
+    const fid = req.query.fid;
+
+    if (!fid) {
+      return res.status(400).json({
+        error: "fid is invalid",
+      });
+    }
+
+    const user = await getFarcasterUserByFid(fid);
+
+    return res.json({
+      result: { user },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get("/v1/user-by-username", limiter, async (req, res) => {
   try {
     const username = req.query.username;
@@ -950,6 +979,30 @@ app.get("/v1/user-by-username", limiter, async (req, res) => {
 
     return res.json({
       result: { user: data.user },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/user-by-username", limiter, async (req, res) => {
+  try {
+    const username = req.query.username;
+
+    if (!username) {
+      return res.status(400).json({
+        error: "username is invalid",
+      });
+    }
+
+    const user = await getFarcasterUserByUsername(username);
+
+    return res.json({
+      result: { user },
     });
   } catch (e) {
     Sentry.captureException(e);
