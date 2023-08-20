@@ -16,7 +16,7 @@ const challenSchema = mongoose.Schema({
 const schema = mongoose.Schema({
   type: {
     type: String,
-    enum: ["PASSKEY"], // add more e.g. social accounts that can recover the account,
+    enum: ["PASSKEY", "FARCASTER_SIGNER"], // add more e.g. social accounts that can recover the account,
   },
   // the identifier of the recoverer, e.g. the passkeyId of the recoverer
   id: {

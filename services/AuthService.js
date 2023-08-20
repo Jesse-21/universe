@@ -10,7 +10,9 @@ const { AccountAddress } = require("../models/AccountAddress");
 const { AccountCommunity } = require("../models/AccountCommunity");
 const { AccountNonce } = require("../models/AccountNonce");
 const { getCustodyAddress, getCurrentUser } = require("../helpers/warpcast");
-
+const {
+  Service: _AccountRecovererService,
+} = require("./AccountRecovererService");
 const { generateNewAccessTokenFromAccount } = require("../helpers/jwt");
 
 const bufferToAB = (buf) => {
@@ -147,7 +149,7 @@ class AuthService {
   }
 
   /**
-   * Authenticate an account with magic link
+   * Authenticate an account with warpcast
    * @returns Promise<Account>
    */
   async authByWarpcast({ address, token, fid, chainId }) {
@@ -163,7 +165,20 @@ class AuthService {
         chainId,
       });
       if (account?.deleted) throw new Error("Account is deleted");
-      return account;
+      const existingRecoverer = account.recoverers.find((r) => {
+        return r.type === "FARCASTER_SIGNER" && r.pubKey === address;
+      });
+      if (existingRecoverer) {
+        return account;
+      }
+
+      const RecovererService = new _AccountRecovererService();
+      const updatedAccount = await RecovererService.addRecoverer(account, {
+        type: "FARCASTER_SIGNER",
+        address: address,
+        id: fid,
+      });
+      return updatedAccount;
     } catch (e) {
       throw new Error("Invalid token");
     }
@@ -255,7 +270,7 @@ class AuthService {
    * Authenticate an account
    * @returns Promise<Account, AccountNonce, AccessTokenString>
    */
-  async authenticate({ address, chainId, signature, type = "SIGNATURE" }) {
+  async authenticate({ address, chainId, signature, type = "SIGNATURE", id }) {
     let account = null;
     if (type === "PASSKEY") {
       account = await this.authByPassKey({
@@ -267,7 +282,7 @@ class AuthService {
       account = await this.authByWarpcast({
         address,
         token: signature,
-        fid: address,
+        fid: id,
         chainId,
       });
     } else {

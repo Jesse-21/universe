@@ -231,6 +231,7 @@ type Mutation {
     chainId: Int!
     signature: String!
     type: AuthType
+    id: String # for magic link, warpcast...
   ): AuthBySignatureResponse
   updateCurrentAccount(
     email: String
