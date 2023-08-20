@@ -89,10 +89,20 @@ const getFarcasterUserByUsername = async (username) => {
 const getFarcasterCastByHash = async (hash) => {
   const cast = await Casts.findOne({ hash });
 
-  const [parentAuthor, author] = await Promise.all([
-    getFarcasterUserByFid(cast.parentFid),
-    getFarcasterUserByFid(cast.fid),
-  ]);
+  const [parentAuthor, author, repliesCount, reactionsCount, recastsCount] =
+    await Promise.all([
+      getFarcasterUserByFid(cast.parentFid),
+      getFarcasterUserByFid(cast.fid),
+      Casts.countDocuments({ parentHash: cast.hash }),
+      Reactions.countDocuments({
+        targetHash: cast.hash,
+        reactionType: ReactionType.REACTION_TYPE_LIKE,
+      }),
+      Reactions.countDocuments({
+        targetHash: cast.hash,
+        reactionType: ReactionType.REACTION_TYPE_RECAST,
+      }),
+    ]);
 
   const mentionPromises = cast.mentions.map((mention) =>
     getFarcasterUserByFid(mention)
@@ -131,6 +141,15 @@ const getFarcasterCastByHash = async (hash) => {
     external: cast.external,
     author,
     parentAuthor,
+    replies: {
+      count: repliesCount,
+    },
+    reactions: {
+      count: reactionsCount,
+    },
+    recasts: {
+      count: recastsCount,
+    },
   };
 
   return data;
