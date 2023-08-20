@@ -15,6 +15,7 @@ const {
   getFarcasterCastReactions,
   getFarcasterCastLikes,
   getFarcasterCastRecasters,
+  getFarcasterCastByShortHash,
 } = require("../helpers/farcaster");
 
 const {
@@ -151,6 +152,30 @@ app.get("/v2/cast", limiter, async (req, res) => {
     }
 
     const cast = await getFarcasterCastByHash(hash);
+
+    return res.json({
+      result: { cast },
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/cast-short", limiter, async (req, res) => {
+  try {
+    let shortHash = req.query.shortHash;
+    let username = req.query.username;
+    if (!shortHash || !username) {
+      return res.status(400).json({
+        error: "Missing hash or username",
+      });
+    }
+
+    const cast = await getFarcasterCastByShortHash(shortHash, username);
 
     return res.json({
       result: { cast },

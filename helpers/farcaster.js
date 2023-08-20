@@ -155,6 +155,20 @@ const getFarcasterCastByHash = async (hash) => {
   return data;
 };
 
+const getFarcasterCastByShortHash = async (shortHash, username) => {
+  // use username, hash to find cast
+  const user = await getFarcasterUserByUsername(username);
+  if (!user) return null;
+
+  const cast = await Casts.findOne({
+    hash: { $regex: shortHash, $options: "i" },
+    fid: user.fid,
+  });
+  if (!cast) return null;
+
+  return await getFarcasterCastByHash(cast.hash);
+};
+
 const getFarcasterAllCastsInThread = async (threadHash) => {
   const parentCast = await Casts.findOne({ hash: threadHash });
 
@@ -283,4 +297,5 @@ module.exports = {
   getFarcasterCastReactions,
   getFarcasterCastLikes,
   getFarcasterCastRecasters,
+  getFarcasterCastByShortHash,
 };
