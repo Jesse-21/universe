@@ -288,6 +288,21 @@ const getFarcasterCastRecasters = async (hash, limit, offset) => {
   return recastData;
 };
 
+const getFarcasterFeed = async (limit, offset) => {
+  // find recent trending casts
+  const trendingCasts = await Casts.find()
+    .sort({ timestamp: -1 })
+    .skip(offset)
+    .limit(limit);
+
+  const trendingCastPromises = trendingCasts.map((cast) =>
+    getFarcasterCastByHash(cast.hash)
+  );
+  const trendingCastData = await Promise.all(trendingCastPromises);
+
+  return trendingCastData;
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -300,4 +315,5 @@ module.exports = {
   getFarcasterCastLikes,
   getFarcasterCastRecasters,
   getFarcasterCastByShortHash,
+  getFarcasterFeed,
 };

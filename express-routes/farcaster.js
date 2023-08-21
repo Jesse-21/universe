@@ -16,6 +16,7 @@ const {
   getFarcasterCastLikes,
   getFarcasterCastRecasters,
   getFarcasterCastByShortHash,
+  getFarcasterFeed,
 } = require("../helpers/farcaster");
 
 const {
@@ -103,6 +104,27 @@ const v1feed = async (req, res) => {
 };
 
 app.get("/v1/feed", limiter, v1feed);
+
+app.get("/v2/feed", limiter, async (req, res) => {
+  try {
+    const limit = req.query.limit || 20;
+    const cursor = req.query.cursor || null;
+
+    let casts = await getFarcasterFeed(limit, cursor);
+
+    return res.json({
+      result: { casts },
+      next: casts.length == limit ? cursor + limit : null,
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
 
 const v1cast = async (req, res) => {
   try {
