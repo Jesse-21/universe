@@ -53,7 +53,8 @@ const CacheService = new _CacheService();
 
 const FARCASTER_KEY = "farcaster-express-endpoint";
 
-const WARPCAST_SIGNIN_READY = false; // We need warpcast signin since we are using @farquest
+const WARPCAST_SIGNIN_READY =
+  process.env.NODE_ENV === "production" ? false : true; // We need warpcast signin since we are using @farquest
 
 const v1feed = async (req, res) => {
   try {
@@ -1248,17 +1249,18 @@ const v1MentionAndReplyNotifications = async (req, res) => {
   try {
     const limit = req.query.limit || 100;
     const cursor = req.query.cursor || null;
+    let data = null;
 
-    let data = await CacheService.get({
-      key: `${FARCASTER_KEY}`,
-      params: { limit, cursor, route: "mention-and-reply-notifications" },
-    });
-    if (data) {
-      return res.json({
-        result: { notifications: data.notifications, next: data.next },
-        source: "v1",
-      });
-    }
+    // let data = await CacheService.get({
+    //   key: `${FARCASTER_KEY}`,
+    //   params: { limit, cursor, route: "mention-and-reply-notifications" },
+    // });
+    // if (data) {
+    //   return res.json({
+    //     result: { notifications: data.notifications, next: data.next },
+    //     source: "v1",
+    //   });
+    // }
     let token = req.headers["WARPCAST_TOKEN"];
     if (!token && process.env.NODE_ENV !== "production") {
       token = process.env.FARQUEST_FARCASTER_APP_TOKEN;
