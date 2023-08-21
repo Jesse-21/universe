@@ -55,7 +55,7 @@ const FARCASTER_KEY = "farcaster-express-endpoint";
 
 const WARPCAST_SIGNIN_READY = false; // We need warpcast signin since we are using @farquest
 
-app.get("/v1/feed", limiter, async (req, res) => {
+const v1feed = async (req, res) => {
   try {
     const limit = req.query.limit || 20;
     const cursor = req.query.cursor || null;
@@ -67,6 +67,8 @@ app.get("/v1/feed", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { casts: data.casts },
+        next: { cursor: null },
+        source: "v1",
       });
     }
 
@@ -88,6 +90,7 @@ app.get("/v1/feed", limiter, async (req, res) => {
     return res.json({
       result: { casts: data.casts },
       next: { cursor: null },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -96,9 +99,11 @@ app.get("/v1/feed", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/cast", limiter, async (req, res) => {
+app.get("/v1/feed", limiter, v1feed);
+
+const v1cast = async (req, res) => {
   try {
     let hash = req.query.hash;
     if (!hash) {
@@ -113,6 +118,7 @@ app.get("/v1/cast", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { cast: data.cast },
+        source: "v1",
       });
     }
 
@@ -132,6 +138,7 @@ app.get("/v1/cast", limiter, async (req, res) => {
 
     return res.json({
       result: { cast: data.cast },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -140,7 +147,9 @@ app.get("/v1/cast", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/cast", limiter, v1cast);
 
 app.get("/v2/cast", limiter, async (req, res) => {
   try {
@@ -153,8 +162,13 @@ app.get("/v2/cast", limiter, async (req, res) => {
 
     const cast = await getFarcasterCastByHash(hash);
 
+    if (!cast) {
+      return await v1cast(req, res);
+    }
+
     return res.json({
       result: { cast },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -179,6 +193,7 @@ app.get("/v2/cast-short", limiter, async (req, res) => {
 
     return res.json({
       result: { cast },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -189,7 +204,7 @@ app.get("/v2/cast-short", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/custody-address", limiter, async (req, res) => {
+const v1custodyAddress = async (req, res) => {
   try {
     let fid = req.query.fid;
     if (!fid) {
@@ -204,6 +219,7 @@ app.get("/v1/custody-address", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { custodyAddress: data.custodyAddress },
+        source: "v1",
       });
     }
 
@@ -223,6 +239,7 @@ app.get("/v1/custody-address", limiter, async (req, res) => {
 
     return res.json({
       result: { custodyAddress: data.custodyAddress },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -231,9 +248,11 @@ app.get("/v1/custody-address", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
+app.get("/v1/custody-address", limiter, v1custodyAddress);
+
+const v1AllCastInThread = async (req, res) => {
   try {
     let threadHash = req.query.threadHash;
     if (!threadHash) {
@@ -248,6 +267,7 @@ app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { casts: data.casts },
+        source: "v1",
       });
     }
 
@@ -267,6 +287,7 @@ app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
 
     return res.json({
       result: { casts: data.casts },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -275,7 +296,9 @@ app.get("/v1/all-casts-in-thread", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/all-casts-in-thread", limiter, v1AllCastInThread);
 
 app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
   try {
@@ -287,9 +310,13 @@ app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
     }
 
     const casts = await getFarcasterAllCastsInThread(threadHash);
+    if (!casts) {
+      return await v1AllCastInThread(req, res);
+    }
 
     return res.json({
       result: { casts },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -300,7 +327,7 @@ app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/casts", limiter, async (req, res) => {
+const v1GetCasts = async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = req.query.limit || 10;
@@ -319,6 +346,7 @@ app.get("/v1/casts", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { casts: data.casts, next: data.next },
+        source: "v1",
       });
     }
 
@@ -341,6 +369,7 @@ app.get("/v1/casts", limiter, async (req, res) => {
     return res.json({
       result: { casts: data.casts },
       next: data.next,
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -349,7 +378,9 @@ app.get("/v1/casts", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/casts", limiter, v1GetCasts);
 
 app.get("/v2/casts", limiter, async (req, res) => {
   try {
@@ -368,6 +399,7 @@ app.get("/v2/casts", limiter, async (req, res) => {
     return res.json({
       result: { casts },
       next: casts.length == limit ? cursor + limit : null,
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -378,7 +410,7 @@ app.get("/v2/casts", limiter, async (req, res) => {
   }
 });
 
-app.post("/v1/casts", limiter, async (req, res) => {
+const v1PostCasts = async (req, res) => {
   try {
     const parentHash = req.query.parentHash;
     const text = req.query.text;
@@ -397,11 +429,12 @@ app.post("/v1/casts", limiter, async (req, res) => {
         parentHash,
         text,
       });
-      cast = data.cast;
+      cast = data.casts;
     }
 
     return res.json({
       result: { cast },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -410,9 +443,11 @@ app.post("/v1/casts", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.delete("/v1/casts", limiter, async (req, res) => {
+app.post("/v1/casts", limiter, v1PostCasts);
+
+const v1DeleteCasts = async (req, res) => {
   try {
     const castHash = req.query.castHash;
 
@@ -431,6 +466,7 @@ app.delete("/v1/casts", limiter, async (req, res) => {
 
     return res.json({
       result: { success: true },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -439,9 +475,11 @@ app.delete("/v1/casts", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/cast-reactions", limiter, async (req, res) => {
+app.delete("/v1/casts", limiter, v1DeleteCasts);
+
+const v1CastReactions = async (req, res) => {
   try {
     const castHash = req.query.castHash;
     const limit = req.query.limit || 100;
@@ -460,6 +498,7 @@ app.get("/v1/cast-reactions", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { reactions: data.reactions, next: data.next },
+        source: "v1",
       });
     }
 
@@ -481,6 +520,7 @@ app.get("/v1/cast-reactions", limiter, async (req, res) => {
 
     return res.json({
       result: { reactions: data.reactions, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -489,7 +529,9 @@ app.get("/v1/cast-reactions", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/cast-reactions", limiter, v1CastReactions);
 
 app.get("/v2/cast-reactions", limiter, async (req, res) => {
   try {
@@ -510,6 +552,7 @@ app.get("/v2/cast-reactions", limiter, async (req, res) => {
         reactions,
         next: reactions.length == limit ? cursor + limit : null,
       },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -520,7 +563,7 @@ app.get("/v2/cast-reactions", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/cast-likes", limiter, async (req, res) => {
+const v1GetCastLikes = async (req, res) => {
   try {
     const castHash = req.query.castHash;
     const limit = req.query.limit || 100;
@@ -539,6 +582,7 @@ app.get("/v1/cast-likes", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { likes: data.likes, next: data.next },
+        source: "v1",
       });
     }
 
@@ -560,6 +604,7 @@ app.get("/v1/cast-likes", limiter, async (req, res) => {
 
     return res.json({
       result: { likes: data.likes, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -568,7 +613,9 @@ app.get("/v1/cast-likes", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/cast-likes", limiter, v1GetCastLikes);
 
 app.get("/v2/cast-likes", limiter, async (req, res) => {
   try {
@@ -586,6 +633,7 @@ app.get("/v2/cast-likes", limiter, async (req, res) => {
 
     return res.json({
       result: { likes, next: likes.length == limit ? cursor + limit : null },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -596,7 +644,7 @@ app.get("/v2/cast-likes", limiter, async (req, res) => {
   }
 });
 
-app.put("/v1/cast-likes", limiter, async (req, res) => {
+const v1PutCastLikes = async (req, res) => {
   try {
     const castHash = req.query.castHash;
 
@@ -618,6 +666,7 @@ app.put("/v1/cast-likes", limiter, async (req, res) => {
 
     return res.json({
       result: { reaction },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -626,9 +675,11 @@ app.put("/v1/cast-likes", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.delete("/v1/cast-likes", limiter, async (req, res) => {
+app.put("/v1/cast-likes", limiter, v1PutCastLikes);
+
+const v1DeleteCastLikes = async (req, res) => {
   try {
     const castHash = req.query.castHash;
 
@@ -647,6 +698,7 @@ app.delete("/v1/cast-likes", limiter, async (req, res) => {
 
     return res.json({
       result: { success: true },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -655,120 +707,11 @@ app.delete("/v1/cast-likes", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/cast-likes", limiter, async (req, res) => {
-  try {
-    const castHash = req.query.castHash;
-    const limit = req.query.limit || 100;
-    const cursor = req.query.cursor || null;
+app.delete("/v1/cast-likes", limiter, v1DeleteCastLikes);
 
-    if (!castHash) {
-      return res.status(400).json({
-        error: "castHash is invalid",
-      });
-    }
-
-    let data = await CacheService.get({
-      key: `${FARCASTER_KEY}`,
-      params: { castHash, limit, cursor, route: "cast-likes" },
-    });
-    if (data) {
-      return res.json({
-        result: { likes: data.likes, next: data.next },
-      });
-    }
-
-    data = await getCastLikes({
-      token:
-        req.headers["WARPCAST_TOKEN"] ||
-        process.env.FARQUEST_FARCASTER_APP_TOKEN,
-      castHash,
-      limit,
-      cursor,
-    });
-
-    await CacheService.set({
-      key: `${FARCASTER_KEY}`,
-      params: { castHash, limit, cursor, route: "cast-likes" },
-      value: data,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache
-    });
-
-    return res.json({
-      result: { likes: data.likes, next: data.next },
-    });
-  } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
-  }
-});
-
-app.put("/v1/cast-likes", limiter, async (req, res) => {
-  try {
-    const castHash = req.query.castHash;
-
-    if (!castHash) {
-      return res.status(400).json({
-        error: "castHash is invalid",
-      });
-    }
-
-    let reaction = {};
-
-    if (WARPCAST_SIGNIN_READY) {
-      const data = await putCastLikes({
-        token: req.headers["WARPCAST_TOKEN"],
-        castHash,
-      });
-      reaction = data.reaction;
-    }
-
-    return res.json({
-      result: { reaction },
-    });
-  } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
-  }
-});
-
-app.delete("/v1/cast-likes", limiter, async (req, res) => {
-  try {
-    const castHash = req.query.castHash;
-
-    if (!castHash) {
-      return res.status(400).json({
-        error: "castHash is invalid",
-      });
-    }
-
-    if (WARPCAST_SIGNIN_READY) {
-      await deleteCastLikes({
-        token: req.headers["WARPCAST_TOKEN"],
-        castHash,
-      });
-    }
-
-    return res.json({
-      result: { success: true },
-    });
-  } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
-  }
-});
-
-app.get("/v1/cast-recasters", limiter, async (req, res) => {
+const v1CastRecasters = async (req, res) => {
   try {
     const castHash = req.query.castHash;
     const limit = req.query.limit || 100;
@@ -787,6 +730,7 @@ app.get("/v1/cast-recasters", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { users: data.users, next: data.next },
+        source: "v1",
       });
     }
 
@@ -808,6 +752,7 @@ app.get("/v1/cast-recasters", limiter, async (req, res) => {
 
     return res.json({
       result: { users: data.users, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -816,7 +761,9 @@ app.get("/v1/cast-recasters", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/cast-recasters", limiter, v1CastRecasters);
 
 app.get("/v2/cast-recasters", limiter, async (req, res) => {
   try {
@@ -834,6 +781,7 @@ app.get("/v2/cast-recasters", limiter, async (req, res) => {
 
     return res.json({
       result: { users, next: users.length == limit ? cursor + limit : null },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -844,7 +792,7 @@ app.get("/v2/cast-recasters", limiter, async (req, res) => {
   }
 });
 
-app.put("/v1/recasts", limiter, async (req, res) => {
+const v1PutRecasts = async (req, res) => {
   try {
     const castHash = req.query.castHash;
 
@@ -863,6 +811,7 @@ app.put("/v1/recasts", limiter, async (req, res) => {
 
     return res.json({
       result: { castHash },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -871,9 +820,11 @@ app.put("/v1/recasts", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.delete("/v1/recasts", limiter, async (req, res) => {
+app.put("/v1/recasts", limiter, v1PutRecasts);
+
+const v1DeleteRecasts = async (req, res) => {
   try {
     const castHash = req.query.castHash;
 
@@ -892,6 +843,7 @@ app.delete("/v1/recasts", limiter, async (req, res) => {
 
     return res.json({
       result: { success: true },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -900,9 +852,11 @@ app.delete("/v1/recasts", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/followers", limiter, async (req, res) => {
+app.delete("/v1/recasts", limiter, v1DeleteRecasts);
+
+const v1GetFollowers = async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = req.query.limit || 100;
@@ -921,6 +875,7 @@ app.get("/v1/followers", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { users: data.users, next: data.next },
+        source: "v1",
       });
     }
 
@@ -942,6 +897,7 @@ app.get("/v1/followers", limiter, async (req, res) => {
 
     return res.json({
       result: { users: data.users, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -950,7 +906,9 @@ app.get("/v1/followers", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/followers", limiter, v1GetFollowers);
 
 app.get("/v2/followers", limiter, async (req, res) => {
   try {
@@ -968,6 +926,7 @@ app.get("/v2/followers", limiter, async (req, res) => {
 
     return res.json({
       result: { users, next: users.length == limit ? cursor + limit : null },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -978,7 +937,7 @@ app.get("/v2/followers", limiter, async (req, res) => {
   }
 });
 
-app.put("/v1/following", limiter, async (req, res) => {
+const v1PutFollowing = async (req, res) => {
   try {
     const fid = req.query.fid;
 
@@ -997,6 +956,7 @@ app.put("/v1/following", limiter, async (req, res) => {
 
     return res.json({
       result: { success: true },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1005,9 +965,11 @@ app.put("/v1/following", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.delete("/v1/following", limiter, async (req, res) => {
+app.put("/v1/following", limiter, v1PutFollowing);
+
+const v1DeleteFollowing = async (req, res) => {
   try {
     const fid = req.query.fid;
 
@@ -1026,6 +988,7 @@ app.delete("/v1/following", limiter, async (req, res) => {
 
     return res.json({
       result: { success: true },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1034,9 +997,11 @@ app.delete("/v1/following", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
 
-app.get("/v1/following", limiter, async (req, res) => {
+app.delete("/v1/following", limiter, v1DeleteFollowing);
+
+const v1GetFollowing = async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = req.query.limit || 100;
@@ -1055,6 +1020,7 @@ app.get("/v1/following", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { users: data.users, next: data.next },
+        source: "v1",
       });
     }
 
@@ -1076,6 +1042,7 @@ app.get("/v1/following", limiter, async (req, res) => {
 
     return res.json({
       result: { users: data.users, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1084,7 +1051,9 @@ app.get("/v1/following", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/following", limiter, v1GetFollowing);
 
 app.get("/v2/following", limiter, async (req, res) => {
   try {
@@ -1102,6 +1071,7 @@ app.get("/v2/following", limiter, async (req, res) => {
 
     return res.json({
       result: { users, next: users.length == limit ? cursor + limit : null },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1112,7 +1082,7 @@ app.get("/v2/following", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/user", limiter, async (req, res) => {
+const v1GetUser = async (req, res) => {
   try {
     const fid = req.query.fid;
 
@@ -1129,6 +1099,7 @@ app.get("/v1/user", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { user: data.user },
+        source: "v1",
       });
     }
 
@@ -1148,6 +1119,7 @@ app.get("/v1/user", limiter, async (req, res) => {
 
     return res.json({
       result: { user: data.user },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1156,7 +1128,9 @@ app.get("/v1/user", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/user", limiter, v1GetUser);
 
 app.get("/v2/user", limiter, async (req, res) => {
   try {
@@ -1169,9 +1143,13 @@ app.get("/v2/user", limiter, async (req, res) => {
     }
 
     const user = await getFarcasterUserByFid(fid);
+    if (!user) {
+      return await v1GetUser(req, res);
+    }
 
     return res.json({
       result: { user },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1182,7 +1160,7 @@ app.get("/v2/user", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/user-by-username", limiter, async (req, res) => {
+const v1UserByUsername = async (req, res) => {
   try {
     const username = req.query.username;
 
@@ -1199,6 +1177,7 @@ app.get("/v1/user-by-username", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { user: data.user },
+        source: "v1",
       });
     }
 
@@ -1218,6 +1197,7 @@ app.get("/v1/user-by-username", limiter, async (req, res) => {
 
     return res.json({
       result: { user: data.user },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1226,7 +1206,9 @@ app.get("/v1/user-by-username", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get("/v1/user-by-username", limiter, v1UserByUsername);
 
 app.get("/v2/user-by-username", limiter, async (req, res) => {
   try {
@@ -1239,9 +1221,13 @@ app.get("/v2/user-by-username", limiter, async (req, res) => {
     }
 
     const user = await getFarcasterUserByUsername(username);
+    if (!user) {
+      return await v1UserByUsername(req, res);
+    }
 
     return res.json({
       result: { user },
+      source: "v2",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1252,7 +1238,7 @@ app.get("/v2/user-by-username", limiter, async (req, res) => {
   }
 });
 
-app.get("/v1/mention-and-reply-notifications", limiter, async (req, res) => {
+const v1MentionAndReplyNotifications = async (req, res) => {
   try {
     const limit = req.query.limit || 100;
     const cursor = req.query.cursor || null;
@@ -1264,12 +1250,17 @@ app.get("/v1/mention-and-reply-notifications", limiter, async (req, res) => {
     if (data) {
       return res.json({
         result: { notifications: data.notifications, next: data.next },
+        source: "v1",
       });
+    }
+    let token = req.headers["WARPCAST_TOKEN"];
+    if (!token && process.env.NODE_ENV !== "production") {
+      token = process.env.FARQUEST_FARCASTER_APP_TOKEN;
     }
 
     if (WARPCAST_SIGNIN_READY) {
       data = await getMentionAndReplyNotifications({
-        token: req.headers["WARPCAST_TOKEN"],
+        token,
         limit,
         cursor,
       });
@@ -1289,6 +1280,7 @@ app.get("/v1/mention-and-reply-notifications", limiter, async (req, res) => {
 
     return res.json({
       result: { notifications: data.notifications, next: data.next },
+      source: "v1",
     });
   } catch (e) {
     Sentry.captureException(e);
@@ -1297,7 +1289,13 @@ app.get("/v1/mention-and-reply-notifications", limiter, async (req, res) => {
       error: "Internal Server Error",
     });
   }
-});
+};
+
+app.get(
+  "/v1/mention-and-reply-notifications",
+  limiter,
+  v1MentionAndReplyNotifications
+);
 
 module.exports = {
   router: app,

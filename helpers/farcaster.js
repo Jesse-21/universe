@@ -88,6 +88,7 @@ const getFarcasterUserByUsername = async (username) => {
 
 const getFarcasterCastByHash = async (hash) => {
   const cast = await Casts.findOne({ hash });
+  if (!cast) return null;
 
   const [parentAuthor, author, repliesCount, reactionsCount, recastsCount] =
     await Promise.all([
@@ -171,6 +172,7 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
 
 const getFarcasterAllCastsInThread = async (threadHash) => {
   const parentCast = await Casts.findOne({ hash: threadHash });
+  if (!parentCast) return null;
 
   // recursively find all children casts where parentHash != castHash
   const findChildren = async (castHash) => {
