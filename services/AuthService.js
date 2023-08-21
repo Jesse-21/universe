@@ -155,10 +155,32 @@ class AuthService {
   async authByWarpcast({ address, token, fid, chainId }) {
     /** step1: get custody address. If this fails it means the token is invalid. */
     try {
-      const { user } = await getCurrentUser({ token });
-      if (!user || user.fid !== fid) throw new Error("Invalid token");
+      let tries = 0;
+      let resjson;
+      while (tries < 60) {
+        tries += 1;
+        await new Promise((r) => setTimeout(r, 1000));
 
-      const { custodyAddress } = await getCustodyAddress({ fid, token });
+        const res = await fetch(
+          `https://api.warpcast.com/v2/signer-request?token=${token}`
+        );
+
+        resjson = await res.json();
+
+        const signerRequest = resjson.result.signerRequest;
+
+        if (signerRequest.base64SignedMessage) {
+          break;
+        }
+      }
+      if (tries >= 60) throw new Error("Timeout");
+
+      // successfully got the signer request
+
+      const { custodyAddress } = await getCustodyAddress({
+        fid,
+        token: process.env.FARQUEST_FARCASTER_APP_TOKEN,
+      });
 
       const account = await Account.findOrCreateByAddressAndChainId({
         address: custodyAddress,

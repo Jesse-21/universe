@@ -24,8 +24,8 @@ const getFarcasterUserByFid = async (fid) => {
 
   let user = {
     fid,
-    following: following,
-    followers: followers,
+    followingCount: following,
+    followerCount: followers,
     pfp: {
       url: "",
       verified: false,
