@@ -61,7 +61,7 @@ const WARPCAST_SIGNIN_READY =
 
 const v1feed = async (req, res) => {
   try {
-    const limit = req.query.limit || 20;
+    const limit = parseInt(req.query.limit || 20);
     const cursor = req.query.cursor || null;
 
     let data = await CacheService.get({
@@ -109,14 +109,14 @@ app.get("/v1/feed", limiter, v1feed);
 
 app.get("/v2/feed", limiter, async (req, res) => {
   try {
-    const limit = req.query.limit || 20;
+    const limit = parseInt(req.query.limit || 20);
     const cursor = req.query.cursor || null;
 
-    let casts = await getFarcasterFeed(limit, cursor);
+    let [casts, next] = await getFarcasterFeed(limit, cursor);
 
     return res.json({
       result: { casts },
-      next: casts.length == limit ? cursor + limit : null,
+      next,
       source: "v2",
     });
   } catch (e) {
@@ -359,7 +359,7 @@ app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
 const v1GetCasts = async (req, res) => {
   try {
     const fid = req.query.fid;
-    const limit = req.query.limit || 10;
+    const limit = parseInt(req.query.limit || 10);
     const cursor = req.query.cursor || null;
 
     if (!fid) {
@@ -415,7 +415,7 @@ app.get("/v2/casts", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = Math.min(req.query.limit || 10, 100);
-    const cursor = parseInt(req.query.cursor || 0);
+    const cursor = parseInt(req.query.cursor || null);
 
     if (!fid) {
       return res.status(400).json({
@@ -423,11 +423,11 @@ app.get("/v2/casts", limiter, async (req, res) => {
       });
     }
 
-    let casts = await getFarcasterCasts(fid, limit, cursor);
+    let [casts, next] = await getFarcasterCasts(fid, limit, cursor);
 
     return res.json({
       result: { casts },
-      next: casts.length == limit ? cursor + limit : null,
+      next,
       source: "v2",
     });
   } catch (e) {
@@ -511,7 +511,7 @@ app.delete("/v1/casts", limiter, v1DeleteCasts);
 const v1CastReactions = async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
 
     if (!castHash) {
@@ -565,8 +565,8 @@ app.get("/v1/cast-reactions", limiter, v1CastReactions);
 app.get("/v2/cast-reactions", limiter, async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = Math.min(req.query.limit || 100, 250);
-    const cursor = req.query.cursor || 0;
+    const limit = Math.min(parseInt(req.query.limit || 100), 250);
+    const cursor = req.query.cursor || null;
 
     if (!castHash) {
       return res.status(400).json({
@@ -574,12 +574,16 @@ app.get("/v2/cast-reactions", limiter, async (req, res) => {
       });
     }
 
-    const reactions = await getFarcasterCastReactions(castHash, limit, cursor);
+    const [reactions, next] = await getFarcasterCastReactions(
+      castHash,
+      limit,
+      cursor
+    );
 
     return res.json({
       result: {
         reactions,
-        next: reactions.length == limit ? cursor + limit : null,
+        next,
       },
       source: "v2",
     });
@@ -595,7 +599,7 @@ app.get("/v2/cast-reactions", limiter, async (req, res) => {
 const v1GetCastLikes = async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
 
     if (!castHash) {
@@ -649,8 +653,8 @@ app.get("/v1/cast-likes", limiter, v1GetCastLikes);
 app.get("/v2/cast-likes", limiter, async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = Math.min(req.query.limit || 100, 250);
-    const cursor = req.query.cursor || 0;
+    const limit = Math.min(parseInt(req.query.limit || 100), 250);
+    const cursor = req.query.cursor || null;
 
     if (!castHash) {
       return res.status(400).json({
@@ -658,10 +662,10 @@ app.get("/v2/cast-likes", limiter, async (req, res) => {
       });
     }
 
-    const likes = await getFarcasterCastLikes(castHash, limit, cursor);
+    const [likes, next] = await getFarcasterCastLikes(castHash, limit, cursor);
 
     return res.json({
-      result: { likes, next: likes.length == limit ? cursor + limit : null },
+      result: { likes, next },
       source: "v2",
     });
   } catch (e) {
@@ -743,7 +747,7 @@ app.delete("/v1/cast-likes", limiter, v1DeleteCastLikes);
 const v1CastRecasters = async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
 
     if (!castHash) {
@@ -797,7 +801,7 @@ app.get("/v1/cast-recasters", limiter, v1CastRecasters);
 app.get("/v2/cast-recasters", limiter, async (req, res) => {
   try {
     const castHash = req.query.castHash;
-    const limit = Math.min(req.query.limit || 100, 250);
+    const limit = Math.min(parseInt(req.query.limit || 100), 250);
     const cursor = req.query.cursor || null;
 
     if (!castHash) {
@@ -806,10 +810,14 @@ app.get("/v2/cast-recasters", limiter, async (req, res) => {
       });
     }
 
-    const users = await getFarcasterCastRecasters(castHash, limit, cursor);
+    const [users, next] = await getFarcasterCastRecasters(
+      castHash,
+      limit,
+      cursor
+    );
 
     return res.json({
-      result: { users, next: users.length == limit ? cursor + limit : null },
+      result: { users, next },
       source: "v2",
     });
   } catch (e) {
@@ -888,7 +896,7 @@ app.delete("/v1/recasts", limiter, v1DeleteRecasts);
 const v1GetFollowers = async (req, res) => {
   try {
     const fid = req.query.fid;
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
 
     if (!fid) {
@@ -942,8 +950,8 @@ app.get("/v1/followers", limiter, v1GetFollowers);
 app.get("/v2/followers", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
-    const limit = Math.min(req.query.limit || 100, 250);
-    const cursor = req.query.cursor || 0;
+    const limit = Math.min(parseInt(req.query.limit || 100), 250);
+    const cursor = req.query.cursor || null;
 
     if (!fid) {
       return res.status(400).json({
@@ -951,10 +959,10 @@ app.get("/v2/followers", limiter, async (req, res) => {
       });
     }
 
-    const users = await getFarcasterFollowers(fid, limit, cursor);
+    const [users, next] = await getFarcasterFollowers(fid, limit, cursor);
 
     return res.json({
-      result: { users, next: users.length == limit ? cursor + limit : null },
+      result: { users, next },
       source: "v2",
     });
   } catch (e) {
@@ -1033,7 +1041,7 @@ app.delete("/v1/following", limiter, v1DeleteFollowing);
 const v1GetFollowing = async (req, res) => {
   try {
     const fid = req.query.fid;
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
 
     if (!fid) {
@@ -1087,8 +1095,8 @@ app.get("/v1/following", limiter, v1GetFollowing);
 app.get("/v2/following", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
-    const limit = Math.min(req.query.limit || 100, 250);
-    const cursor = req.query.cursor || 0;
+    const limit = Math.min(parseInt(req.query.limit || 100), 250);
+    const cursor = req.query.cursor || null;
 
     if (!fid) {
       return res.status(400).json({
@@ -1096,10 +1104,10 @@ app.get("/v2/following", limiter, async (req, res) => {
       });
     }
 
-    const users = await getFarcasterFollowing(fid, limit, cursor);
+    const [users, next] = await getFarcasterFollowing(fid, limit, cursor);
 
     return res.json({
-      result: { users, next: users.length == limit ? cursor + limit : null },
+      result: { users, next },
       source: "v2",
     });
   } catch (e) {
@@ -1271,7 +1279,7 @@ app.get("/v2/user-by-username", limiter, async (req, res) => {
 
 const v1MentionAndReplyNotifications = async (req, res) => {
   try {
-    const limit = req.query.limit || 100;
+    const limit = parseInt(req.query.limit || 100);
     const cursor = req.query.cursor || null;
     let data = null;
 
