@@ -43,6 +43,8 @@ const {
   getCustodyAddress,
 } = require("../helpers/warpcast");
 
+const { Message, getSSLHubRpcClient } = require("@farcaster/hub-nodejs");
+
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000, // 3s
@@ -1326,6 +1328,20 @@ app.get(
   limiter,
   v1MentionAndReplyNotifications
 );
+
+const v1PostCast = async (req, res) => {
+  const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
+  const message = Message.fromJSON(req.body.message);
+  const hubResult = await hubClient.submitMessage(message);
+  const unwrapped = hubResult.unwrapOr(null);
+  if (!unwrapped) {
+    res.status(400).json({ message: "Could not send message" });
+    return;
+  }
+  return res.json({ result: Message.toJSON(unwrapped) });
+};
+
+app.post("/v1/cast", v1PostCast);
 
 module.exports = {
   router: app,
