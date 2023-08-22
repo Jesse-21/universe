@@ -142,6 +142,7 @@ const getFarcasterCastByHash = async (hash) => {
     external: cast.external,
     author,
     parentAuthor,
+    timestamp: cast.timestamp.getTime(),
     replies: {
       count: repliesCount,
     },

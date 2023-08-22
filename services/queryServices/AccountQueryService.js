@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const { Service: AccountService } = require("../AccountService");
 const {
-  Service: FarcasterServiceV2,
-} = require("../identities/FarcasterServiceV2");
+  Service: FarcasterHubService,
+} = require("../identities/FarcasterHubService");
 const { AccountCommunity } = require("../../models/AccountCommunity");
 const { AccountNonce } = require("../../models/AccountNonce");
 const { AccountCommunityRole } = require("../../models/AccountCommunityRole");
@@ -125,14 +125,11 @@ class AccountQueryService extends AccountService {
   }
   identities(account) {
     try {
-      const FarcasterService = new FarcasterServiceV2();
+      const FarcasterService = new FarcasterHubService();
       return {
         _id: account._id,
         farcaster: async () => {
-          await account.populate("addresses");
-          const profile = await FarcasterService.getProfileByAddress(
-            account.addresses[0].address
-          );
+          const profile = await FarcasterService.getProfileByAccount(account);
           return profile;
         },
         ens: async () => {

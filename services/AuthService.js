@@ -5,6 +5,7 @@ const { recoverPersonalSignature } = require("@metamask/eth-sig-util");
 const base64url = require("base64url");
 const mongoose = require("mongoose");
 
+const axios = require("axios").default;
 const { Account } = require("../models/Account");
 const { AccountAddress } = require("../models/AccountAddress");
 const { AccountCommunity } = require("../models/AccountCommunity");
@@ -152,28 +153,35 @@ class AuthService {
    * Authenticate an account with warpcast
    * @returns Promise<Account>
    */
-  async authByWarpcast({ address, token, fid, chainId }) {
+  async authByWarpcast({ token, chainId }) {
     /** step1: get custody address. If this fails it means the token is invalid. */
     try {
       let tries = 0;
-      let resjson;
+      let signerData;
+
       while (tries < 60) {
         tries += 1;
         await new Promise((r) => setTimeout(r, 1000));
 
-        const res = await fetch(
-          `https://api.warpcast.com/v2/signer-request?token=${token}`
+        const { data } = await axios.get(
+          `https://api.warpcast.com/v2/signer-request`,
+          {
+            params: {
+              token: token,
+            },
+          }
         );
 
-        resjson = await res.json();
-
-        const signerRequest = resjson.result.signerRequest;
+        const signerRequest = data.result.signerRequest;
 
         if (signerRequest.base64SignedMessage) {
+          signerData = signerRequest;
           break;
         }
       }
       if (tries >= 60) throw new Error("Timeout");
+      const address = signerData.publicKey;
+      const fid = signerData.fid.toString();
 
       // successfully got the signer request
 
@@ -186,8 +194,9 @@ class AuthService {
         address: custodyAddress,
         chainId,
       });
+
       if (account?.deleted) throw new Error("Account is deleted");
-      const existingRecoverer = account.recoverers.find((r) => {
+      const existingRecoverer = account.recoverers?.find?.((r) => {
         return r.type === "FARCASTER_SIGNER" && r.pubKey === address;
       });
       if (existingRecoverer) {
@@ -197,11 +206,12 @@ class AuthService {
       const RecovererService = new _AccountRecovererService();
       const updatedAccount = await RecovererService.addRecoverer(account, {
         type: "FARCASTER_SIGNER",
-        address: address,
+        address,
         id: fid,
       });
       return updatedAccount;
     } catch (e) {
+      console.log(e);
       throw new Error("Invalid token");
     }
   }
