@@ -56,8 +56,8 @@ const getFarcasterUserByFid = async (fid) => {
         break;
       case UserDataType.USER_DATA_TYPE_BIO:
         user.bio.text = convertedData;
-        // find "@" mentions
-        const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+        // find "@" mentions not inside a link
+        const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+)/g;
         let match;
         while ((match = mentionRegex.exec(convertedData))) {
           user.bio.mentions.push(match[1]);
@@ -126,6 +126,7 @@ const getFarcasterCastByHash = async (hash) => {
   while (threadHash !== cast.parentHash) {
     // derive threadHash (first cast in the thread) by travelling up the parentHash chain until the parentHash as the hash
     const parentCast = await Casts.findOne({ hash: threadHash });
+    if (!parentCast.parentHash) break;
     threadHash = parentCast.parentHash;
   }
 
@@ -136,7 +137,7 @@ const getFarcasterCastByHash = async (hash) => {
     parentUrl: cast.parentUrl,
     threadHash,
     text: text,
-    embeds: cast.embeds,
+    embeds: JSON.parse(cast.embeds),
     mentions: cast.mentions,
     mentionsPositions: cast.mentionsPositions,
     external: cast.external,

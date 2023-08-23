@@ -1346,6 +1346,7 @@ const v1PostCast = async (req, res) => {
     res.status(400).json({ message: "Could not send message" });
     return;
   }
+  // TODO: be optimistic and save the cast whether it's external or not.
   return res.json({ result: Message.toJSON(unwrapped) });
 };
 
