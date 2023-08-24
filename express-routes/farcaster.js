@@ -1337,7 +1337,7 @@ app.get(
   v1MentionAndReplyNotifications
 );
 
-const v1PostCast = async (req, res) => {
+const v1PostMessage = async (req, res) => {
   const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
   const message = Message.fromJSON(req.body.message);
   const hubResult = await hubClient.submitMessage(message);
@@ -1350,7 +1350,7 @@ const v1PostCast = async (req, res) => {
   return res.json({ result: Message.toJSON(unwrapped) });
 };
 
-app.post("/v1/cast", v1PostCast);
+app.post("/v1/message", v1PostMessage);
 
 module.exports = {
   router: app,

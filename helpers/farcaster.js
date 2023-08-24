@@ -111,15 +111,25 @@ const getFarcasterCastByHash = async (hash) => {
   const mentionUsers = await Promise.all(mentionPromises);
 
   let text = cast.text;
+  let offset = 0;
+  let updatedMentionsPositions = []; // Array to store updated positions
+
   for (let i = 0; i < mentionUsers.length; i++) {
-    const mentionPosition = cast.mentionsPositions[i];
+    const adjustedMentionPosition = cast.mentionsPositions[i] + offset;
     const mentionUsername = mentionUsers[i].username;
 
     const mentionLink = `@${mentionUsername}`;
     text =
-      text.slice(0, mentionPosition) +
+      text.slice(0, adjustedMentionPosition) +
       mentionLink +
-      text.slice(mentionPosition);
+      " " + // Adding a space after each mention
+      text.slice(adjustedMentionPosition + 1); // +1 to replace the space
+
+    // Update the offset based on the added mention
+    offset += mentionLink.length;
+
+    // Store the adjusted position in the new array
+    updatedMentionsPositions.push(adjustedMentionPosition);
   }
 
   let threadHash = cast.hash;
@@ -138,8 +148,8 @@ const getFarcasterCastByHash = async (hash) => {
     threadHash,
     text: text,
     embeds: JSON.parse(cast.embeds),
-    mentions: cast.mentions,
-    mentionsPositions: cast.mentionsPositions,
+    mentions: mentionUsers,
+    mentionsPositions: updatedMentionsPositions,
     external: cast.external,
     author,
     parentAuthor,
@@ -331,6 +341,7 @@ const getFarcasterFeed = async (limit, offset) => {
   // find recent trending casts
   const trendingCasts = await Casts.find({
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
