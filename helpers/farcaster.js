@@ -174,7 +174,7 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
   if (!user) return null;
 
   const cast = await Casts.findOne({
-    hash: { $regex: shortHash, $options: "i" },
+    hash: { $regex: `^${shortHash}` },
     fid: user.fid,
   });
   if (!cast) return null;

@@ -47,6 +47,7 @@ const castsSchema = new mongoose.Schema(
 castsSchema.index({ hash: 1 });
 castsSchema.index({ parentHash: 1 });
 castsSchema.index({ hash: "text", fid: 1 });
+castsSchema.index({ fid: 1, hash: 1 });
 
 const reactionsSchema = new mongoose.Schema(
   {
