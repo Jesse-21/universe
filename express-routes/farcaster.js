@@ -187,11 +187,6 @@ app.get("/v2/cast", limiter, async (req, res) => {
 
     const cast = await getFarcasterCastByHash(hash);
 
-    if (!cast) {
-      console.error(`Fallback to v1 for /v2/cast: ${hash}`);
-      return await v1cast(req, res);
-    }
-
     return res.json({
       result: { cast },
       source: "v2",
@@ -336,12 +331,6 @@ app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
     }
 
     const casts = await getFarcasterAllCastsInThread(threadHash);
-    if (!casts) {
-      console.error(
-        `Fallback to v1 for /v2/all-casts-in-thread: ${threadHash}`
-      );
-      return await v1AllCastInThread(req, res);
-    }
 
     return res.json({
       result: { casts },
@@ -1180,10 +1169,6 @@ app.get("/v2/user", limiter, async (req, res) => {
     }
 
     const user = await getFarcasterUserByFid(fid);
-    if (!user) {
-      console.error(`Fallback to v1 for /v2/user: ${fid}`);
-      return await v1GetUser(req, res);
-    }
 
     return res.json({
       result: { user },
@@ -1259,10 +1244,6 @@ app.get("/v2/user-by-username", limiter, async (req, res) => {
     }
 
     const user = await getFarcasterUserByUsername(username);
-    if (!user) {
-      console.error(`Fallback to v1 for /v2/user-by-username: ${username}`);
-      return await v1UserByUsername(req, res);
-    }
 
     return res.json({
       result: { user },

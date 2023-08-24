@@ -132,7 +132,7 @@ const getFarcasterCastByHash = async (hash) => {
     updatedMentionsPositions.push(adjustedMentionPosition);
   }
 
-  let threadHash = cast.hash;
+  let threadHash = cast.parentHash || cast.hash;
   while (threadHash !== cast.parentHash) {
     // derive threadHash (first cast in the thread) by travelling up the parentHash chain until the parentHash as the hash
     const parentCast = await Casts.findOne({ hash: threadHash });
