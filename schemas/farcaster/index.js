@@ -44,10 +44,10 @@ const castsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-castsSchema.index({ hash: 1 });
-castsSchema.index({ parentHash: 1 });
-castsSchema.index({ hash: "text", fid: 1 });
-castsSchema.index({ fid: 1, hash: 1 });
+castsSchema.index({ hash: 1, deletedAt: 1 });
+castsSchema.index({ parentHash: 1, deletedAt: 1 });
+castsSchema.index({ hash: "text", fid: 1, deletedAt: 1 });
+castsSchema.index({ fid: 1, hash: 1, deletedAt: 1 });
 
 const reactionsSchema = new mongoose.Schema(
   {
@@ -64,8 +64,8 @@ const reactionsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-reactionsSchema.index({ targetHash: 1 });
-reactionsSchema.index({ targetHash: 1, reactionType: 1 });
+reactionsSchema.index({ targetHash: 1, deletedAt: 1 });
+reactionsSchema.index({ targetHash: 1, reactionType: 1, deletedAt: 1 });
 
 const signersSchema = new mongoose.Schema(
   {
@@ -106,8 +106,8 @@ const userDataSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userDataSchema.index({ fid: 1 });
-userDataSchema.index({ value: 1, type: 1 });
+userDataSchema.index({ fid: 1, deletedAt: 1 });
+userDataSchema.index({ value: 1, type: 1, deletedAt: 1 });
 
 const fidsSchema = new mongoose.Schema(
   {
@@ -118,7 +118,7 @@ const fidsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-fidsSchema.index({ fid: 1 });
+fidsSchema.index({ fid: 1, deletedAt: 1 });
 
 const fnamesSchema = new mongoose.Schema(
   {
@@ -130,7 +130,7 @@ const fnamesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-fnamesSchema.index({ custodyAddress: 1 });
+fnamesSchema.index({ custodyAddress: 1, deletedAt: 1 });
 
 const linksSchema = new mongoose.Schema(
   {
@@ -146,8 +146,8 @@ const linksSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-linksSchema.index({ fid: 1, type: 1 });
-linksSchema.index({ targetFid: 1, type: 1 });
+linksSchema.index({ fid: 1, type: 1, deletedAt: 1 });
+linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
 
 module.exports = {
   hubSubscriptionsSchema,

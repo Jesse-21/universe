@@ -14,12 +14,13 @@ const {
 
 const getFarcasterUserByFid = async (fid) => {
   const [following, followers, allUserData] = await Promise.all([
-    Links.countDocuments({ fid, type: "follow" }),
+    Links.countDocuments({ fid, type: "follow", deletedAt: null }),
     Links.countDocuments({
       targetFid: fid,
       type: "follow",
+      deletedAt: null,
     }),
-    UserData.find({ fid }),
+    UserData.find({ fid, deletedAt: null }),
   ]);
 
   let user = {
@@ -79,6 +80,7 @@ const getFarcasterUserByUsername = async (username) => {
   const userData = await UserData.findOne({
     value: hexUsername,
     type: UserDataType.USER_DATA_TYPE_USERNAME,
+    deletedAt: null,
   });
   if (userData) {
     return await getFarcasterUserByFid(userData.fid);
@@ -87,21 +89,23 @@ const getFarcasterUserByUsername = async (username) => {
 };
 
 const getFarcasterCastByHash = async (hash) => {
-  const cast = await Casts.findOne({ hash });
+  const cast = await Casts.findOne({ hash, deletedAt: null });
   if (!cast) return null;
 
   const [parentAuthor, author, repliesCount, reactionsCount, recastsCount] =
     await Promise.all([
       getFarcasterUserByFid(cast.parentFid),
       getFarcasterUserByFid(cast.fid),
-      Casts.countDocuments({ parentHash: cast.hash }),
+      Casts.countDocuments({ parentHash: cast.hash, deletedAt: null }),
       Reactions.countDocuments({
         targetHash: cast.hash,
         reactionType: ReactionType.REACTION_TYPE_LIKE,
+        deletedAt: null,
       }),
       Reactions.countDocuments({
         targetHash: cast.hash,
         reactionType: ReactionType.REACTION_TYPE_RECAST,
+        deletedAt: null,
       }),
     ]);
 
@@ -140,7 +144,10 @@ const getFarcasterCastByHash = async (hash) => {
   let threadHash = cast.parentHash || cast.hash;
   while (threadHash !== cast.parentHash) {
     // derive threadHash (first cast in the thread) by travelling up the parentHash chain until the parentHash as the hash
-    const parentCast = await Casts.findOne({ hash: threadHash });
+    const parentCast = await Casts.findOne({
+      hash: threadHash,
+      deletedAt: null,
+    });
     if (!parentCast.parentHash) break;
     threadHash = parentCast.parentHash;
   }
@@ -181,6 +188,7 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
   const cast = await Casts.findOne({
     hash: { $regex: `^${shortHash}` },
     fid: user.fid,
+    deletedAt: null,
   });
   if (!cast) return null;
 
@@ -188,12 +196,15 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
 };
 
 const getFarcasterAllCastsInThread = async (threadHash) => {
-  const parentCast = await Casts.findOne({ hash: threadHash });
+  const parentCast = await Casts.findOne({ hash: threadHash, deletedAt: null });
   if (!parentCast) return null;
 
   // recursively find all children casts where parentHash != castHash
   const findChildren = async (castHash) => {
-    const children = await Casts.find({ parentHash: castHash });
+    const children = await Casts.find({
+      parentHash: castHash,
+      deletedAt: null,
+    });
     const childrenPromises = children.map((child) =>
       getFarcasterCastByHash(child.hash)
     );
@@ -223,6 +234,7 @@ const getFarcasterCasts = async (fid, limit, offset) => {
   const casts = await Casts.find({
     fid,
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
@@ -243,6 +255,7 @@ const getFarcasterFollowing = async (fid, limit, offset) => {
     fid,
     type: "follow",
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
@@ -265,6 +278,7 @@ const getFarcasterFollowers = async (fid, limit, offset) => {
     targetFid: fid,
     type: "follow",
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
@@ -286,6 +300,7 @@ const getFarcasterCastReactions = async (hash, limit, offset) => {
   const reactions = await Reactions.find({
     targetHash: hash,
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
@@ -308,6 +323,7 @@ const getFarcasterCastLikes = async (hash, limit, offset) => {
     targetHash: hash,
     reactionType: ReactionType.REACTION_TYPE_LIKE,
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
@@ -328,6 +344,7 @@ const getFarcasterCastRecasters = async (hash, limit, offset) => {
     targetHash: hash,
     reactionType: ReactionType.REACTION_TYPE_RECAST,
     timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
   }).limit(limit);
 
   const recastPromises = recasts.map((recast) =>
