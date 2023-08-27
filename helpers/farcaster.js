@@ -193,6 +193,19 @@ const getFarcasterCastByHash = async (hash) => {
   return data;
 };
 
+const getFarcasterFeedCastByHash = async (hash) => {
+  const cast = await getFarcasterCastByHash(hash);
+  if (cast.threadHash) {
+    // return the root cast with childrenCasts
+    const root = await getFarcasterCastByHash(cast.threadHash);
+    return {
+      ...root,
+      childrenCasts: [cast],
+    };
+  }
+  return cast;
+};
+
 const getFarcasterCastByShortHash = async (shortHash, username) => {
   // use username, hash to find cast
   const user = await getFarcasterUserByUsername(username);
@@ -382,7 +395,7 @@ const getFarcasterFeed = async (limit, offset) => {
     .limit(limit);
 
   const trendingCastPromises = trendingCasts.map((cast) =>
-    getFarcasterCastByHash(cast.hash)
+    getFarcasterFeedCastByHash(cast.hash)
   );
   const trendingCastData = await Promise.all(trendingCastPromises);
 
