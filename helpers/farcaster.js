@@ -146,7 +146,6 @@ const getFarcasterCastByHash = async (hash) => {
     // threadHash not cached
     threadHash = cast.hash;
     let currentParentHash = cast.parentHash;
-    let count = 0;
 
     while (currentParentHash) {
       const parentCast = await Casts.findOne({
@@ -155,12 +154,16 @@ const getFarcasterCastByHash = async (hash) => {
       });
 
       if (!parentCast) break; // Exit if no parent cast found
+      if (parentCast.threadHash) {
+        // threadHash found
+        threadHash = parentCast.threadHash;
+        break;
+      }
 
       threadHash = parentCast.hash; // Update the threadHash to the current parentCast
       currentParentHash = parentCast.parentHash; // Update the currentParentHash for the next iteration
-
-      count++;
     }
+
     cast.threadHash = threadHash;
     cast.save();
   }
@@ -203,7 +206,6 @@ const getFarcasterFeedCastByHash = async (hash) => {
       childrenCasts: [cast],
     };
   }
-  return cast;
 };
 
 const getFarcasterCastByShortHash = async (shortHash, username) => {

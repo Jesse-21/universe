@@ -107,58 +107,70 @@ class AccountClass {
     walletEmail,
     encyrptedWalletJson,
   }) {
-    if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
-      throw new Error("Invalid chain id");
-    }
-    const address = validateAndConvertAddress(rawAddress, chainId);
-
-    const existing = await this.findByAddressAndChainId({
-      address,
-      chainId,
-    });
-    if (existing?.deleted) throw new Error("Account is deleted");
-    if (existing) return existing;
-    const createdNonceTmp = new AccountNonce();
-    const createdExpTmp = new AccountExp();
-    const createdAddressTmp = new AccountAddress({
-      address,
-      chain: {
-        chainId,
-        name: ChainHelpers.mapChainIdToName(chainId),
-      },
-    });
-    const createdAccount = await this.create({
-      email,
-      addresses: [createdAddressTmp._id],
-      activities: {},
-      walletEmail,
-      encyrptedWalletJson,
-    });
-    createdAddressTmp.account = createdAccount._id;
-    createdNonceTmp.account = createdAccount._id;
-    createdExpTmp.account = createdAccount._id;
-    await createdAddressTmp.save();
-    await createdNonceTmp.save();
-    await createdExpTmp.save();
-
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      await this.findByAddressAndChainId({
+      if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
+        throw new Error("Invalid chain id");
+      }
+      const address = validateAndConvertAddress(rawAddress, chainId);
+
+      const existing = await this.findByAddressAndChainId({
         address,
         chainId,
       });
-    } catch (e) {
-      // This means we created a duplicate account
-      // This is a rare case, but it can happen
-      // We should delete the account we just created
-      // and return the existing account
-      await createdAccount.delete();
-      await createdAddressTmp.delete();
-      await createdNonceTmp.delete();
-      await createdExpTmp.delete();
-      throw e;
-    }
+      if (existing?.deleted) throw new Error("Account is deleted");
+      if (existing) return existing;
 
-    return createdAccount;
+      const createdNonceTmp = new AccountNonce();
+      const createdExpTmp = new AccountExp();
+      const createdAddressTmp = new AccountAddress({
+        address,
+        chain: {
+          chainId,
+          name: ChainHelpers.mapChainIdToName(chainId),
+        },
+      });
+      const createdAccount = await this.create({
+        email,
+        addresses: [createdAddressTmp._id],
+        activities: {},
+        walletEmail,
+        encyrptedWalletJson,
+      });
+      createdAddressTmp.account = createdAccount._id;
+      createdNonceTmp.account = createdAccount._id;
+      createdExpTmp.account = createdAccount._id;
+
+      await createdAddressTmp.save({ session });
+      await createdNonceTmp.save({ session });
+      await createdExpTmp.save({ session });
+
+      try {
+        await this.findByAddressAndChainId({
+          address,
+          chainId,
+        });
+      } catch (e) {
+        // This means we created a duplicate account
+        // This is a rare case, but it can happen
+        // We should delete the account we just created
+        // and return the existing account
+        await createdAccount.delete({ session });
+        await createdAddressTmp.delete({ session });
+        await createdNonceTmp.delete({ session });
+        await createdExpTmp.delete({ session });
+        throw e;
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+      return createdAccount;
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error; // re-throw the error to be handled by the calling function
+    }
   }
 
   /**

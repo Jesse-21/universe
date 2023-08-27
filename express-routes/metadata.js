@@ -230,7 +230,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
 
     let data = {
       name: `${rawDomain}.beb`,
-      description: `Check the status of ${rawDomain}.beb on beb.quest, and try our first game at farquest.app 👁️`,
+      description: `Check the status of ${rawDomain}.beb on beb.quest, and try our first game at far.quest 👁️`,
       image,
       attributes: [
         {
