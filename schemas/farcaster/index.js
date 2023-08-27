@@ -22,6 +22,7 @@ const messagesSchema = new mongoose.Schema(
     signer: { type: String, required: true },
     raw: { type: String, required: true },
     external: { type: Boolean, default: false },
+    unindexed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -41,6 +42,7 @@ const castsSchema = new mongoose.Schema(
     mentions: [Number],
     mentionsPositions: [Number],
     external: { type: Boolean, default: false },
+    threadHash: { type: String },
   },
   { timestamps: true }
 );

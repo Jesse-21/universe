@@ -43,7 +43,17 @@ const {
   getCustodyAddress,
 } = require("../helpers/warpcast");
 
-const { Message, getSSLHubRpcClient } = require("@farcaster/hub-nodejs");
+const { Messages } = require("../models/farcaster");
+
+const {
+  Message: MessageFarcaster,
+  getSSLHubRpcClient,
+  fromFarcasterTime,
+} = require("@farcaster/hub-nodejs");
+
+const { requireAuth } = require("../helpers/auth-middleware");
+
+const assert = require("assert");
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -58,6 +68,45 @@ const FARCASTER_KEY = "farcaster-express-endpoint";
 
 const WARPCAST_SIGNIN_READY =
   process.env.NODE_ENV === "production" ? false : true; // We need warpcast signin since we are using @farquest
+
+const authRequired = async (req, res, next) => {
+  try {
+    const data = await requireAuth(req.headers.authorization?.slice(7) || "");
+    assert(!req.header.accountId, "accountId already exists in req.header");
+    req.header.accountId = data.payload.id;
+    next();
+  } catch (e) {
+    try {
+      if (!e.message.includes("jwt must be provided")) {
+        Sentry.captureException(e);
+        console.error(e);
+      }
+      return res.status(403).json({
+        error: "Unauthorized",
+      });
+    } catch (e) {
+      Sentry.captureException(e);
+      console.error(e);
+      return res.status(403).json({
+        error: "Unauthorized",
+      });
+    }
+  }
+};
+
+function farcasterTimeToDate(time) {
+  if (time === undefined) return undefined;
+  if (time === null) return null;
+  const result = fromFarcasterTime(time);
+  if (result.isErr()) throw result.error;
+  return new Date(result.value);
+}
+
+function bytesToHex(bytes) {
+  if (bytes === undefined) return undefined;
+  if (bytes === null) return null;
+  return `0x${Buffer.from(bytes).toString("hex")}`;
+}
 
 const v1feed = async (req, res) => {
   try {
@@ -463,7 +512,7 @@ const v1PostCasts = async (req, res) => {
   }
 };
 
-app.post("/v1/casts", limiter, v1PostCasts);
+app.post("/v1/casts", limiter, authRequired, v1PostCasts);
 
 const v1DeleteCasts = async (req, res) => {
   try {
@@ -1319,19 +1368,51 @@ app.get(
 );
 
 const v1PostMessage = async (req, res) => {
-  const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
-  const message = Message.fromJSON(req.body.message);
-  const hubResult = await hubClient.submitMessage(message);
-  const unwrapped = hubResult.unwrapOr(null);
-  if (!unwrapped) {
-    res.status(400).json({ message: "Could not send message" });
-    return;
+  try {
+    const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
+    const isExternal = req.body.isExternal || false;
+    const message = MessageFarcaster.fromJSON(req.body.message);
+    if (!isExternal) {
+      const hubResult = await hubClient.submitMessage(message);
+      const unwrapped = hubResult.unwrapOr(null);
+      if (!unwrapped) {
+        res.status(400).json({ message: "Could not send message" });
+        return;
+      }
+    } else {
+      const now = new Date();
+      let messageData = {
+        fid: message.data.fid,
+        createdAt: now,
+        updatedAt: now,
+        messageType: message.data.type,
+        timestamp: farcasterTimeToDate(message.data.timestamp),
+        hash: bytesToHex(message.hash),
+        hashScheme: message.hashScheme,
+        signature: bytesToHex(message.signature),
+        signatureScheme: message.signatureScheme,
+        signer: bytesToHex(message.signer),
+        raw: bytesToHex(MessageFarcaster.encode(message).finish()),
+        deletedAt: operation === "delete" ? now : null,
+        prunedAt: operation === "prune" ? now : null,
+        revokedAt: operation === "revoke" ? now : null,
+        external: true,
+        unindexed: true,
+      };
+
+      await Messages.create(messageData);
+    }
+    return res.json({ result: MessageFarcaster.toJSON(message) });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
   }
-  // TODO: be optimistic and save the cast whether it's external or not.
-  return res.json({ result: Message.toJSON(unwrapped) });
 };
 
-app.post("/v1/message", v1PostMessage);
+app.post("/v1/message", authRequired, v1PostMessage);
 
 module.exports = {
   router: app,

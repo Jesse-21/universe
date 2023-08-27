@@ -141,15 +141,29 @@ const getFarcasterCastByHash = async (hash) => {
     updatedMentionsPositions.push(adjustedMentionPosition);
   }
 
-  let threadHash = cast.parentHash || cast.hash;
-  while (threadHash !== cast.parentHash) {
-    // derive threadHash (first cast in the thread) by travelling up the parentHash chain until the parentHash as the hash
-    const parentCast = await Casts.findOne({
-      hash: threadHash,
-      deletedAt: null,
-    });
-    if (!parentCast.parentHash) break;
-    threadHash = parentCast.parentHash;
+  let threadHash = cast.threadHash;
+  if (!threadHash) {
+    // threadHash not cached
+    threadHash = cast.hash;
+    let currentParentHash = cast.parentHash;
+    let maxIterations = 1000; // or an appropriate number
+    let count = 0;
+
+    while (currentParentHash && count < maxIterations) {
+      const parentCast = await Casts.findOne({
+        hash: currentParentHash,
+        deletedAt: null,
+      });
+
+      if (!parentCast) break; // Exit if no parent cast found
+
+      threadHash = parentCast.hash; // Update the threadHash to the current parentCast
+      currentParentHash = parentCast.parentHash; // Update the currentParentHash for the next iteration
+
+      count++;
+    }
+    cast.threadHash = threadHash;
+    cast.save();
   }
 
   const data = {
