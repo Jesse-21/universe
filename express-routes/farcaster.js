@@ -46,7 +46,7 @@ const {
 const { Messages } = require("../models/farcaster");
 
 const {
-  Message: MessageFarcaster,
+  Message,
   getSSLHubRpcClient,
   fromFarcasterTime,
 } = require("@farcaster/hub-nodejs");
@@ -1371,7 +1371,7 @@ const v1PostMessage = async (req, res) => {
   try {
     const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
     const isExternal = req.body.isExternal || false;
-    const message = MessageFarcaster.fromJSON(req.body.message);
+    const message = Message.fromJSON(req.body.message);
     if (!isExternal) {
       const hubResult = await hubClient.submitMessage(message);
       const unwrapped = hubResult.unwrapOr(null);
@@ -1392,7 +1392,7 @@ const v1PostMessage = async (req, res) => {
         signature: bytesToHex(message.signature),
         signatureScheme: message.signatureScheme,
         signer: bytesToHex(message.signer),
-        raw: bytesToHex(MessageFarcaster.encode(message).finish()),
+        raw: bytesToHex(Message.encode(message).finish()),
         deletedAt: operation === "delete" ? now : null,
         prunedAt: operation === "prune" ? now : null,
         revokedAt: operation === "revoke" ? now : null,
@@ -1402,7 +1402,7 @@ const v1PostMessage = async (req, res) => {
 
       await Messages.create(messageData);
     }
-    return res.json({ result: MessageFarcaster.toJSON(message) });
+    return res.json({ result: Message.toJSON(message) });
   } catch (e) {
     Sentry.captureException(e);
     console.error(e);

@@ -146,10 +146,9 @@ const getFarcasterCastByHash = async (hash) => {
     // threadHash not cached
     threadHash = cast.hash;
     let currentParentHash = cast.parentHash;
-    let maxIterations = 1000; // or an appropriate number
     let count = 0;
 
-    while (currentParentHash && count < maxIterations) {
+    while (currentParentHash) {
       const parentCast = await Casts.findOne({
         hash: currentParentHash,
         deletedAt: null,
