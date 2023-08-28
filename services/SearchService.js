@@ -116,6 +116,7 @@ class SearchService {
       if (farcasterAccounts) {
         accounts = [...accounts, ...farcasterAccounts];
       }
+      // @TODO dedupe accounts
     }
     return accounts;
   }
