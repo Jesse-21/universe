@@ -21,18 +21,32 @@ class SearchService {
     // Convert the search string to its hex representation
     const hexSearchString = Buffer.from(searchString, "ascii").toString("hex");
 
-    // Create a regex pattern that searches for this hex string with the "0x" prefix
-    // The ^ ensures the pattern matches from the start of the string
-    const pattern = new RegExp(`^0x${hexSearchString}.*`, "i");
-
-    const users = await UserData.find({
-      value: pattern,
+    // Start by searching for an exact match
+    let users = await UserData.find({
+      value: `0x${hexSearchString}`,
       type: UserDataType.USER_DATA_TYPE_USERNAME,
       deletedAt: null,
     })
       .sort("-updatedAt")
       .limit(5);
-    if (users) {
+
+    // If we didn't find 5 users or want to add more inexact matches
+    if (users.length < 5) {
+      // Create a regex pattern that searches for this hex string with the "0x" prefix
+      const pattern = new RegExp(`^0x${hexSearchString}.*`, "i");
+
+      // Find additional users with the pattern
+      const regexUsers = await UserData.find({
+        value: pattern,
+        type: UserDataType.USER_DATA_TYPE_USERNAME,
+        deletedAt: null,
+      })
+        .sort("-updatedAt")
+        .limit(5 - users.length); // limit to the number of users needed to reach 5
+
+      users = users.concat(regexUsers);
+    }
+    if (users && users.length > 0) {
       // an array of Account, derived from signer address
       return await Promise.all(
         users.map(async (u) => {
@@ -99,7 +113,6 @@ class SearchService {
         .limit(5);
       accounts = accounts.filter((account) => !account.deleted);
       const farcasterAccounts = await this.searchFarcasterUserByUsername(query);
-
       if (farcasterAccounts) {
         accounts = [...accounts, ...farcasterAccounts];
       }
