@@ -52,6 +52,7 @@ castsSchema.index({ parentHash: 1, deletedAt: 1 });
 castsSchema.index({ hash: "text", fid: 1, deletedAt: 1 });
 castsSchema.index({ fid: 1, hash: 1, deletedAt: 1 });
 castsSchema.index({ fid: 1, deletedAt: 1, timestamp: -1 });
+castsSchema.index({ deletedAt: 1, timestamp: -1 });
 
 const reactionsSchema = new mongoose.Schema(
   {
@@ -152,6 +153,7 @@ const linksSchema = new mongoose.Schema(
 
 linksSchema.index({ fid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
+linksSchema.index({ fid: 1, targetFid: 1, type: 1 });
 
 module.exports = {
   hubSubscriptionsSchema,

@@ -129,6 +129,9 @@ class AccountQueryService extends AccountService {
       return {
         _id: account._id,
         farcaster: async () => {
+          if (account.identities?.farcaster) {
+            return account.identities.farcaster;
+          }
           const profile = await FarcasterService.getProfileByAccount(account);
           return profile;
         },

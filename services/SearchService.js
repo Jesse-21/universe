@@ -1,6 +1,8 @@
 const { Account } = require("../models/Account");
 const { Community } = require("../models/Community");
 const { Farcaster } = require("../models/Identities/Farcaster");
+const { UserData, UserDataType } = require("../models/farcaster");
+const { getFarcasterUserByFid } = require("../helpers/farcaster");
 const filter = require("../helpers/filter");
 
 const { isAddress, isENS } = require("../helpers/validate-and-convert-address");
@@ -9,10 +11,56 @@ const {
 } = require("../helpers/get-address-from-ens");
 
 class SearchService {
+  // Utility function to convert username search string to hex regex pattern
+  _getUsernameHexPattern(searchString) {
+    const hexSearchString = Buffer.from(searchString, "ascii").toString("hex");
+    return new RegExp(`^0x.*${hexSearchString}.*`, "i");
+  }
+
+  async searchFarcasterUserByUsername(searchString) {
+    // Convert the search string to its hex representation
+    const hexSearchString = Buffer.from(searchString, "ascii").toString("hex");
+
+    // Create a regex pattern that searches for this hex string with the "0x" prefix
+    // The ^ ensures the pattern matches from the start of the string
+    const pattern = new RegExp(`^0x${hexSearchString}.*`, "i");
+
+    const users = await UserData.find({
+      value: pattern,
+      type: UserDataType.USER_DATA_TYPE_USERNAME,
+      deletedAt: null,
+    })
+      .sort("-updatedAt")
+      .limit(5);
+    if (users) {
+      // an array of Account, derived from signer address
+      return await Promise.all(
+        users.map(async (u) => {
+          const farcasterIdentity = await getFarcasterUserByFid(u.fid);
+          const account = await Account.findOrCreateByAddressAndChainId({
+            address: farcasterIdentity.custodyAddress,
+            chainId: 1,
+          });
+          return {
+            ...account.toObject(),
+            identities: {
+              farcaster: {
+                ...farcasterIdentity,
+              },
+            },
+          };
+        })
+      );
+    }
+
+    return [];
+  }
+
   /**
    * Find all accounts by username or identity username such as Farcaster
    * @TODO add limit
    */
+
   async searchAccountByIdentity(query) {
     const farcasterWithAccounts = await Farcaster.find({
       $or: [
@@ -50,6 +98,11 @@ class SearchService {
         .sort("-updatedAt")
         .limit(5);
       accounts = accounts.filter((account) => !account.deleted);
+      const farcasterAccounts = await this.searchFarcasterUserByUsername(query);
+
+      if (farcasterAccounts) {
+        accounts = [...accounts, ...farcasterAccounts];
+      }
     }
     return accounts;
   }

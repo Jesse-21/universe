@@ -13,7 +13,7 @@ const {
 } = require("../models/farcaster");
 
 const getFarcasterUserByFid = async (fid) => {
-  const [following, followers, allUserData] = await Promise.all([
+  const [following, followers, allUserData, fids] = await Promise.all([
     Links.countDocuments({ fid, type: "follow", deletedAt: null }),
     Links.countDocuments({
       targetFid: fid,
@@ -21,6 +21,7 @@ const getFarcasterUserByFid = async (fid) => {
       deletedAt: null,
     }),
     UserData.find({ fid, deletedAt: null }),
+    Fids.findOne({ fid, deletedAt: null }),
   ]);
 
   let user = {
@@ -36,6 +37,7 @@ const getFarcasterUserByFid = async (fid) => {
       mentions: [],
     },
     external: false,
+    custodyAddress: fids?.custodyAddress,
   };
 
   for (const userData of allUserData) {
