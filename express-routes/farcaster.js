@@ -72,7 +72,7 @@ const WARPCAST_SIGNIN_READY =
 const authRequired = async (req, res, next) => {
   try {
     const data = await requireAuth(req.headers.authorization?.slice(7) || "");
-    assert(!req.header.accountId, "accountId already exists in req.header");
+    // assert(!req.header.accountId, "accountId already exists in req.header");
     req.header.accountId = data.payload.id;
     next();
   } catch (e) {
@@ -1371,10 +1371,13 @@ const v1PostMessage = async (req, res) => {
   try {
     const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
     const isExternal = req.body.isExternal || false;
-    const message = Message.fromJSON(req.body.message);
+    const message = Message.create(req.body.message);
+    console.log(req.body.message);
     if (!isExternal) {
       const hubResult = await hubClient.submitMessage(message);
+      console.log(hubResult);
       const unwrapped = hubResult.unwrapOr(null);
+      console.log(unwrapped);
       if (!unwrapped) {
         res.status(400).json({ message: "Could not send message" });
         return;
@@ -1393,9 +1396,9 @@ const v1PostMessage = async (req, res) => {
         signatureScheme: message.signatureScheme,
         signer: bytesToHex(message.signer),
         raw: bytesToHex(Message.encode(message).finish()),
-        deletedAt: operation === "delete" ? now : null,
-        prunedAt: operation === "prune" ? now : null,
-        revokedAt: operation === "revoke" ? now : null,
+        // deletedAt: operation === "delete" ? now : null,
+        // prunedAt: operation === "prune" ? now : null,
+        // revokedAt: operation === "revoke" ? now : null,
         external: true,
         unindexed: true,
       };
