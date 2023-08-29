@@ -94,27 +94,42 @@ const getFarcasterCastByHash = async (hash) => {
   const cast = await Casts.findOne({ hash, deletedAt: null });
   if (!cast) return null;
 
-  const [parentAuthor, author, repliesCount, reactionsCount, recastsCount] =
-    await Promise.all([
-      getFarcasterUserByFid(cast.parentFid),
-      getFarcasterUserByFid(cast.fid),
-      Casts.countDocuments({ parentHash: cast.hash, deletedAt: null }),
-      Reactions.countDocuments({
-        targetHash: cast.hash,
-        reactionType: ReactionType.REACTION_TYPE_LIKE,
-        deletedAt: null,
-      }),
-      Reactions.countDocuments({
-        targetHash: cast.hash,
-        reactionType: ReactionType.REACTION_TYPE_RECAST,
-        deletedAt: null,
-      }),
-    ]);
+  const [
+    parentAuthor,
+    author,
+    repliesCount,
+    reactionsCount,
+    recastsCount,
+    recastersFids,
+  ] = await Promise.all([
+    getFarcasterUserByFid(cast.parentFid),
+    getFarcasterUserByFid(cast.fid),
+    Casts.countDocuments({ parentHash: cast.hash, deletedAt: null }),
+    Reactions.countDocuments({
+      targetHash: cast.hash,
+      reactionType: ReactionType.REACTION_TYPE_LIKE,
+      deletedAt: null,
+    }),
+    Reactions.countDocuments({
+      targetHash: cast.hash,
+      reactionType: ReactionType.REACTION_TYPE_RECAST,
+      deletedAt: null,
+    }),
+    Reactions.find({
+      targetHash: cast.hash,
+      reactionType: ReactionType.REACTION_TYPE_RECAST,
+      deletedAt: null,
+    }).select("fid"),
+  ]);
 
   const mentionPromises = cast.mentions.map((mention) =>
     getFarcasterUserByFid(mention)
   );
+  const recastersPromises = recastersFids.map((recaster) =>
+    getFarcasterUserByFid(recaster.fid)
+  );
   const mentionUsers = await Promise.all(mentionPromises);
+  const recasters = await Promise.all(recastersPromises);
 
   let text = cast.text;
   let offset = 0;
@@ -192,6 +207,7 @@ const getFarcasterCastByHash = async (hash) => {
     },
     recasts: {
       count: recastsCount,
+      recasters: recasters,
     },
   };
 

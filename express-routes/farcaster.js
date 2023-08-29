@@ -1371,8 +1371,7 @@ const v1PostMessage = async (req, res) => {
   try {
     const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
     const isExternal = req.body.isExternal || false;
-    const message = Message.create(req.body.message);
-    console.log(req.body.message);
+    const message = Message.fromJSON(req.body.message);
     if (!isExternal) {
       const hubResult = await hubClient.submitMessage(message);
       console.log(hubResult);
