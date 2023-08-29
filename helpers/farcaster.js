@@ -418,13 +418,25 @@ const getFarcasterFeed = async (limit, offset) => {
     getFarcasterFeedCastByHash(cast.hash)
   );
   const trendingCastData = await Promise.all(trendingCastPromises);
+  // filter by unique hashes
+  const uniqueCasts = trendingCastData.reduce((acc, cast) => {
+    if (!acc[cast.hash]) {
+      acc[cast.hash] = cast;
+    } else {
+      // If the hash already exists, compare childrenCasts lengths
+      if (cast.childrenCasts.length > acc[cast.hash].childrenCasts.length) {
+        acc[cast.hash] = cast;
+      }
+    }
+    return acc;
+  }, {});
 
   let next = null;
   if (trendingCasts.length === limit) {
     next = trendingCasts[trendingCasts.length - 1].timestamp.getTime();
   }
 
-  return [trendingCastData, next];
+  return [Object.values(uniqueCasts), next];
 };
 
 module.exports = {
