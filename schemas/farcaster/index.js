@@ -154,6 +154,40 @@ linksSchema.index({ fid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ fid: 1, targetFid: 1, type: 1 });
 
+const notificationsSchema = new mongoose.Schema(
+  {
+    // Timestamp when the notification was generated
+    timestamp: { type: Date, required: true },
+
+    // Type of the notification (follow, reaction, reply, etc.)
+    notificationType: { type: String, required: true },
+
+    // FID (Foreign ID) of the user who generated the notification
+    fromFid: { type: Number, required: true },
+
+    // FID of the user who will receive the notification
+    toFid: { type: Number, required: true },
+
+    // Optional additional data relevant to the notification
+    payload: { type: mongoose.Schema.Types.Mixed },
+
+    // Flag to mark if the notification was deleted
+    deletedAt: Date,
+
+    // Flag to mark if the notification is external
+    external: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+// Indexes for faster queries
+notificationsSchema.index({ toFid: 1, notificationType: 1, deletedAt: 1 });
+notificationsSchema.index({ fromFid: 1, notificationType: 1, deletedAt: 1 });
+
+module.exports = {
+  notificationsSchema,
+};
+
 module.exports = {
   hubSubscriptionsSchema,
   messagesSchema,
@@ -165,4 +199,5 @@ module.exports = {
   fidsSchema,
   fnamesSchema,
   linksSchema,
+  notificationsSchema,
 };

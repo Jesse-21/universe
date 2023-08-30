@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const generateNewAccessTokenFromAccount = (account) => {
   if (!account || !account._id) throw new Error("Invalid Account");
+
   return new Promise((resolve, reject) => {
     jwt.sign(
       {

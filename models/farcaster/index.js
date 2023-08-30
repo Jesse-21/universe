@@ -11,6 +11,7 @@ const {
   fidsSchema,
   fnamesSchema,
   linksSchema,
+  notificationsSchema,
 } = require("../../schemas/farcaster");
 
 class HubSubscriptionsClass {
@@ -113,6 +114,17 @@ linksSchema.loadClass(LinksClass);
 const Links =
   mongoose.models.Links || mongoose.model("farcaster.Links", linksSchema);
 
+class NotificationsClass {
+  static ping() {
+    console.log("model: NotificationsClass");
+  }
+}
+
+notificationsSchema.loadClass(NotificationsClass);
+const Notifications =
+  mongoose.models.Notifications ||
+  mongoose.model("farcaster.Notifications", notificationsSchema);
+
 const UserDataType = {
   USER_DATA_TYPE_NONE: 0,
   USER_DATA_TYPE_PFP: 1,
@@ -139,6 +151,7 @@ module.exports = {
   Fids,
   Fnames,
   Links,
+  Notifications,
   UserDataType,
   ReactionType,
 };

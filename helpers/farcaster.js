@@ -75,6 +75,20 @@ const getFarcasterUserByFid = async (fid) => {
   return user;
 };
 
+const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
+  const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
+  if (!fid) return null;
+
+  return await getFarcasterUserByFid(fid.fid);
+};
+
+const getFidByCustodyAddress = async (custodyAddress) => {
+  const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
+  if (!fid) return null;
+
+  return fid.fid;
+};
+
 const getFarcasterUserByUsername = async (username) => {
   // convert to hex with 0x prefix
   const hexUsername = "0x" + Buffer.from(username, "ascii").toString("hex");
@@ -90,7 +104,7 @@ const getFarcasterUserByUsername = async (username) => {
   return null;
 };
 
-const getFarcasterCastByHash = async (hash) => {
+const getFarcasterCastByHash = async (hash, context = {}) => {
   const cast = await Casts.findOne({ hash, deletedAt: null });
   if (!cast) return null;
 
@@ -215,14 +229,29 @@ const getFarcasterCastByHash = async (hash) => {
     deletedAt: cast.deletedAt,
   };
 
+  if (context.accountId) {
+    data.isSelfLike = await Reactions.exists({
+      targetHash: cast.hash,
+      fid: context.fid,
+      reactionType: ReactionType.REACTION_TYPE_LIKE,
+      deletedAt: null,
+    });
+    data.isSelfRecast = await Reactions.exists({
+      targetHash: cast.hash,
+      fid: context.fid,
+      reactionType: ReactionType.REACTION_TYPE_RECAST,
+      deletedAt: null,
+    });
+  }
+
   return data;
 };
 
-const getFarcasterFeedCastByHash = async (hash) => {
-  const cast = await getFarcasterCastByHash(hash);
+const getFarcasterFeedCastByHash = async (hash, context = {}) => {
+  const cast = await getFarcasterCastByHash(hash, context);
   if (cast.threadHash) {
     // return the root cast with childrenCasts
-    const root = await getFarcasterCastByHash(cast.threadHash);
+    const root = await getFarcasterCastByHash(cast.threadHash, context);
     return {
       ...root,
       childrenCasts: [cast],
@@ -245,23 +274,23 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
   return await getFarcasterCastByHash(cast.hash);
 };
 
-const getFarcasterAllCastsInThread = async (threadHash) => {
+const getFarcasterAllCastsInThread = async (threadHash, context) => {
   const parentCast = await Casts.findOne({ hash: threadHash, deletedAt: null });
   if (!parentCast) return null;
 
   // recursively find all children casts where parentHash != castHash
-  const findChildren = async (castHash) => {
+  const findChildren = async (castHash, _context) => {
     const children = await Casts.find({
       parentHash: castHash,
       deletedAt: null,
     });
     const childrenPromises = children.map((child) =>
-      getFarcasterCastByHash(child.hash)
+      getFarcasterCastByHash(child.hash, _context)
     );
     const childrenData = await Promise.all(childrenPromises);
 
     const grandChildrenPromises = childrenData.map((childData) =>
-      findChildren(childData.hash)
+      findChildren(childData.hash, _context)
     );
     const allGrandChildren = await Promise.all(grandChildrenPromises);
 
@@ -272,9 +301,9 @@ const getFarcasterAllCastsInThread = async (threadHash) => {
     return childrenData;
   };
 
-  const children = await findChildren(threadHash);
+  const children = await findChildren(threadHash, context);
 
-  const parentCastData = await getFarcasterCastByHash(parentCast.hash);
+  const parentCastData = await getFarcasterCastByHash(parentCast.hash, context);
 
   // return as an array
   return [parentCastData, ...children];
@@ -409,7 +438,7 @@ const getFarcasterCastRecasters = async (hash, limit, offset) => {
   return [recastData, next];
 };
 
-const getFarcasterFeed = async (limit, offset) => {
+const getFarcasterFeed = async ({ limit, offset, context }) => {
   // find recent trending casts
   const trendingCasts = await Casts.find({
     timestamp: { $lt: offset || Date.now() },
@@ -419,7 +448,7 @@ const getFarcasterFeed = async (limit, offset) => {
     .limit(limit);
 
   const trendingCastPromises = trendingCasts.map((cast) =>
-    getFarcasterFeedCastByHash(cast.hash)
+    getFarcasterFeedCastByHash(cast.hash, context)
   );
   const trendingCastData = await Promise.all(trendingCastPromises);
   // filter by unique hashes
@@ -456,4 +485,6 @@ module.exports = {
   getFarcasterCastRecasters,
   getFarcasterCastByShortHash,
   getFarcasterFeed,
+  getFidByCustodyAddress,
+  getFarcasterUserByCustodyAddress,
 };

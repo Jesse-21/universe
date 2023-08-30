@@ -3,7 +3,10 @@ const Sentry = require("@sentry/node");
 
 const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
-
+const {
+  Service: _FarcasterHubService,
+} = require("../services/identities/FarcasterHubService");
+const { Account } = require("../models/account");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -17,6 +20,7 @@ const {
   getFarcasterCastRecasters,
   getFarcasterCastByShortHash,
   getFarcasterFeed,
+  getFidByCustodyAddress,
 } = require("../helpers/farcaster");
 
 const {
@@ -44,16 +48,12 @@ const {
 } = require("../helpers/warpcast");
 
 const { Messages } = require("../models/farcaster");
-
 const {
   Message,
   getSSLHubRpcClient,
   fromFarcasterTime,
 } = require("@farcaster/hub-nodejs");
-
 const { requireAuth } = require("../helpers/auth-middleware");
-
-const assert = require("assert");
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -61,6 +61,38 @@ const limiter = rateLimit({
   max: 50, // limit each IP to 50 requests per windowMs
   message: "Too many requests, please try again later.",
 });
+
+const authContext = async (req, res, next) => {
+  try {
+    if (req.context && req.context.accountId) {
+      return next();
+    }
+    const FCHubService = new _FarcasterHubService();
+    const data = await requireAuth(req.headers.authorization?.slice(7) || "");
+    if (!data.payload.id) {
+      throw new Error("jwt must be provided");
+    }
+    const account = await Account.findById(data.payload.id);
+    const fid = FCHubService.getFidByAccount(account);
+    req.context = {
+      ...(req.context || {}),
+      accountId: data.payload.id,
+      fid,
+      account,
+    };
+    console.log("authContext", req.context, data);
+  } catch (e) {
+    if (!e.message.includes("jwt must be provided")) {
+      Sentry.captureException(e);
+      console.error(e);
+    }
+    req.context = {
+      ...(req.context || {}),
+      accountId: null,
+    };
+  }
+  next();
+};
 
 const CacheService = new _CacheService();
 
@@ -156,12 +188,16 @@ const v1feed = async (req, res) => {
 
 app.get("/v1/feed", limiter, v1feed);
 
-app.get("/v2/feed", limiter, async (req, res) => {
+app.get("/v2/feed", [authContext, limiter], async (req, res) => {
   try {
     const limit = parseInt(req.query.limit || 20);
     const cursor = req.query.cursor || null;
 
-    let [casts, next] = await getFarcasterFeed(limit, cursor);
+    let [casts, next] = await getFarcasterFeed({
+      limit,
+      cursor,
+      context: req.context,
+    });
 
     return res.json({
       result: { casts },
@@ -370,7 +406,7 @@ const v1AllCastInThread = async (req, res) => {
 
 app.get("/v1/all-casts-in-thread", limiter, v1AllCastInThread);
 
-app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
+app.get("/v2/all-casts-in-thread", [authContext, limiter], async (req, res) => {
   try {
     let threadHash = req.query.threadHash;
     if (!threadHash) {
@@ -379,7 +415,7 @@ app.get("/v2/all-casts-in-thread", limiter, async (req, res) => {
       });
     }
 
-    const casts = await getFarcasterAllCastsInThread(threadHash);
+    const casts = await getFarcasterAllCastsInThread(threadHash, req.context);
 
     return res.json({
       result: { casts },
