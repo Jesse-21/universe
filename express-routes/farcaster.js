@@ -6,7 +6,7 @@ const { Service: _CacheService } = require("../services/cache/CacheService");
 const {
   Service: _FarcasterHubService,
 } = require("../services/identities/FarcasterHubService");
-const { Account } = require("../models/account");
+const { Account } = require("../models/Account");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -81,7 +81,6 @@ const authContext = async (req, res, next) => {
       fid,
       account,
     };
-    console.log("authContext", req.context, data);
   } catch (e) {
     if (!e.message.includes("jwt must be provided")) {
       Sentry.captureException(e);

@@ -491,7 +491,9 @@ const getFarcasterNotifications = async ({ limit, offset, context }) => {
       const actor = await getFarcasterUserByFid(notification.fromFid);
 
       let content = {};
-      if (notification.notificationType in ["reply", "mention", "reaction"]) {
+      if (
+        ["reply", "mention", "reaction"].includes(notification.notificationType)
+      ) {
         content.cast = await getFarcasterCastByHash(
           notification.payload.castHash
         );
