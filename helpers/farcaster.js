@@ -486,7 +486,27 @@ const getFarcasterNotifications = async ({ limit, offset, context }) => {
     next = notifications[notifications.length - 1].timestamp.getTime();
   }
 
-  return [notifications, next];
+  const data = await Promise.all(
+    notifications.map(async (notification) => {
+      const actor = await getFarcasterUserByFid(notification.fromFid);
+
+      let content = {};
+      if (notification.notificationType in ["reply", "mention", "reaction"]) {
+        content.cast = await getFarcasterCastByHash(
+          notification.payload.castHash
+        );
+      }
+
+      return {
+        type: notification.notificationType,
+        timestamp: notification.timestamp.getTime(),
+        actor,
+        content,
+      };
+    })
+  );
+
+  return [data, next];
 };
 
 module.exports = {
