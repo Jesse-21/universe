@@ -1371,7 +1371,7 @@ const v1PostMessage = async (req, res) => {
   try {
     const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
     const isExternal = req.body.isExternal || false;
-    const message = Message.fromJSON(req.body.message);
+    let message = Message.fromJSON(req.body.message);
     if (!isExternal) {
       const hubResult = await hubClient.submitMessage(message);
       console.log(hubResult);
@@ -1380,6 +1380,12 @@ const v1PostMessage = async (req, res) => {
       if (!unwrapped) {
         res.status(400).json({ message: "Could not send message" });
         return;
+      } else {
+        message = {
+          ...unwrapped,
+          hash: bytesToHex(unwrapped.hash),
+          signer: bytesToHex(unwrapped.signer),
+        };
       }
     } else {
       const now = new Date();
@@ -1404,7 +1410,7 @@ const v1PostMessage = async (req, res) => {
 
       await Messages.create(messageData);
     }
-    return res.json({ result: Message.toJSON(message) });
+    return res.json({ result: message });
   } catch (e) {
     Sentry.captureException(e);
     console.error(e);

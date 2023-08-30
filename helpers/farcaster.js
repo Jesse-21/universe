@@ -167,7 +167,6 @@ const getFarcasterCastByHash = async (hash) => {
     while (currentParentHash) {
       const parentCast = await Casts.findOne({
         hash: currentParentHash,
-        deletedAt: null,
       });
 
       if (!parentCast) break; // Exit if no parent cast found
@@ -209,6 +208,7 @@ const getFarcasterCastByHash = async (hash) => {
       count: recastsCount,
       recasters: recasters,
     },
+    deletedAt: cast.deletedAt,
   };
 
   return data;
