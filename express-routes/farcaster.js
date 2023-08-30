@@ -21,6 +21,7 @@ const {
   getFarcasterCastByShortHash,
   getFarcasterFeed,
   getFidByCustodyAddress,
+  getFarcasterNotifications,
 } = require("../helpers/farcaster");
 
 const {
@@ -1403,6 +1404,28 @@ app.get(
   v1MentionAndReplyNotifications
 );
 
+app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || 100);
+    const cursor = req.query.cursor || null;
+    let [notifications, next] = await getFarcasterNotifications({
+      limit,
+      cursor,
+      context: req.context,
+    });
+    return res.json({
+      result: { notifications: notifications, next: next },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 const v1PostMessage = async (req, res) => {
   try {
     const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
@@ -1446,7 +1469,7 @@ const v1PostMessage = async (req, res) => {
 
       await Messages.create(messageData);
     }
-    return res.json({ result: message });
+    return res.json({ result: message, source: "v2" });
   } catch (e) {
     Sentry.captureException(e);
     console.error(e);
@@ -1456,7 +1479,7 @@ const v1PostMessage = async (req, res) => {
   }
 };
 
-app.post("/v1/message", authRequired, v1PostMessage);
+app.post("/v2/message", authRequired, v1PostMessage);
 
 module.exports = {
   router: app,

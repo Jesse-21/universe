@@ -10,6 +10,7 @@ const {
   Links,
   UserDataType,
   ReactionType,
+  Notifications,
 } = require("../models/farcaster");
 
 const getFarcasterUserByFid = async (fid) => {
@@ -472,6 +473,22 @@ const getFarcasterFeed = async ({ limit, offset, context }) => {
   return [Object.values(uniqueCasts), next];
 };
 
+const getFarcasterNotifications = async ({ limit, offset, context }) => {
+  const notifications = await Notifications.find({
+    targetFid: context.fid,
+    timestamp: { $lt: offset || Date.now() },
+    deletedAt: null,
+  })
+    .sort({ timestamp: -1 })
+    .limit(limit);
+  let next = null;
+  if (notifications.length === limit) {
+    next = notifications[notifications.length - 1].timestamp.getTime();
+  }
+
+  return [notifications, next];
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -487,4 +504,5 @@ module.exports = {
   getFarcasterFeed,
   getFidByCustodyAddress,
   getFarcasterUserByCustodyAddress,
+  getFarcasterNotifications,
 };
