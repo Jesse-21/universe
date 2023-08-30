@@ -475,7 +475,7 @@ const getFarcasterFeed = async ({ limit, offset, context }) => {
 
 const getFarcasterNotifications = async ({ limit, offset, context }) => {
   const notifications = await Notifications.find({
-    targetFid: context.fid,
+    toFid: context.fid,
     timestamp: { $lt: offset || Date.now() },
     deletedAt: null,
   })
@@ -499,12 +499,16 @@ const getFarcasterNotifications = async ({ limit, offset, context }) => {
         );
       }
 
-      return {
+      const returnData = {
         type: notification.notificationType,
         timestamp: notification.timestamp.getTime(),
         actor,
         content,
       };
+      if (notification.notificationType === "reaction") {
+        returnData.reactionType = notification.payload.reactionType;
+      }
+      return returnData;
     })
   );
 

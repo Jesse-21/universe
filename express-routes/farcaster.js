@@ -1412,6 +1412,7 @@ app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
       cursor,
       context: req.context,
     });
+    console.log(cursor, next);
     return res.json({
       result: { notifications: notifications, next: next },
       source: "v2",
