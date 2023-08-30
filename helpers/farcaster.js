@@ -136,26 +136,30 @@ const getFarcasterCastByHash = async (hash) => {
   let updatedMentionsPositions = []; // Array to store updated positions
 
   for (let i = 0; i < mentionUsers.length; i++) {
-    // Counting newlines before the mention position to adjust for discrepancies
-    let newlineAdjustment =
-      text.substr(0, cast.mentionsPositions[i] + offset).split("\n").length - 1;
-
-    const adjustedMentionPosition =
-      cast.mentionsPositions[i] + offset - newlineAdjustment;
+    // Assuming mentionsPositions consider newlines as characters, so no newline adjustment
+    const adjustedMentionPosition = cast.mentionsPositions[i];
     const mentionUsername = mentionUsers[i].username;
 
     const mentionLink = `@${mentionUsername}`;
+
+    // Assuming originalMention field exists in mentionUsers array
+    const originalMentionLength = mentionUsers[i].originalMention
+      ? mentionUsers[i].originalMention.length
+      : 1;
+
+    // Apply the offset only when slicing the text
+    const actualPosition = adjustedMentionPosition + offset;
     text =
-      text.slice(0, adjustedMentionPosition) +
+      text.slice(0, actualPosition) +
       mentionLink +
       " " +
-      text.slice(adjustedMentionPosition + 1);
+      text.slice(actualPosition + originalMentionLength);
 
     // Update the offset based on the added mention
-    offset += mentionLink.length + 1; // +1 for space
+    offset += mentionLink.length + 1 - originalMentionLength; // +1 for space
 
     // Store the adjusted position in the new array
-    updatedMentionsPositions.push(adjustedMentionPosition);
+    updatedMentionsPositions.push(actualPosition);
   }
 
   let threadHash = cast.threadHash;
