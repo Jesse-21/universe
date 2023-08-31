@@ -14,7 +14,7 @@ const messagesSchema = new mongoose.Schema(
     revokedAt: Date,
     timestamp: { type: Date, required: true },
     messageType: Number,
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     hashScheme: Number,
     signature: { type: String, required: true },
@@ -33,10 +33,10 @@ const castsSchema = new mongoose.Schema(
   {
     deletedAt: Date,
     timestamp: { type: Date, required: true },
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     parentHash: String,
-    parentFid: Number,
+    parentFid: String,
     parentUrl: String,
     text: { type: String },
     embeds: String,
@@ -58,10 +58,10 @@ const reactionsSchema = new mongoose.Schema(
     deletedAt: Date,
     timestamp: { type: Date, required: true },
     reactionType: Number,
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     targetHash: String,
-    targetFid: Number,
+    targetFid: String,
     targetUrl: String,
     external: { type: Boolean, default: false },
   },
@@ -75,7 +75,7 @@ const signersSchema = new mongoose.Schema(
   {
     deletedAt: Date,
     timestamp: { type: Date, required: true },
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     custodyAddress: { type: String, required: true },
     signer: { type: String, required: true },
@@ -89,7 +89,7 @@ const verificationsSchema = new mongoose.Schema(
   {
     deletedAt: Date,
     timestamp: { type: Date, required: true },
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     claim: { type: String, required: true },
     external: { type: Boolean, default: false },
@@ -101,7 +101,7 @@ const userDataSchema = new mongoose.Schema(
   {
     deletedAt: Date,
     timestamp: { type: Date, required: true },
-    fid: { type: Number, required: true },
+    fid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     type: { type: Number, required: true },
     value: { type: String, required: true },
@@ -115,7 +115,7 @@ userDataSchema.index({ value: 1, type: 1, deletedAt: 1 });
 
 const fidsSchema = new mongoose.Schema(
   {
-    fid: { type: Number, required: true, unique: true },
+    fid: { type: String, required: true, unique: true },
     custodyAddress: { type: String, required: true },
     external: { type: Boolean, default: false },
   },
@@ -138,8 +138,8 @@ fnamesSchema.index({ custodyAddress: 1, deletedAt: 1 });
 
 const linksSchema = new mongoose.Schema(
   {
-    fid: { type: Number, required: true },
-    targetFid: { type: Number, required: true },
+    fid: { type: String, required: true },
+    targetFid: { type: String, required: true },
     hash: { type: String, required: true, unique: true },
     timestamp: { type: Date, required: true },
     deletedAt: Date,
@@ -163,10 +163,10 @@ const notificationsSchema = new mongoose.Schema(
     notificationType: { type: String, required: true },
 
     // FID (Foreign ID) of the user who generated the notification
-    fromFid: { type: Number, required: true },
+    fromFid: { type: String, required: true },
 
     // FID of the user who will receive the notification
-    toFid: { type: Number, required: true },
+    toFid: { type: String, required: true },
 
     // Optional additional data relevant to the notification
     payload: { type: mongoose.Schema.Types.Mixed },
@@ -183,6 +183,8 @@ const notificationsSchema = new mongoose.Schema(
 // Indexes for faster queries
 notificationsSchema.index({ toFid: 1, notificationType: 1, deletedAt: 1 });
 notificationsSchema.index({ fromFid: 1, notificationType: 1, deletedAt: 1 });
+notificationsSchema.index({ "payload.linkHash": 1, deletedAt: 1 });
+notificationsSchema.index({ "payload.castHash": 1, deletedAt: 1 });
 
 module.exports = {
   notificationsSchema,
