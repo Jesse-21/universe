@@ -310,10 +310,12 @@ const getFarcasterAllCastsInThread = async (threadHash, context) => {
   return [parentCastData, ...children];
 };
 
-const getFarcasterCasts = async (fid, limit, offset) => {
+const getFarcasterCasts = async (fid, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const casts = await Casts.find({
     fid,
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
@@ -324,17 +326,21 @@ const getFarcasterCasts = async (fid, limit, offset) => {
 
   let next = null;
   if (casts.length === limit) {
-    next = casts[casts.length - 1].timestamp.getTime();
+    next = `${casts[casts.length - 1].timestamp.getTime()}-${
+      casts[casts.length - 1].id
+    }`;
   }
 
   return [castData, next];
 };
 
-const getFarcasterFollowing = async (fid, limit, offset) => {
+const getFarcasterFollowing = async (fid, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const following = await Links.find({
     fid,
     type: "follow",
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
@@ -347,17 +353,21 @@ const getFarcasterFollowing = async (fid, limit, offset) => {
 
   let next = null;
   if (following.length === limit) {
-    next = following[following.length - 1].timestamp.getTime();
+    next = `${following[following.length - 1].timestamp.getTime()}-${
+      following[following.length - 1].id
+    }`;
   }
 
   return [followingData, next];
 };
 
-const getFarcasterFollowers = async (fid, limit, offset) => {
+const getFarcasterFollowers = async (fid, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const followers = await Links.find({
     targetFid: fid,
     type: "follow",
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
@@ -370,16 +380,20 @@ const getFarcasterFollowers = async (fid, limit, offset) => {
 
   let next = null;
   if (followers.length === limit) {
-    next = followers[followers.length - 1].timestamp.getTime();
+    next = `${followers[followers.length - 1].timestamp.getTime()}-${
+      followers[followers.length - 1].id
+    }`;
   }
 
   return [followerData, next];
 };
 
-const getFarcasterCastReactions = async (hash, limit, offset) => {
+const getFarcasterCastReactions = async (hash, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const reactions = await Reactions.find({
     targetHash: hash,
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
@@ -392,16 +406,20 @@ const getFarcasterCastReactions = async (hash, limit, offset) => {
 
   let next = null;
   if (reactions.length === limit) {
-    next = reactions[reactions.length - 1].timestamp.getTime();
+    next = `${reactions[reactions.length - 1].timestamp.getTime()}-${
+      reactions[reactions.length - 1].id
+    }`;
   }
 
   return [reactionData, next];
 };
 
-const getFarcasterCastLikes = async (hash, limit, offset) => {
+const getFarcasterCastLikes = async (hash, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const likes = await Reactions.find({
     targetHash: hash,
     reactionType: ReactionType.REACTION_TYPE_LIKE,
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     timestamp: { $lt: offset || Date.now() },
     deletedAt: null,
   })
@@ -413,16 +431,20 @@ const getFarcasterCastLikes = async (hash, limit, offset) => {
 
   let next = null;
   if (likes.length === limit) {
-    next = likes[likes.length - 1].timestamp.getTime();
+    next = `${likes[likes.length - 1].timestamp.getTime()}-${
+      likes[likes.length - 1].id
+    }`;
   }
 
   return [likeData, next];
 };
 
-const getFarcasterCastRecasters = async (hash, limit, offset) => {
+const getFarcasterCastRecasters = async (hash, limit, cursor) => {
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const recasts = await Reactions.find({
     targetHash: hash,
     reactionType: ReactionType.REACTION_TYPE_RECAST,
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     timestamp: { $lt: offset || Date.now() },
     deletedAt: null,
   }).limit(limit);
@@ -433,16 +455,22 @@ const getFarcasterCastRecasters = async (hash, limit, offset) => {
   const recastData = await Promise.all(recastPromises);
   let next = null;
   if (recasts.length === limit) {
-    next = recasts[recasts.length - 1].timestamp.getTime();
+    next = `${recasts[recasts.length - 1].timestamp.getTime()}-${
+      recasts[recasts.length - 1].id
+    }`;
   }
 
   return [recastData, next];
 };
 
-const getFarcasterFeed = async ({ limit, offset, context }) => {
+const getFarcasterFeed = async ({ limit, cursor, context }) => {
+  // cursor is "timestamp"-"id of last cast"
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
+
   // find recent trending casts
   const trendingCasts = await Casts.find({
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
@@ -467,23 +495,30 @@ const getFarcasterFeed = async ({ limit, offset, context }) => {
 
   let next = null;
   if (trendingCasts.length === limit) {
-    next = trendingCasts[trendingCasts.length - 1].timestamp.getTime();
+    next = `${trendingCasts[trendingCasts.length - 1].timestamp.getTime()}-${
+      trendingCasts[trendingCasts.length - 1].id
+    }`;
   }
 
   return [Object.values(uniqueCasts), next];
 };
 
-const getFarcasterNotifications = async ({ limit, offset, context }) => {
+const getFarcasterNotifications = async ({ limit, cursor, context }) => {
+  // cursor is "timestamp"-"id of last notification"
+  const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const notifications = await Notifications.find({
     toFid: context.fid,
     timestamp: { $lt: offset || Date.now() },
+    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
     .sort({ timestamp: -1 })
     .limit(limit);
   let next = null;
   if (notifications.length === limit) {
-    next = notifications[notifications.length - 1].timestamp.getTime();
+    next = `${notifications[notifications.length - 1].timestamp.getTime()}-${
+      notifications[notifications.length - 1].id
+    }`;
   }
 
   const data = await Promise.all(

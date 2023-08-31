@@ -489,7 +489,7 @@ app.get("/v2/casts", limiter, async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = Math.min(req.query.limit || 10, 100);
-    const cursor = parseInt(req.query.cursor || null);
+    const cursor = req.query.cursor || null;
 
     if (!fid) {
       return res.status(400).json({
