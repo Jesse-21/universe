@@ -175,19 +175,16 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
     const afterMention = textBuffer.slice(
       actualPosition + originalMentionLength
     );
-    const spaceBuffer = Buffer.from(" ", "utf-8");
 
     // Concatenating buffers
     textBuffer = Buffer.concat([
       beforeMention,
       mentionLinkBuffer,
-      spaceBuffer,
       afterMention,
     ]);
 
     // Update the offset based on the added mention
-    offset +=
-      mentionLinkBuffer.length + spaceBuffer.length - originalMentionLength;
+    offset += mentionLinkBuffer.length - originalMentionLength;
 
     // Store the adjusted position in the new array
     updatedMentionsPositions.push(actualPosition);
