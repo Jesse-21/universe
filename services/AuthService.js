@@ -172,7 +172,7 @@ class AuthService {
           }
         );
 
-        const signerRequest = data.result.signerRequest;
+        const signerRequest = data.result.signedKeyRequest;
 
         if (signerRequest.state === "completed") {
           signerData = signerRequest;
@@ -183,7 +183,6 @@ class AuthService {
       const fid = signerData.userFid.toString();
 
       // successfully got the signer request
-
       const { custodyAddress } = await getCustodyAddress({
         fid,
         token: process.env.FARQUEST_FARCASTER_APP_TOKEN,
