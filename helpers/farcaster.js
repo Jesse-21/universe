@@ -492,8 +492,10 @@ const getFarcasterFeed = async ({ limit, cursor, context }) => {
     getFarcasterFeedCastByHash(cast.hash, context)
   );
   const trendingCastData = await Promise.all(trendingCastPromises);
+  // filter out undefined
+  const filteredTrendingCastData = trendingCastData.filter((cast) => !!cast);
   // filter by unique hashes
-  const uniqueCasts = trendingCastData.reduce((acc, cast) => {
+  const uniqueCasts = filteredTrendingCastData.reduce((acc, cast) => {
     if (!acc[cast.hash]) {
       acc[cast.hash] = cast;
     } else {
