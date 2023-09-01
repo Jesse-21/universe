@@ -26,6 +26,7 @@ const messagesSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+messagesSchema.index({ unindexed: 1 });
 messagesSchema.index({ external: 1, unindexed: 1 });
 
 // Casts

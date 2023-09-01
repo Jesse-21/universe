@@ -1472,7 +1472,6 @@ app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
       cursor,
       context: req.context,
     });
-    console.log(cursor, next);
     return res.json({
       result: { notifications: notifications, next: next },
       source: "v2",
@@ -1492,42 +1491,40 @@ const v2PostMessage = async (req, res) => {
     let message = Message.fromJSON(req.body.message);
     if (!isExternal) {
       const hubResult = await req.context.hubClient.submitMessage(message);
-      console.log(hubResult);
       const unwrapped = hubResult.unwrapOr(null);
-      console.log(unwrapped);
       if (!unwrapped) {
-        res.status(400).json({ message: "Could not send message" });
-        return;
+        console.error("Could not send message");
+        return res.status(400).json({ message: "Could not send message" });
       } else {
         message = {
           ...unwrapped,
-          hash: bytesToHex(unwrapped.hash),
-          signer: bytesToHex(unwrapped.signer),
+          hash: unwrapped.hash,
+          signer: unwrapped.signer,
         };
       }
-    } else {
-      const now = new Date();
-      let messageData = {
-        fid: message.data.fid,
-        createdAt: now,
-        updatedAt: now,
-        messageType: message.data.type,
-        timestamp: farcasterTimeToDate(message.data.timestamp),
-        hash: bytesToHex(message.hash),
-        hashScheme: message.hashScheme,
-        signature: bytesToHex(message.signature),
-        signatureScheme: message.signatureScheme,
-        signer: bytesToHex(message.signer),
-        raw: bytesToHex(Message.encode(message).finish()),
-        // deletedAt: operation === "delete" ? now : null,
-        // prunedAt: operation === "prune" ? now : null,
-        // revokedAt: operation === "revoke" ? now : null,
-        external: true,
-        unindexed: true,
-      };
-
-      await Messages.create(messageData);
     }
+    const now = new Date();
+    let messageData = {
+      fid: message.data.fid,
+      createdAt: now,
+      updatedAt: now,
+      messageType: message.data.type,
+      timestamp: farcasterTimeToDate(message.data.timestamp),
+      hash: bytesToHex(message.hash),
+      hashScheme: message.hashScheme,
+      signature: bytesToHex(message.signature),
+      signatureScheme: message.signatureScheme,
+      signer: bytesToHex(message.signer),
+      raw: bytesToHex(Message.encode(message).finish()),
+      // deletedAt: operation === "delete" ? now : null,
+      // prunedAt: operation === "prune" ? now : null,
+      // revokedAt: operation === "revoke" ? now : null,
+      external: isExternal,
+      unindexed: true,
+    };
+
+    await Messages.create(messageData);
+
     return res.json({ result: message, source: "v2" });
   } catch (e) {
     Sentry.captureException(e);
