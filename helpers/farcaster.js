@@ -248,6 +248,7 @@ const getFarcasterFeedCastByHash = async (hash, context = {}) => {
       childrenCasts: [cast],
     };
   }
+  return null;
 };
 
 const getFarcasterCastByShortHash = async (shortHash, username) => {
