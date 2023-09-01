@@ -143,39 +143,58 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
   const recastersPromises = recastersFids.map((recaster) =>
     getFarcasterUserByFid(recaster.fid)
   );
-  const mentionUsers = await Promise.all(mentionPromises);
-  const recasters = await Promise.all(recastersPromises);
+  const [mentionUsers, recasters] = await Promise.all([
+    Promise.all(mentionPromises),
+    Promise.all(recastersPromises),
+  ]);
 
   let text = cast.text;
   let offset = 0;
   let updatedMentionsPositions = []; // Array to store updated positions
 
+  // Convert text to a Buffer object to deal with bytes
+  let textBuffer = Buffer.from(text, "utf-8");
+
   for (let i = 0; i < mentionUsers.length; i++) {
-    // Assuming mentionsPositions consider newlines as characters, so no newline adjustment
+    // Assuming mentionsPositions consider newlines as bytes, so no newline adjustment
     const adjustedMentionPosition = cast.mentionsPositions[i];
     const mentionUsername = mentionUsers[i].username;
 
     const mentionLink = `@${mentionUsername}`;
+    const mentionLinkBuffer = Buffer.from(mentionLink, "utf-8");
 
     // Assuming originalMention field exists in mentionUsers array
-    const originalMentionLength = mentionUsers[i].originalMention
-      ? mentionUsers[i].originalMention.length
-      : 1;
+    const originalMention = mentionUsers[i].originalMention || "";
+    const originalMentionBuffer = Buffer.from(originalMention, "utf-8");
+    const originalMentionLength = originalMentionBuffer.length;
 
     // Apply the offset only when slicing the text
     const actualPosition = adjustedMentionPosition + offset;
-    text =
-      text.slice(0, actualPosition) +
-      mentionLink +
-      " " +
-      text.slice(actualPosition + originalMentionLength);
+
+    const beforeMention = textBuffer.slice(0, actualPosition);
+    const afterMention = textBuffer.slice(
+      actualPosition + originalMentionLength
+    );
+    const spaceBuffer = Buffer.from(" ", "utf-8");
+
+    // Concatenating buffers
+    textBuffer = Buffer.concat([
+      beforeMention,
+      mentionLinkBuffer,
+      spaceBuffer,
+      afterMention,
+    ]);
 
     // Update the offset based on the added mention
-    offset += mentionLink.length + 1 - originalMentionLength; // +1 for space
+    offset +=
+      mentionLinkBuffer.length + spaceBuffer.length - originalMentionLength;
 
     // Store the adjusted position in the new array
     updatedMentionsPositions.push(actualPosition);
   }
+
+  // Convert the final Buffer back to a string
+  text = textBuffer.toString("utf-8");
 
   let threadHash = cast.threadHash;
   if (!threadHash) {
