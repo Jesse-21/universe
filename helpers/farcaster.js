@@ -326,7 +326,7 @@ const getFarcasterAllCastsInThread = async (threadHash, context) => {
   return [parentCastData, ...children];
 };
 
-const getFarcasterCasts = async (fid, limit, cursor) => {
+const getFarcasterCasts = async ({ fid, limit, cursor, context }) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const casts = await Casts.find({
     fid,
@@ -337,8 +337,30 @@ const getFarcasterCasts = async (fid, limit, cursor) => {
     .sort({ timestamp: -1 })
     .limit(limit);
 
-  const castPromises = casts.map((cast) => getFarcasterCastByHash(cast.hash));
+  const castPromises = casts.map((cast) =>
+    getFarcasterCastByHash(cast.hash, context)
+  );
   const castData = await Promise.all(castPromises);
+  const parentHashPromises = castData.map((cast) => {
+    if (cast.parentHash) {
+      // return the root cast with childrenCasts
+      const root = getFarcasterCastByHash(cast.parentHash, context);
+      return root;
+    } else {
+      return cast;
+    }
+  });
+  const parentData = await Promise.all(parentHashPromises);
+  const finalData = castData.map((cast, index) => {
+    if (cast.parentHash && parentData[index]) {
+      return {
+        ...parentData[index],
+        childrenCasts: [cast],
+      };
+    } else {
+      return cast;
+    }
+  });
 
   let next = null;
   if (casts.length === limit) {
@@ -347,7 +369,7 @@ const getFarcasterCasts = async (fid, limit, cursor) => {
     }`;
   }
 
-  return [castData, next];
+  return [finalData, next];
 };
 
 const getFarcasterFollowing = async (fid, limit, cursor) => {
@@ -519,6 +541,16 @@ const getFarcasterFeed = async ({ limit, cursor, context }) => {
   return [Object.values(uniqueCasts), next];
 };
 
+const getFarcasterUnseenNotificationsCount = async ({ lastSeen, context }) => {
+  // cursor is "timestamp"-"id of last notification"
+  const count = await Notifications.countDocuments({
+    toFid: context.fid,
+    timestamp: { $gt: lastSeen },
+    deletedAt: null,
+  });
+  return count;
+};
+
 const getFarcasterNotifications = async ({ limit, cursor, context }) => {
   // cursor is "timestamp"-"id of last notification"
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
@@ -546,7 +578,8 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
         ["reply", "mention", "reaction"].includes(notification.notificationType)
       ) {
         content.cast = await getFarcasterCastByHash(
-          notification.payload.castHash
+          notification.payload.castHash,
+          context
         );
       }
 
@@ -582,4 +615,5 @@ module.exports = {
   getFidByCustodyAddress,
   getFarcasterUserByCustodyAddress,
   getFarcasterNotifications,
+  getFarcasterUnseenNotificationsCount,
 };

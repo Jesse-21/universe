@@ -23,6 +23,7 @@ const {
   getFarcasterCastByShortHash,
   getFarcasterFeed,
   getFidByCustodyAddress,
+  getFarcasterUnseenNotificationsCount,
   getFarcasterNotifications,
 } = require("../helpers/farcaster");
 
@@ -469,7 +470,7 @@ const v1GetCasts = async (req, res) => {
 
 app.get("/v1/casts", limiter, v1GetCasts);
 
-app.get("/v2/casts", limiter, async (req, res) => {
+app.get("/v2/casts", [authContext, limiter], async (req, res) => {
   try {
     const fid = req.query.fid;
     const limit = Math.min(req.query.limit || 10, 100);
@@ -481,7 +482,12 @@ app.get("/v2/casts", limiter, async (req, res) => {
       });
     }
 
-    let [casts, next] = await getFarcasterCasts(fid, limit, cursor);
+    let [casts, next] = await getFarcasterCasts({
+      fid,
+      limit,
+      cursor,
+      context: req.context,
+    });
 
     return res.json({
       result: { casts },
@@ -1386,6 +1392,76 @@ app.get(
   limiter,
   v1MentionAndReplyNotifications
 );
+
+app.get(
+  "/v2/unseen-notifications-count",
+  [authContext, limiter],
+  async (req, res) => {
+    try {
+      if (!req.context.accountId) {
+        return res.status(401).json({
+          error: "Unauthorized",
+        });
+      }
+      const CacheService = new _CacheService();
+      let lastSeen = await CacheService.get({
+        key: `UNSEEN_NOTIFICATIONS_COUNT`,
+        params: {
+          accountId: req.context.accountId,
+        },
+      });
+      if (!lastSeen) {
+        lastSeen = new Date(0);
+      }
+      const unseenCount = await getFarcasterUnseenNotificationsCount({
+        lastSeen,
+        context: req.context,
+      });
+
+      return res.json({
+        result: { unseenCount },
+        source: "v2",
+      });
+    } catch (e) {
+      Sentry.captureException(e);
+      console.error(e);
+      return res.status(500).json({
+        error: "Internal Server Error",
+      });
+    }
+  }
+);
+
+app.post("/v2/notifications/seen", [authContext, limiter], async (req, res) => {
+  try {
+    if (!req.context.accountId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
+    const CacheService = new _CacheService();
+    await CacheService.set({
+      key: `UNSEEN_NOTIFICATIONS_COUNT`,
+      params: {
+        accountId: req.context.accountId,
+      },
+      value: new Date(),
+      expiresAt: null,
+    });
+
+    return res.json({
+      result: { success: true },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
 
 app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
   try {
