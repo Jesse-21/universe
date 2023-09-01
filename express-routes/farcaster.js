@@ -1,5 +1,6 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
+const { ethers } = require("ethers");
 
 const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
@@ -7,6 +8,7 @@ const {
   Service: _FarcasterHubService,
 } = require("../services/identities/FarcasterHubService");
 const { Account } = require("../models/Account");
+const axios = require("axios").default;
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -63,12 +65,18 @@ const limiter = rateLimit({
   message: "Too many requests, please try again later.",
 });
 
+let _hubClient;
+
 const authContext = async (req, res, next) => {
+  const hubClient = _hubClient || getSSLHubRpcClient(process.env.HUB_ADDRESS);
+  _hubClient = hubClient;
+
   try {
-    if (req.context && req.context.accountId) {
+    if (req.context && req.context.accountId && req.context.hubClient) {
       return next();
     }
     const FCHubService = new _FarcasterHubService();
+
     const data = await requireAuth(req.headers.authorization?.slice(7) || "");
     if (!data.payload.id) {
       throw new Error("jwt must be provided");
@@ -80,6 +88,7 @@ const authContext = async (req, res, next) => {
       accountId: data.payload.id,
       fid,
       account,
+      hubClient,
     };
   } catch (e) {
     if (!e.message.includes("jwt must be provided")) {
@@ -100,31 +109,6 @@ const FARCASTER_KEY = "farcaster-express-endpoint";
 
 const WARPCAST_SIGNIN_READY =
   process.env.NODE_ENV === "production" ? false : true; // We need warpcast signin since we are using @farquest
-
-const authRequired = async (req, res, next) => {
-  try {
-    const data = await requireAuth(req.headers.authorization?.slice(7) || "");
-    // assert(!req.header.accountId, "accountId already exists in req.header");
-    req.header.accountId = data.payload.id;
-    next();
-  } catch (e) {
-    try {
-      if (!e.message.includes("jwt must be provided")) {
-        Sentry.captureException(e);
-        console.error(e);
-      }
-      return res.status(403).json({
-        error: "Unauthorized",
-      });
-    } catch (e) {
-      Sentry.captureException(e);
-      console.error(e);
-      return res.status(403).json({
-        error: "Unauthorized",
-      });
-    }
-  }
-};
 
 function farcasterTimeToDate(time) {
   if (time === undefined) return undefined;
@@ -548,7 +532,7 @@ const v1PostCasts = async (req, res) => {
   }
 };
 
-app.post("/v1/casts", limiter, authRequired, v1PostCasts);
+app.post("/v1/casts", limiter, authContext, v1PostCasts);
 
 const v1DeleteCasts = async (req, res) => {
   try {
@@ -1426,13 +1410,12 @@ app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
   }
 });
 
-const v1PostMessage = async (req, res) => {
+const v2PostMessage = async (req, res) => {
   try {
-    const hubClient = getSSLHubRpcClient(process.env.HUB_ADDRESS);
     const isExternal = req.body.isExternal || false;
     let message = Message.fromJSON(req.body.message);
     if (!isExternal) {
-      const hubResult = await hubClient.submitMessage(message);
+      const hubResult = await req.context.hubClient.submitMessage(message);
       console.log(hubResult);
       const unwrapped = hubResult.unwrapOr(null);
       console.log(unwrapped);
@@ -1479,7 +1462,56 @@ const v1PostMessage = async (req, res) => {
   }
 };
 
-app.post("/v2/message", authRequired, v1PostMessage);
+const v2SignedKeyRequest = async (req, res) => {
+  try {
+    const key = "0x" + req.query.key;
+    const SIGNED_KEY_REQUEST_VALIDATOR_EIP_712_DOMAIN = {
+      name: "Farcaster SignedKeyRequestValidator",
+      version: "1",
+      chainId: 10,
+      verifyingContract: "0x00000000fc700472606ed4fa22623acf62c60553",
+    };
+
+    const SIGNED_KEY_REQUEST_TYPE = [
+      { name: "requestFid", type: "uint256" },
+      { name: "key", type: "bytes" },
+      { name: "deadline", type: "uint256" },
+    ];
+    const deadline = Math.floor(Date.now() / 1000) + 86400; // signature is valid for 1 day
+    const wallet = ethers.Wallet.fromMnemonic(process.env.FARCAST_KEY);
+    const signature = await wallet._signTypedData(
+      SIGNED_KEY_REQUEST_VALIDATOR_EIP_712_DOMAIN,
+      { SignedKeyRequest: SIGNED_KEY_REQUEST_TYPE },
+      {
+        requestFid: ethers.BigNumber.from(18548),
+        key,
+        deadline: ethers.BigNumber.from(deadline),
+      }
+    );
+
+    const { data } = await axios.post(
+      `https://api.warpcast.com/v2/signed-key-requests`,
+      {
+        requestFid: "18548",
+        deadline: deadline,
+        key,
+        signature,
+      }
+    );
+
+    return res.json({ result: data.result, source: "v2" });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+};
+
+app.post("/v2/message", authContext, v2PostMessage);
+
+app.get("/v2/signed-key-requests", limiter, v2SignedKeyRequest);
 
 module.exports = {
   router: app,

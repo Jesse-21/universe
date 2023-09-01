@@ -153,7 +153,7 @@ class AuthService {
    * Authenticate an account with warpcast
    * @returns Promise<Account>
    */
-  async authByWarpcast({ token, chainId }) {
+  async authByWarpcast({ address, token, chainId }) {
     /** step1: get custody address. If this fails it means the token is invalid. */
     try {
       let tries = 0;
@@ -164,7 +164,7 @@ class AuthService {
         await new Promise((r) => setTimeout(r, 1000));
 
         const { data } = await axios.get(
-          `https://api.warpcast.com/v2/signer-request`,
+          `https://api.warpcast.com/v2/signed-key-request`,
           {
             params: {
               token: token,
@@ -174,14 +174,13 @@ class AuthService {
 
         const signerRequest = data.result.signerRequest;
 
-        if (signerRequest.base64SignedMessage) {
+        if (signerRequest.state === "completed") {
           signerData = signerRequest;
           break;
         }
       }
       if (tries >= 60) throw new Error("Timeout");
-      const address = signerData.publicKey;
-      const fid = signerData.fid.toString();
+      const fid = signerData.userFid.toString();
 
       // successfully got the signer request
 
