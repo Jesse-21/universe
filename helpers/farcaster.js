@@ -193,38 +193,12 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
   // Convert the final Buffer back to a string
   text = textBuffer.toString("utf-8");
 
-  let threadHash = cast.threadHash;
-  if (!threadHash) {
-    // threadHash not cached
-    threadHash = cast.hash;
-    let currentParentHash = cast.parentHash;
-
-    while (currentParentHash) {
-      const parentCast = await Casts.findOne({
-        hash: currentParentHash,
-      });
-
-      if (!parentCast) break; // Exit if no parent cast found
-      if (parentCast.threadHash) {
-        // threadHash found
-        threadHash = parentCast.threadHash;
-        break;
-      }
-
-      threadHash = parentCast.hash; // Update the threadHash to the current parentCast
-      currentParentHash = parentCast.parentHash; // Update the currentParentHash for the next iteration
-    }
-
-    cast.threadHash = threadHash;
-    cast.save();
-  }
-
   const data = {
     hash: cast.hash,
     parentHash: cast.parentHash,
     parentFid: cast.parentFid,
     parentUrl: cast.parentUrl,
-    threadHash,
+    threadHash: cast.threadHash,
     text: text,
     embeds: JSON.parse(cast.embeds),
     mentions: mentionUsers,
