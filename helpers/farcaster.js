@@ -129,6 +129,24 @@ const getFarcasterUserByUsername = async (username) => {
   return null;
 };
 
+const getFarcasterUserAndLinksByUsername = async ({ username, context }) => {
+  // convert to hex with 0x prefix
+  const hexUsername = "0x" + Buffer.from(username, "ascii").toString("hex");
+
+  const userData = await UserData.findOne({
+    value: hexUsername,
+    type: UserDataType.USER_DATA_TYPE_USERNAME,
+    deletedAt: null,
+  });
+  if (userData) {
+    return await getFarcasterUserAndLinksByFid({
+      fid: userData.fid,
+      context,
+    });
+  }
+  return null;
+};
+
 const getFarcasterCastByHash = async (hash, context = {}) => {
   const cast = await Casts.findOne({ hash, deletedAt: null });
   if (!cast) return null;
@@ -618,4 +636,5 @@ module.exports = {
   getFarcasterNotifications,
   getFarcasterUnseenNotificationsCount,
   getFarcasterUserAndLinksByFid,
+  getFarcasterUserAndLinksByUsername,
 };
