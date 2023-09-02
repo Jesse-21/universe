@@ -114,7 +114,7 @@ class RegistrarService {
           key: `RegistrarService.expiresAt`,
           params: { domain },
           value: nameDuration.toString(),
-          expiresAt: new Date(Date.now() + 1000 * 60 * 1), // 5 minute cache,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 5), // 5 minute cache,
         });
       }
       return nameDuration?.toString();
