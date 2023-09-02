@@ -25,6 +25,7 @@ const {
   getFidByCustodyAddress,
   getFarcasterUnseenNotificationsCount,
   getFarcasterNotifications,
+  getFarcasterUserAndLinksByFid,
 } = require("../helpers/farcaster");
 
 const {
@@ -1233,7 +1234,7 @@ const v1GetUser = async (req, res) => {
 
 app.get("/v1/user", limiter, v1GetUser);
 
-app.get("/v2/user", limiter, async (req, res) => {
+app.get("/v2/user", [limiter, authContext], async (req, res) => {
   try {
     const fid = req.query.fid;
 
@@ -1243,7 +1244,10 @@ app.get("/v2/user", limiter, async (req, res) => {
       });
     }
 
-    const user = await getFarcasterUserByFid(fid);
+    const user = await getFarcasterUserAndLinksByFid({
+      fid,
+      context: req.context,
+    });
 
     return res.json({
       result: { user },

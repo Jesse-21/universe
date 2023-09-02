@@ -76,6 +76,30 @@ const getFarcasterUserByFid = async (fid) => {
   return user;
 };
 
+const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
+  const user = await getFarcasterUserByFid(fid);
+  if (!user) return null;
+  const [isFollowing, isFollowedBy] = await Promise.all([
+    Links.exists({
+      fid: context.fid,
+      targetFid: fid,
+      type: "follow",
+      deletedAt: null,
+    }),
+    Links.exists({
+      fid,
+      targetFid: context.fid,
+      type: "follow",
+      deletedAt: null,
+    }),
+  ]);
+  return {
+    ...user,
+    isFollowing,
+    isFollowedBy,
+  };
+};
+
 const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
   const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
   if (!fid) return null;
@@ -593,4 +617,5 @@ module.exports = {
   getFarcasterUserByCustodyAddress,
   getFarcasterNotifications,
   getFarcasterUnseenNotificationsCount,
+  getFarcasterUserAndLinksByFid,
 };
