@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const hubSubscriptionsSchema = new mongoose.Schema({
   host: { type: String, required: true, unique: true },
   lastEventId: Number,
+  lastBackfillFid: Number,
 });
 
 // Messages
