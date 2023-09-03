@@ -3,19 +3,26 @@ const Sentry = require("@sentry/node");
 const TIMEOUT_MS = 10_000;
 
 class AlchemyService {
-  constructor({ apiKey, chain = "mainnet" }) {
+  constructor({ apiKey, chain = "eth-mainnet" }) {
     this.apiKey = apiKey;
     this.chain = chain;
-    if (this.chain === "homestead") {
-      this.chain = "mainnet";
+    if (this.chain == "homestead" || this.chain == "mainnet") {
+      this.chain = "eth-mainnet";
+    }
+    if (
+      this.chain === "rinkeby" ||
+      this.chain === "ropsten" ||
+      this.chain === "goerli"
+    ) {
+      this.chain = `eth-${this.chain}`;
     }
   }
 
   getBaseRoute() {
-    return `https://eth-${this.chain}.g.alchemy.com/v2/${this.apiKey}`;
+    return `https://${this.chain}.g.alchemy.com/v2/${this.apiKey}`;
   }
   getNFTBaseRoute() {
-    return `https://eth-${this.chain}.g.alchemy.com/nft/v2/${this.apiKey}`;
+    return `https://${this.chain}.g.alchemy.com/nft/v2/${this.apiKey}`;
   }
 
   /**
