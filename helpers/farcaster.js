@@ -576,6 +576,7 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
   const notifications = await Notifications.find({
     toFid: context.fid,
     timestamp: { $lt: offset || Date.now() },
+    fromFid: { $ne: context.fid },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
   })
