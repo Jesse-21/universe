@@ -48,14 +48,16 @@ class SearchService {
     }
     if (users && users.length > 0) {
       // an array of Account, derived from signer address
-      return await Promise.all(
-        users.map(async (u) => {
-          const farcasterIdentity = await getFarcasterUserByFid(u.fid);
+      let uniqueIds = {};
+      for (let i = 0; i < users.length; i++) {
+        try {
+          const farcasterIdentity = await getFarcasterUserByFid(users[i].fid);
           const account = await Account.findOrCreateByAddressAndChainId({
             address: farcasterIdentity.custodyAddress,
             chainId: 1,
           });
-          return {
+          if (uniqueIds[account._id]) continue;
+          uniqueIds[account._id] = {
             ...account.toObject(),
             identities: {
               farcaster: {
@@ -63,8 +65,12 @@ class SearchService {
               },
             },
           };
-        })
-      );
+        } catch (e) {
+          console.log(e);
+          continue;
+        }
+      }
+      return Object.values(uniqueIds);
     }
 
     return [];
@@ -114,9 +120,14 @@ class SearchService {
       accounts = accounts.filter((account) => !account.deleted);
       const farcasterAccounts = await this.searchFarcasterUserByUsername(query);
       if (farcasterAccounts) {
+        // filter by unique accounts
+        // const ids = {};
+        // const combined = [...accounts, ...farcasterAccounts];
+        // combined.forEach((a) => {
+        //   ids[a._id] = a;
+        // });
         accounts = [...accounts, ...farcasterAccounts];
       }
-      // @TODO dedupe accounts
     }
     return accounts;
   }
