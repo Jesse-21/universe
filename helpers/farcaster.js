@@ -287,6 +287,7 @@ const getFarcasterFeedCastByHash = async (hash, context = {}) => {
     const root = await getFarcasterCastByHash(cast.threadHash, context);
     return {
       ...root,
+      childCast: cast,
       childrenCasts: [cast],
     };
   }
@@ -372,6 +373,7 @@ const getFarcasterCasts = async ({ fid, limit, cursor, context }) => {
     if (cast.parentHash && parentData[index]) {
       return {
         ...parentData[index],
+        childCast: cast,
         childrenCasts: [cast],
       };
     } else {
