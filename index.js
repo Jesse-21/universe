@@ -122,8 +122,13 @@ if (process.env.SENTRY_DSN) {
     });
   });
 
-  app.get("/health", (_req, res) => {
-    res.status(200).send("Okay!");
+  app.get("/health", async (_req, res) => {
+    try {
+      await connectDB();
+      res.status(200).send("Okay!");
+    } catch (e) {
+      res.status(500).send("Error!");
+    }
   });
 
   app.use(express.json());
