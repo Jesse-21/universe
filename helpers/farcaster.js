@@ -41,8 +41,15 @@ const getFarcasterUserByFid = async (fid) => {
     custodyAddress: fids?.custodyAddress,
   };
 
+  let registeredAt = null;
+
   for (const userData of allUserData) {
     if (userData.external) user.external = true;
+    registeredAt = registeredAt || userData.createdAt;
+    // determine if userData.createdAt is earlier than registeredAt
+    if (userData.createdAt < registeredAt) {
+      registeredAt = userData.createdAt;
+    }
     const hexString = userData.value.startsWith("0x")
       ? userData.value.slice(2)
       : userData.value;
@@ -72,6 +79,8 @@ const getFarcasterUserByFid = async (fid) => {
         break;
     }
   }
+
+  user.registeredAt = registeredAt?.getTime();
 
   return user;
 };
@@ -105,6 +114,34 @@ const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
   if (!fid) return null;
 
   return await getFarcasterUserByFid(fid.fid);
+};
+
+const getFarcasterUserByConnectedAddress = async (connectedAddress) => {
+  // Verifications.claim is similar to {"address":"0x86924c37a93734e8611eb081238928a9d18a63c0","ethSignature":"0x2fc09da1f4dcb7236efb91f77932c249c418c0af00c66ed92ee1f35b02c80d6a1145280c9f361d207d28447f8f7463366840d3a9369036cf6954afd1fd331beb1b","blockHash":"0x191905a9201170abb55f4c90a4cc968b44c1b71cdf3db2764b775c93e7e22b29"}
+  // We need to find "address":"connectedAddress"
+  const verification = await Verifications.findOne({
+    claim: { $regex: `"address":"${connectedAddress}"` },
+    deletedAt: null,
+  });
+
+  if (!verification) return null;
+
+  return await getFarcasterUserByFid(verification.fid);
+};
+
+const getConnectedAddressForFid = async (fid) => {
+  const verification = await Verifications.findOne({
+    fid,
+    deletedAt: null,
+  });
+
+  if (!verification) return null;
+
+  // need to JSON parse the claim
+
+  const claim = JSON.parse(verification.claim);
+
+  return claim.address;
 };
 
 const getFidByCustodyAddress = async (custodyAddress) => {
@@ -640,4 +677,6 @@ module.exports = {
   getFarcasterUnseenNotificationsCount,
   getFarcasterUserAndLinksByFid,
   getFarcasterUserAndLinksByUsername,
+  getFarcasterUserByConnectedAddress,
+  getConnectedAddressForFid,
 };

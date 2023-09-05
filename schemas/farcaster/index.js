@@ -98,6 +98,8 @@ const verificationsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+verificationsSchema.index({ claim: 1, deletedAt: 1 });
+verificationsSchema.index({ fid: 1, deletedAt: 1 });
 
 const userDataSchema = new mongoose.Schema(
   {

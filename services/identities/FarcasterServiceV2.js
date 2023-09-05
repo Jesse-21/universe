@@ -1,35 +1,30 @@
 const axios = require("axios").default;
 
+const {
+  getFarcasterUserByUsername,
+  getFarcasterUserByConnectedAddress,
+  getConnectedAddressForFid,
+} = require("../../helpers/farcaster");
+
 class FarcasterServiceV2 {
   /**
    * clean up API profile to our farcaster schema
    * at schemas/identities/farcaster.js */
   _cleanProfile(profile = {}) {
     return {
-      _id: profile.id,
-      avatarUrl: profile.avatarUrl,
+      _id: parseInt(profile.fid),
       username: profile.username,
       displayName: profile.displayName,
-      farcasterAddress: profile.address, // profile.address is not the same as connectedAddress!
-      bio: profile.bio,
-      followers: profile.followers,
-      following: profile.following,
+      farcasterAddress: profile.custodyAddress, // profile.address is not the same as connectedAddress!
+      followers: profile.followerCount,
+      following: profile.followingCount,
       registeredAt: profile.registeredAt,
+      bio: profile.bio?.text,
     };
   }
   async getProfileByAddress(address) {
     try {
-      const { data: apiCallData } = await axios.get(
-        "https://searchcaster.xyz/api/profiles",
-        {
-          params: {
-            connected_address: address,
-          },
-          timeout: 5000,
-        }
-      );
-
-      const farcaster = apiCallData?.[0]?.body;
+      const farcaster = await getFarcasterUserByConnectedAddress(address);
       if (!farcaster) return null;
       return { ...this._cleanProfile(farcaster), address };
     } catch (e) {
@@ -38,21 +33,12 @@ class FarcasterServiceV2 {
   }
   async getProfileByUsername(username) {
     try {
-      const { data: apiCallData } = await axios.get(
-        "https://searchcaster.xyz/api/profiles",
-        {
-          params: {
-            username,
-          },
-          timeout: 5000,
-        }
-      );
-
-      const farcaster = apiCallData?.[0]?.body;
+      const farcaster = await getFarcasterUserByUsername(username);
       if (!farcaster) return null;
+      const address = await getConnectedAddressForFid(farcaster.fid);
       return {
         ...this._cleanProfile(farcaster),
-        address: apiCallData?.[0]?.connectedAddress,
+        address,
       };
     } catch (e) {
       return false;

@@ -6,6 +6,10 @@ const { IndexerRuleAPI } = require("../../models/IndexerRules/IndexerRuleAPI");
 
 const { Service: _AlchemyService } = require("../../services/AlchemyService");
 
+const {
+  getFarcasterUserByConnectedAddress,
+} = require("../../helpers/farcaster");
+
 const AlchemyServiceMainnet = new _AlchemyService({
   apiKey: process.env.HOMESTEAD_NODE_URL,
 });
@@ -87,17 +91,11 @@ class IndexerRoleRuleService {
    */
   async _canClaimFarcasterRole(_, { data = {} }) {
     try {
-      const { data: apiCallData } = await axios.get(
-        "https://searchcaster.xyz/api/profiles",
-        {
-          params: {
-            connected_address: data.address,
-          },
-          timeout: 5000,
-        }
+      const farcasterUser = await getFarcasterUserByConnectedAddress(
+        data.address
       );
 
-      return !!apiCallData?.[0];
+      return !!farcasterUser;
     } catch (e) {
       return false;
     }
