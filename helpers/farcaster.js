@@ -355,51 +355,58 @@ const getFarcasterAllCastsInThread = async (
   const parentCast = await Casts.findOne({ hash: threadHash, deletedAt: null });
   if (!parentCast) return null;
 
-  // recursively find all children casts where parentHash != castHash
-  const findChildren = async (castHash, _context, _limit, _cursor) => {
-    let query = {
-      parentHash: castHash,
-      deletedAt: null,
-    };
+  // // recursively find all children casts where parentHash != castHash
+  // const findChildren = async (castHash, _context, _limit, _cursor) => {
+  //   let query = {
+  //     parentHash: castHash,
+  //     deletedAt: null,
+  //   };
 
-    if (_cursor) {
-      query["timestamp"] = { $lt: new Date(_cursor) };
-    }
+  //   if (_cursor) {
+  //     query["timestamp"] = { $lt: new Date(_cursor) };
+  //   }
 
-    const children = await Casts.find(query)
-      .sort({ timestamp: -1 })
-      .limit(_limit);
+  //   const children = await Casts.find(query)
+  //     .sort({ timestamp: -1 })
+  //     .limit(_limit);
 
-    if (!children.length) return [];
+  //   if (!children.length) return [];
 
-    const childrenPromises = children.map((child) =>
-      getFarcasterCastByHash(child.hash, _context)
-    );
+  //   const childrenPromises = children.map((child) =>
+  //     getFarcasterCastByHash(child.hash, _context)
+  //   );
 
-    const childrenData = await Promise.all(childrenPromises);
+  //   const childrenData = await Promise.all(childrenPromises);
 
-    if (childrenData.length < _limit) {
-      const remainingLimit = _limit - childrenData.length;
-      const grandChildrenPromises = childrenData.map((childData) =>
-        findChildren(
-          childData.hash,
-          _context,
-          remainingLimit,
-          children[children.length - 1].timestamp
-        )
-      );
+  //   if (childrenData.length < _limit) {
+  //     const remainingLimit = _limit - childrenData.length;
+  //     const grandChildrenPromises = childrenData.map((childData) =>
+  //       findChildren(
+  //         childData.hash,
+  //         _context,
+  //         remainingLimit,
+  //         children[children.length - 1].timestamp
+  //       )
+  //     );
 
-      const allGrandChildren = await Promise.all(grandChildrenPromises);
+  //     const allGrandChildren = await Promise.all(grandChildrenPromises);
 
-      for (let i = 0; i < allGrandChildren.length; i++) {
-        childrenData.push(...allGrandChildren[i]);
-      }
-    }
+  //     for (let i = 0; i < allGrandChildren.length; i++) {
+  //       childrenData.push(...allGrandChildren[i]);
+  //     }
+  //   }
 
-    return childrenData;
-  };
+  //   return childrenData;
+  // };
+  const childrenCasts = await Casts.find({
+    threadHash: threadHash,
+    deletedAt: null,
+  }).sort({ timestamp: -1 });
+  // .limit(_limit);
 
-  const children = await findChildren(threadHash, context, limit, cursor);
+  const children = await Promise.all(
+    childrenCasts.map((c) => getFarcasterCastByHash(c.hash, context))
+  );
 
   const parentCastData = await getFarcasterCastByHash(parentCast.hash, context);
 

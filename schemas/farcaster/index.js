@@ -60,6 +60,7 @@ castsSchema.index({ fid: 1, hash: 1, deletedAt: 1 });
 castsSchema.index({ fid: 1, deletedAt: 1, timestamp: -1 });
 castsSchema.index({ mentions: 1, fid: 1, deletedAt: 1, timestamp: -1 });
 castsSchema.index({ fid: 1, deletedAt: 1 });
+castsSchema.index({ threadHash: 1, deletedAt: 1 });
 castsSchema.index({ globalScore: -1, deletedAt: 1, timestamp: -1 });
 
 const reactionsSchema = new mongoose.Schema(
