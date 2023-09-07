@@ -346,39 +346,68 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
   return await getFarcasterCastByHash(cast.hash);
 };
 
-const getFarcasterAllCastsInThread = async (threadHash, context) => {
+const getFarcasterAllCastsInThread = async (
+  threadHash,
+  context,
+  limit,
+  cursor = null
+) => {
   const parentCast = await Casts.findOne({ hash: threadHash, deletedAt: null });
   if (!parentCast) return null;
 
   // recursively find all children casts where parentHash != castHash
-  const findChildren = async (castHash, _context) => {
-    const children = await Casts.find({
+  const findChildren = async (castHash, _context, _limit, _cursor) => {
+    let query = {
       parentHash: castHash,
       deletedAt: null,
-    });
+    };
+
+    if (_cursor) {
+      query["timestamp"] = { $lt: new Date(_cursor) };
+    }
+
+    const children = await Casts.find(query)
+      .sort({ timestamp: -1 })
+      .limit(_limit);
+
+    if (!children.length) return [];
+
     const childrenPromises = children.map((child) =>
       getFarcasterCastByHash(child.hash, _context)
     );
+
     const childrenData = await Promise.all(childrenPromises);
 
-    const grandChildrenPromises = childrenData.map((childData) =>
-      findChildren(childData.hash, _context)
-    );
-    const allGrandChildren = await Promise.all(grandChildrenPromises);
+    if (childrenData.length < _limit) {
+      const remainingLimit = _limit - childrenData.length;
+      const grandChildrenPromises = childrenData.map((childData) =>
+        findChildren(
+          childData.hash,
+          _context,
+          remainingLimit,
+          children[children.length - 1].timestamp
+        )
+      );
 
-    for (let i = 0; i < allGrandChildren.length; i++) {
-      childrenData.push(...allGrandChildren[i]);
+      const allGrandChildren = await Promise.all(grandChildrenPromises);
+
+      for (let i = 0; i < allGrandChildren.length; i++) {
+        childrenData.push(...allGrandChildren[i]);
+      }
     }
 
     return childrenData;
   };
 
-  const children = await findChildren(threadHash, context);
+  const children = await findChildren(threadHash, context, limit, cursor);
 
   const parentCastData = await getFarcasterCastByHash(parentCast.hash, context);
 
-  // return as an array
-  return [parentCastData, ...children];
+  const lastCursor =
+    children.length > 0 ? children[children.length - 1].timestamp : null;
+
+  // Return an array of data and the cursor for the next batch
+  return [[parentCastData, ...children], lastCursor];
 };
 
 const getFarcasterCasts = async ({ fid, limit, cursor, context }) => {

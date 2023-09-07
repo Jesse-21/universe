@@ -401,11 +401,18 @@ app.get("/v2/all-casts-in-thread", [authContext, limiter], async (req, res) => {
         error: "Missing threadHash",
       });
     }
+    const limit = parseInt(req.query.limit || 100);
+    const cursor = req.query.cursor || null;
 
-    const casts = await getFarcasterAllCastsInThread(threadHash, req.context);
+    const [casts, next] = await getFarcasterAllCastsInThread(
+      threadHash,
+      req.context,
+      limit,
+      cursor
+    );
 
     return res.json({
-      result: { casts },
+      result: { casts, next },
       source: "v2",
     });
   } catch (e) {
