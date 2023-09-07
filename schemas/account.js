@@ -9,7 +9,7 @@ const { schema: accountRecovererSchema } = require("./accountRecoverer");
 const schema = mongoose.Schema(
   {
     email: { type: String, index: true }, // email of the account
-    walletEmail: { type: String, index: true, unique: true }, // the email used to register a wallet
+    walletEmail: { type: String, index: true }, // the email used to register a wallet
     encyrptedWalletJson: { type: String }, // the encrypted wallet json
     username: { type: String, index: true }, // username of the account
     usernameLowercase: { type: String, index: true }, // username of the account

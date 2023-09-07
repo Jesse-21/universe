@@ -8,7 +8,10 @@ const TIMEOUT = 10000;
 const verifyTwitter = async (url, text) => {
   if (!url) return false;
   const { data } = await axios.get(
-    `https://publish.twitter.com/oembed?url=${url}`,
+    `https://publish.twitter.com/oembed?url=${url.replace(
+      "x.com",
+      "twitter.com"
+    )}`,
     {
       timeout: TIMEOUT,
     }

@@ -23,26 +23,18 @@ class FarcasterServiceV2 {
     };
   }
   async getProfileByAddress(address) {
-    try {
-      const farcaster = await getFarcasterUserByConnectedAddress(address);
-      if (!farcaster) return null;
-      return { ...this._cleanProfile(farcaster), address };
-    } catch (e) {
-      return false;
-    }
+    const farcaster = await getFarcasterUserByConnectedAddress(address);
+    if (!farcaster) return null;
+    return { ...this._cleanProfile(farcaster), address };
   }
   async getProfileByUsername(username) {
-    try {
-      const farcaster = await getFarcasterUserByUsername(username);
-      if (!farcaster) return null;
-      const address = await getConnectedAddressForFid(farcaster.fid);
-      return {
-        ...this._cleanProfile(farcaster),
-        address,
-      };
-    } catch (e) {
-      return false;
-    }
+    const farcaster = await getFarcasterUserByUsername(username);
+    if (!farcaster) return null;
+    const address = await getConnectedAddressForFid(farcaster.fid);
+    return {
+      ...this._cleanProfile(farcaster),
+      address,
+    };
   }
 }
 

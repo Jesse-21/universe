@@ -1533,7 +1533,7 @@ const v2PostMessage = async (req, res) => {
 
     await Messages.create(messageData);
 
-    return res.json({ result: message, source: "v2" });
+    return res.json({ result: messageData, source: "v2" });
   } catch (e) {
     Sentry.captureException(e);
     console.error(e);

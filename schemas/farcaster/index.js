@@ -6,6 +6,9 @@ const hubSubscriptionsSchema = new mongoose.Schema({
   lastEventId: Number,
   lastBackfillFid: Number,
 });
+hubSubscriptionsSchema.index({ lastEventId: 1 });
+hubSubscriptionsSchema.index({ lastBackfillFid: 1 });
+hubSubscriptionsSchema.index({ host: 1 });
 
 // Messages
 const messagesSchema = new mongoose.Schema(
@@ -46,6 +49,7 @@ const castsSchema = new mongoose.Schema(
     mentionsPositions: [Number],
     external: { type: Boolean, default: false },
     threadHash: { type: String },
+    globalScore: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -54,6 +58,9 @@ castsSchema.index({ parentHash: 1, deletedAt: 1 });
 castsSchema.index({ hash: "text", fid: 1, deletedAt: 1 });
 castsSchema.index({ fid: 1, hash: 1, deletedAt: 1 });
 castsSchema.index({ fid: 1, deletedAt: 1, timestamp: -1 });
+castsSchema.index({ mentions: 1, fid: 1, deletedAt: 1, timestamp: -1 });
+castsSchema.index({ fid: 1, deletedAt: 1 });
+castsSchema.index({ globalScore: -1, deletedAt: 1, timestamp: -1 });
 
 const reactionsSchema = new mongoose.Schema(
   {
@@ -72,6 +79,7 @@ const reactionsSchema = new mongoose.Schema(
 
 reactionsSchema.index({ targetHash: 1, deletedAt: 1 });
 reactionsSchema.index({ targetHash: 1, reactionType: 1, deletedAt: 1 });
+reactionsSchema.index({ targetFid: 1, reactionType: 1, deletedAt: 1 });
 
 const signersSchema = new mongoose.Schema(
   {
@@ -100,6 +108,7 @@ const verificationsSchema = new mongoose.Schema(
 );
 verificationsSchema.index({ claim: 1, deletedAt: 1 });
 verificationsSchema.index({ fid: 1, deletedAt: 1 });
+verificationsSchema.index({ deletedAt: 1 });
 
 const userDataSchema = new mongoose.Schema(
   {
@@ -157,6 +166,7 @@ const linksSchema = new mongoose.Schema(
 linksSchema.index({ fid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ fid: 1, targetFid: 1, type: 1 });
+// linksSchema.index({ fid: 1, targetFid: 1, type: 1, deletedAt: 1 });
 
 const notificationsSchema = new mongoose.Schema(
   {

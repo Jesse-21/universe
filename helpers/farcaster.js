@@ -120,7 +120,7 @@ const getFarcasterUserByConnectedAddress = async (connectedAddress) => {
   // Verifications.claim is similar to {"address":"0x86924c37a93734e8611eb081238928a9d18a63c0","ethSignature":"0x2fc09da1f4dcb7236efb91f77932c249c418c0af00c66ed92ee1f35b02c80d6a1145280c9f361d207d28447f8f7463366840d3a9369036cf6954afd1fd331beb1b","blockHash":"0x191905a9201170abb55f4c90a4cc968b44c1b71cdf3db2764b775c93e7e22b29"}
   // We need to find "address":"connectedAddress"
   const verification = await Verifications.findOne({
-    claim: { $regex: `"address":"${connectedAddress}"` },
+    claim: { $regex: connectedAddress.toLowerCase() },
     deletedAt: null,
   });
 
