@@ -179,11 +179,13 @@ app.get("/v2/feed", [authContext, limiter], async (req, res) => {
   try {
     const limit = parseInt(req.query.limit || 20);
     const cursor = req.query.cursor || null;
+    const trending = req.query.trending || false;
 
     let [casts, next] = await getFarcasterFeed({
       limit,
       cursor,
       context: req.context,
+      trending,
     });
 
     return res.json({

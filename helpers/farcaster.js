@@ -593,27 +593,40 @@ const getFarcasterCastRecasters = async (hash, limit, cursor) => {
   return [recastData, next];
 };
 
-const getFarcasterFeed = async ({ limit, cursor, context }) => {
+const getFarcasterFeed = async ({ limit, cursor, context, trending }) => {
   // cursor is "timestamp"-"id of last cast"
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
 
-  // find recent trending casts
-  const trendingCasts = await Casts.find({
+  // determine time 24 hours ago
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+  // create a basic query for casts
+  let query = {
     timestamp: { $lt: offset || Date.now() },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
+  };
+
+  // modify query for trending
+  if (trending) {
+    query.timestamp = { $gt: oneDayAgo, ...query.timestamp };
+  }
+
+  // find casts based on the query
+  let casts = await Casts.find(query)
+    .sort(trending ? { globalScore: -1, timestamp: -1 } : { timestamp: -1 })
     .limit(limit);
 
-  const trendingCastPromises = trendingCasts.map((cast) =>
+  const castPromises = casts.map((cast) =>
     getFarcasterFeedCastByHash(cast.hash, context)
   );
-  const trendingCastData = await Promise.all(trendingCastPromises);
+  const castData = await Promise.all(castPromises);
+
   // filter out undefined
-  const filteredTrendingCastData = trendingCastData.filter((cast) => !!cast);
+  const filteredCastData = castData.filter((cast) => !!cast);
+
   // filter by unique hashes
-  const uniqueCasts = filteredTrendingCastData.reduce((acc, cast) => {
+  const uniqueCasts = filteredCastData.reduce((acc, cast) => {
     if (!acc[cast.hash]) {
       acc[cast.hash] = cast;
     } else {
@@ -626,9 +639,9 @@ const getFarcasterFeed = async ({ limit, cursor, context }) => {
   }, {});
 
   let next = null;
-  if (trendingCasts.length === limit) {
-    next = `${trendingCasts[trendingCasts.length - 1].timestamp.getTime()}-${
-      trendingCasts[trendingCasts.length - 1].id
+  if (casts.length === limit) {
+    next = `${casts[casts.length - 1].timestamp.getTime()}-${
+      casts[casts.length - 1].id
     }`;
   }
 
