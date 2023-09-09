@@ -131,13 +131,18 @@ class AccountClass {
           name: ChainHelpers.mapChainIdToName(chainId),
         },
       });
-      const createdAccount = await this.create({
-        email,
-        addresses: [createdAddressTmp._id],
-        activities: {},
-        walletEmail,
-        encyrptedWalletJson,
-      });
+      const [createdAccount] = await this.create(
+        [
+          {
+            email,
+            addresses: [createdAddressTmp._id],
+            activities: {},
+            walletEmail,
+            encyrptedWalletJson,
+          },
+        ],
+        { session }
+      );
       createdAddressTmp.account = createdAccount._id;
       createdNonceTmp.account = createdAccount._id;
       createdExpTmp.account = createdAccount._id;
