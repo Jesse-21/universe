@@ -36,6 +36,7 @@ const {
   fromFarcasterTime,
 } = require("@farcaster/hub-nodejs");
 const { requireAuth } = require("../helpers/auth-middleware");
+const { getMemcachedClient } = require("../connectmemcached");
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -578,6 +579,12 @@ const v2PostMessage = async (req, res) => {
     };
 
     await Messages.create(messageData);
+
+    if (process.env.NODE_ENV !== "production" && process.env.CLEAR_CACHE) {
+      const memcached = getMemcachedClient();
+      await memcached.cmd("flush_all", { noreply: true });
+      console.log("Cleared memcached due to CLEAR_CACHE");
+    }
 
     return res.json({ result: messageData, source: "v2" });
   } catch (e) {
