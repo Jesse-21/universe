@@ -62,6 +62,7 @@ castsSchema.index({ mentions: 1, fid: 1, deletedAt: 1, timestamp: -1 });
 castsSchema.index({ fid: 1, deletedAt: 1 });
 castsSchema.index({ threadHash: 1, deletedAt: 1 });
 castsSchema.index({ globalScore: -1, deletedAt: 1, timestamp: -1 });
+castsSchema.index({ text: "text", deletedAt: 1, timestamp: -1 });
 
 const reactionsSchema = new mongoose.Schema(
   {
@@ -107,7 +108,7 @@ const verificationsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-verificationsSchema.index({ claim: 1, deletedAt: 1 });
+verificationsSchema.index({ claim: "text", deletedAt: 1 });
 verificationsSchema.index({ fid: 1, deletedAt: 1 });
 verificationsSchema.index({ deletedAt: 1 });
 
@@ -124,8 +125,9 @@ const userDataSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userDataSchema.index({ fid: 1, type: 1 });
 userDataSchema.index({ fid: 1, deletedAt: 1 });
-userDataSchema.index({ value: 1, type: 1, deletedAt: 1 });
+userDataSchema.index({ value: "text", type: 1, deletedAt: 1 });
 
 const fidsSchema = new mongoose.Schema(
   {
@@ -135,8 +137,9 @@ const fidsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+fidsSchema.index({ fid: 1 });
 fidsSchema.index({ fid: 1, deletedAt: 1 });
+fidsSchema.index({ custodyAddress: 1, deletedAt: 1 });
 
 const fnamesSchema = new mongoose.Schema(
   {
@@ -167,7 +170,7 @@ const linksSchema = new mongoose.Schema(
 linksSchema.index({ fid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ fid: 1, targetFid: 1, type: 1 });
-// linksSchema.index({ fid: 1, targetFid: 1, type: 1, deletedAt: 1 });
+linksSchema.index({ fid: 1, targetFid: 1, type: 1, deletedAt: 1 });
 
 const notificationsSchema = new mongoose.Schema(
   {
@@ -200,10 +203,6 @@ notificationsSchema.index({ toFid: 1, notificationType: 1, deletedAt: 1 });
 notificationsSchema.index({ fromFid: 1, notificationType: 1, deletedAt: 1 });
 notificationsSchema.index({ "payload.linkHash": 1, deletedAt: 1 });
 notificationsSchema.index({ "payload.castHash": 1, deletedAt: 1 });
-
-module.exports = {
-  notificationsSchema,
-};
 
 module.exports = {
   hubSubscriptionsSchema,

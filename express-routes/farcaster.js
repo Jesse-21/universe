@@ -484,17 +484,19 @@ app.get("/v1/casts", limiter, v1GetCasts);
 app.get("/v2/casts", [authContext, limiter], async (req, res) => {
   try {
     const fid = req.query.fid;
+    const parentChain = req.query.parentChain;
     const limit = Math.min(req.query.limit || 10, 100);
     const cursor = req.query.cursor || null;
 
-    if (!fid) {
+    if (!fid && !parentChain) {
       return res.status(400).json({
-        error: "fid is invalid",
+        error: "fid or parentChain is invalid",
       });
     }
 
     let [casts, next] = await getFarcasterCasts({
       fid,
+      parentChain,
       limit,
       cursor,
       context: req.context,

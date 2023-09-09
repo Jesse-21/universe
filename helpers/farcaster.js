@@ -13,7 +13,22 @@ const {
   Notifications,
 } = require("../models/farcaster");
 
+const createOrFindExternalFarcasterUser = async (address) => {
+  if (!address) return null;
+  const existing = await Fids.findOne({ fid: address, deletedAt: null });
+  if (existing) return await getFarcasterUserByFid(existing.fid);
+  const newFid = await Fids.create({
+    fid: address,
+    external: true,
+    custodyAddress: address,
+    deletedAt: null,
+  });
+  return await getFarcasterUserByFid(newFid.fid);
+};
+
+// TODO: cache this as author schema and sync with hubreplicator
 const getFarcasterUserByFid = async (fid) => {
+  if (!fid) return null;
   const [following, followers, allUserData, fids] = await Promise.all([
     Links.countDocuments({ fid, type: "follow", deletedAt: null }),
     Links.countDocuments({
@@ -110,6 +125,7 @@ const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
 };
 
 const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
+  if (!custodyAddress) return null;
   const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
   if (!fid) return null;
 
@@ -119,8 +135,10 @@ const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
 const getFarcasterUserByConnectedAddress = async (connectedAddress) => {
   // Verifications.claim is similar to {"address":"0x86924c37a93734e8611eb081238928a9d18a63c0","ethSignature":"0x2fc09da1f4dcb7236efb91f77932c249c418c0af00c66ed92ee1f35b02c80d6a1145280c9f361d207d28447f8f7463366840d3a9369036cf6954afd1fd331beb1b","blockHash":"0x191905a9201170abb55f4c90a4cc968b44c1b71cdf3db2764b775c93e7e22b29"}
   // We need to find "address":"connectedAddress"
+  const pattern = '^\\{"address":"' + connectedAddress.toLowerCase() + '"';
+
   const verification = await Verifications.findOne({
-    claim: { $regex: connectedAddress.toLowerCase() },
+    claim: { $regex: pattern },
     deletedAt: null,
   });
 
@@ -130,6 +148,7 @@ const getFarcasterUserByConnectedAddress = async (connectedAddress) => {
 };
 
 const getConnectedAddressForFid = async (fid) => {
+  if (!fid) return null;
   const verification = await Verifications.findOne({
     fid,
     deletedAt: null,
@@ -145,6 +164,7 @@ const getConnectedAddressForFid = async (fid) => {
 };
 
 const getFidByCustodyAddress = async (custodyAddress) => {
+  if (!custodyAddress) return null;
   const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
   if (!fid) return null;
 
@@ -189,15 +209,13 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
   if (!cast) return null;
 
   const [
-    parentAuthor,
-    author,
     repliesCount,
     reactionsCount,
     recastsCount,
+    parentAuthor,
+    author,
     recastersFids,
   ] = await Promise.all([
-    getFarcasterUserByFid(cast.parentFid),
-    getFarcasterUserByFid(cast.fid),
     Casts.countDocuments({ parentHash: cast.hash, deletedAt: null }),
     Reactions.countDocuments({
       targetHash: cast.hash,
@@ -209,6 +227,8 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
       reactionType: ReactionType.REACTION_TYPE_RECAST,
       deletedAt: null,
     }),
+    getFarcasterUserByFid(cast.parentFid),
+    getFarcasterUserByFid(cast.fid),
     Reactions.find({
       targetHash: cast.hash,
       reactionType: ReactionType.REACTION_TYPE_RECAST,
@@ -310,6 +330,12 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
       targetHash: cast.hash,
       fid: context.fid,
       reactionType: ReactionType.REACTION_TYPE_RECAST,
+      deletedAt: null,
+    });
+    data.isFollowing = await Links.exists({
+      fid: context.fid,
+      targetFid: cast.fid,
+      type: "follow",
       deletedAt: null,
     });
   }
@@ -417,16 +443,30 @@ const getFarcasterAllCastsInThread = async (
   return [[parentCastData, ...children], lastCursor];
 };
 
-const getFarcasterCasts = async ({ fid, limit, cursor, context }) => {
+const getFarcasterCasts = async ({
+  fid,
+  parentChain,
+  limit,
+  cursor,
+  context,
+}) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const casts = await Casts.find({
-    fid,
+
+  const query = {
     timestamp: { $lt: offset || Date.now() },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  };
+
+  if (fid) {
+    query["fid"] = fid;
+  } else if (parentChain) {
+    query["text"] = parentChain;
+  } else {
+    throw new Error("Must provide fid or parentChain");
+  }
+
+  const casts = await Casts.find(query).sort({ timestamp: -1 }).limit(limit);
 
   const castPromises = casts.map((cast) =>
     getFarcasterCastByHash(cast.hash, context)
@@ -599,12 +639,24 @@ const getFarcasterFeed = async ({ limit, cursor, context, trending }) => {
 
   // determine time 24 hours ago
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const currentHour = new Date().getHours() + new Date().getMinutes() / 60;
+  const dayThreshold = 200;
+  const nightThreshold = 100;
+  const dayStart = 6;
+  const dayEnd = 18;
+
+  let t = (currentHour - dayStart) / (dayEnd - dayStart);
+  t = Math.max(0, Math.min(1, t));
+  const threshold = Math.round(
+    nightThreshold + t * (dayThreshold - nightThreshold)
+  );
 
   // create a basic query for casts
   let query = {
     timestamp: { $lt: offset || Date.now() },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
+    globalScore: { $gt: threshold },
   };
 
   // modify query for trending
@@ -728,4 +780,5 @@ module.exports = {
   getFarcasterUserAndLinksByUsername,
   getFarcasterUserByConnectedAddress,
   getConnectedAddressForFid,
+  createOrFindExternalFarcasterUser,
 };
