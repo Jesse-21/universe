@@ -117,26 +117,56 @@ const getFarcasterUserByFid = async (fid) => {
 };
 
 const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
+  if (!context.fid) return null;
   const user = await getFarcasterUserByFid(fid);
   if (!user) return null;
-  const [isFollowing, isFollowedBy] = await Promise.all([
-    Links.exists({
-      fid: context.fid,
-      targetFid: fid,
-      type: "follow",
-      deletedAt: null,
-    }),
-    Links.exists({
-      fid,
-      targetFid: context.fid,
-      type: "follow",
-      deletedAt: null,
-    }),
-  ]);
+
+  const memcached = getMemcachedClient();
+
+  let links;
+
+  try {
+    const data = await memcached.get(
+      `getFarcasterUserAndLinksByFid_${context.fid}:${fid}`
+    );
+    if (data) {
+      links = JSON.parse(data.value);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!links) {
+    const [isFollowing, isFollowedBy] = await Promise.all([
+      Links.exists({
+        fid: context.fid,
+        targetFid: fid,
+        type: "follow",
+        deletedAt: null,
+      }),
+      Links.exists({
+        fid,
+        targetFid: context.fid,
+        type: "follow",
+        deletedAt: null,
+      }),
+    ]);
+    links = {
+      isFollowing,
+      isFollowedBy,
+    };
+    try {
+      await memcached.set(
+        `getFarcasterUserAndLinksByFid_${context.fid}:${fid}`,
+        JSON.stringify(links)
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
   return {
     ...user,
-    isFollowing,
-    isFollowedBy,
+    ...links,
   };
 };
 
@@ -403,7 +433,7 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
       deletedAt: null,
     }),
     getFarcasterUserByFid(cast.parentFid),
-    getFarcasterUserByFid(cast.fid),
+    getFarcasterUserAndLinksByFid({ fid: cast.fid, context }),
     Reactions.find({
       targetHash: cast.hash,
       reactionType: ReactionType.REACTION_TYPE_RECAST,

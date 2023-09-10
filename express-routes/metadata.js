@@ -225,7 +225,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
       "base64"
     )}`;
     if (process.env.NODE_ENV === "development") {
-      console.log(svg);
+      // console.log(svg);
     }
 
     let data = {

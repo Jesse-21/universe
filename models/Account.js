@@ -20,6 +20,8 @@ const {
 
 const { Service: ContentService } = require("../services/ContentService");
 
+const { getMemcachedClient } = require("../connectmemcached");
+
 const Sentry = require("@sentry/node");
 
 class AccountClass {
@@ -183,23 +185,48 @@ class AccountClass {
    * @returns Promise<Account | null>
    */
   static async findByAddressAndChainId({ address: rawAddress, chainId }) {
+    const memcachedClient = getMemcachedClient();
     const address = validateAndConvertAddress(rawAddress, chainId);
 
-    const accountAddress = await AccountAddress.aggregate([
-      {
-        $match: {
-          $and: [{ "chain.chainId": chainId }, { address }],
-        },
-      },
-    ]);
+    let accountId;
 
-    if (!accountAddress || !accountAddress.length) return null;
-    if (accountAddress.length > 1) {
-      throw new Error(
-        `Multiple accounts found for address ${address} and chainId ${chainId}!`
+    try {
+      const data = await memcachedClient.get(
+        `Account:findByAddressAndChainId:${chainId}:${address}`
       );
+      if (data) {
+        accountId = data.value;
+      }
+    } catch (e) {
+      console.error(e);
     }
-    const account = await this.findById(get(accountAddress, "[0].account"));
+
+    if (!accountId) {
+      const accountAddress = await AccountAddress.aggregate([
+        {
+          $match: {
+            $and: [{ "chain.chainId": chainId }, { address }],
+          },
+        },
+      ]);
+
+      if (!accountAddress || !accountAddress.length) return null;
+      if (accountAddress.length > 1) {
+        throw new Error(
+          `Multiple accounts found for address ${address} and chainId ${chainId}!`
+        );
+      }
+      accountId = accountAddress[0].account;
+      try {
+        await memcachedClient.set(
+          `Account:findByAddressAndChainId:${chainId}:${address}`,
+          accountId.toString()
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    const account = await this.findById(accountId);
     if (!account) {
       throw new Error(
         `AccountAddress has a null account for address ${address} and chainId ${chainId}!`

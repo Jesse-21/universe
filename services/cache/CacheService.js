@@ -1,5 +1,6 @@
 const { KeyValueCache } = require("../../models/cache/KeyValueCache");
 const { Service: NormalizeCacheService } = require("./NormalizeCacheService");
+const { getMemcachedClient } = require("../../connectmemcached");
 
 class CacheService extends NormalizeCacheService {
   /**
@@ -25,12 +26,30 @@ class CacheService extends NormalizeCacheService {
   }
 
   async get({ key, params }) {
+    const memcached = getMemcachedClient();
+    try {
+      const data = await memcached.get(this.normalize({ key, params }));
+      if (data) {
+        return JSON.parse(data.value).value;
+      }
+    } catch (e) {
+      console.error(e);
+    }
     const normalizedKey = this.normalize({ key, params });
     const found = await KeyValueCache.findOne({
       key: normalizedKey,
     });
     const notExpired = found?.expiresAt > new Date() || !found?.expiresAt;
     if (found && notExpired) {
+      try {
+        // expiresAt is a Date object, need seconds
+        const options = found.expiresAt
+          ? { lifetime: Math.floor((found.expiresAt - new Date()) / 1000) }
+          : {};
+        await memcached.set(normalizedKey, found.value, options);
+      } catch (e) {
+        console.error(e);
+      }
       return JSON.parse(found.value).value;
     }
     return null;
