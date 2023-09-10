@@ -117,8 +117,8 @@ const getFarcasterUserByFid = async (fid) => {
 };
 
 const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
-  if (!context.fid) return null;
   const user = await getFarcasterUserByFid(fid);
+  if (!context.fid || fid === context.fid) return user;
   if (!user) return null;
 
   const memcached = getMemcachedClient();
