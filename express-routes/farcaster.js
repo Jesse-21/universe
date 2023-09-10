@@ -131,7 +131,7 @@ app.get("/v2/feed", [authContext, limiter], async (req, res) => {
   }
 });
 
-app.get("/v2/cast", limiter, async (req, res) => {
+app.get("/v2/cast", [authContext, limiter], async (req, res) => {
   try {
     let hash = req.query.hash;
     if (!hash) {
@@ -140,7 +140,7 @@ app.get("/v2/cast", limiter, async (req, res) => {
       });
     }
 
-    const cast = await getFarcasterCastByHash(hash);
+    const cast = await getFarcasterCastByHash(hash, req.context);
 
     return res.json({
       result: { cast },
