@@ -155,7 +155,7 @@ app.get("/v2/cast", [authContext, limiter], async (req, res) => {
   }
 });
 
-app.get("/v2/cast-short", limiter, async (req, res) => {
+app.get("/v2/cast-short", [authContext, limiter], async (req, res) => {
   try {
     let shortHash = req.query.shortHash;
     let username = req.query.username;
@@ -165,7 +165,11 @@ app.get("/v2/cast-short", limiter, async (req, res) => {
       });
     }
 
-    const cast = await getFarcasterCastByShortHash(shortHash, username);
+    const cast = await getFarcasterCastByShortHash(
+      shortHash,
+      username,
+      req.context
+    );
 
     return res.json({
       result: { cast },

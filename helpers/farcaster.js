@@ -46,7 +46,7 @@ const getFarcasterUserByFid = async (fid) => {
       type: "follow",
       deletedAt: null,
     }),
-    UserData.find({ fid, deletedAt: null }),
+    UserData.find({ fid, deletedAt: null }).sort({ createdAt: 1 }),
     Fids.findOne({ fid, deletedAt: null }),
   ]);
 
@@ -78,29 +78,45 @@ const getFarcasterUserByFid = async (fid) => {
     const hexString = userData.value.startsWith("0x")
       ? userData.value.slice(2)
       : userData.value;
+    const found = {};
 
     const convertedData = Buffer.from(hexString, "hex").toString("utf8");
     switch (userData.type) {
       case UserDataType.USER_DATA_TYPE_USERNAME:
-        user.username = convertedData;
+        if (!found.username) {
+          user.username = convertedData;
+          found.username = true;
+        }
         break;
       case UserDataType.USER_DATA_TYPE_DISPLAY:
-        user.displayName = convertedData;
+        if (!found.displayName) {
+          user.displayName = convertedData;
+          found.displayName = true;
+        }
         break;
       case UserDataType.USER_DATA_TYPE_PFP:
-        user.pfp.url = convertedData;
+        if (!found.pfp) {
+          user.pfp.url = convertedData;
+          found.pfp = true;
+        }
         break;
       case UserDataType.USER_DATA_TYPE_BIO:
-        user.bio.text = convertedData;
-        // find "@" mentions not inside a link
-        const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+)/g;
-        let match;
-        while ((match = mentionRegex.exec(convertedData))) {
-          user.bio.mentions.push(match[1]);
+        if (!found.bio) {
+          user.bio.text = convertedData;
+          // find "@" mentions not inside a link
+          const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+)/g;
+          let match;
+          while ((match = mentionRegex.exec(convertedData))) {
+            user.bio.mentions.push(match[1]);
+          }
+          found.bio = true;
         }
         break;
       case UserDataType.USER_DATA_TYPE_URL:
-        user.url = convertedData;
+        if (!found.url) {
+          user.url = convertedData;
+          found.url = true;
+        }
         break;
     }
   }
@@ -547,7 +563,11 @@ const getFarcasterFeedCastByHash = async (hash, context = {}) => {
   return null;
 };
 
-const getFarcasterCastByShortHash = async (shortHash, username) => {
+const getFarcasterCastByShortHash = async (
+  shortHash,
+  username,
+  context = {}
+) => {
   // use username, hash to find cast
   const user = await getFarcasterUserByUsername(username);
   if (!user) return null;
@@ -576,7 +596,7 @@ const getFarcasterCastByShortHash = async (shortHash, username) => {
     castHash = cast.hash;
   }
 
-  return await getFarcasterCastByHash(castHash);
+  return await getFarcasterCastByHash(castHash, context);
 };
 
 const getFarcasterAllCastsInThread = async (
