@@ -216,6 +216,7 @@ type Mutation {
   addRecoverer(
     address: String
     encyrptedWalletJson: String
+    id: String
     signature: String
     type: String
   ): AccountMutationResponse

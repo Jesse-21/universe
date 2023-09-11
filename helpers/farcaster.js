@@ -14,6 +14,77 @@ const {
 } = require("../models/farcaster");
 
 const { getMemcachedClient } = require("../connectmemcached");
+const { Message, fromFarcasterTime } = require("@farcaster/hub-nodejs");
+
+function farcasterTimeToDate(time) {
+  if (time === undefined) return undefined;
+  if (time === null) return null;
+  const result = fromFarcasterTime(time);
+  if (result.isErr()) throw result.error;
+  return new Date(result.value);
+}
+
+function bytesToHex(bytes) {
+  if (bytes === undefined) return undefined;
+  if (bytes === null) return null;
+  return `0x${Buffer.from(bytes).toString("hex")}`;
+}
+
+const postMessage = async ({
+  isExternal = false,
+  messageJSON,
+  hubClient,
+  shouldClearCache = false,
+  memcachedClient,
+  errorHandler = (error) => console.error(error),
+}) => {
+  try {
+    let message = Message.fromJSON(messageJSON);
+
+    if (!isExternal) {
+      const hubResult = await hubClient.submitMessage(message);
+      const unwrapped = hubResult.unwrapOr(null);
+      if (!unwrapped) {
+        throw new Error("Could not send message");
+      } else {
+        message = {
+          ...unwrapped,
+          hash: unwrapped.hash,
+          signer: unwrapped.signer,
+        };
+      }
+    }
+
+    const now = new Date();
+    let messageData = {
+      fid: message.data.fid,
+      createdAt: now,
+      updatedAt: now,
+      messageType: message.data.type,
+      timestamp: farcasterTimeToDate(message.data.timestamp),
+      hash: bytesToHex(message.hash),
+      hashScheme: message.hashScheme,
+      signature: bytesToHex(message.signature),
+      signatureScheme: message.signatureScheme,
+      signer: bytesToHex(message.signer),
+      raw: bytesToHex(Message.encode(message).finish()),
+      external: isExternal,
+      unindexed: true,
+    };
+
+    await Messages.create(messageData);
+
+    if (shouldClearCache) {
+      await memcachedClient.cmd("flush_all", { noreply: true });
+      console.log("Cleared memcached due to CLEAR_CACHE");
+    }
+
+    return { result: messageData, source: "v2" };
+  } catch (e) {
+    errorHandler(e);
+    throw e; // Re-throw to let the caller handle it further if needed
+  }
+};
 
 const createOrFindExternalFarcasterUser = async (address) => {
   if (!address) return null;
@@ -632,6 +703,7 @@ const getFarcasterCasts = async ({
   context,
 }) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
+  const memcached = getMemcachedClient();
 
   const query = {
     timestamp: { $lt: offset || Date.now() },
@@ -647,7 +719,33 @@ const getFarcasterCasts = async ({
     throw new Error("Must provide fid or parentChain");
   }
 
-  const casts = await Casts.find(query).sort({ timestamp: -1 }).limit(limit);
+  let casts;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}`
+      );
+      if (data) {
+        casts = JSON.parse(data.value).map((cast) => new Casts(cast));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (!casts) {
+    casts = await Casts.find(query).sort({ timestamp: -1 }).limit(limit);
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}`,
+          JSON.stringify(casts)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const castPromises = casts.map((cast) =>
     getFarcasterCastByHash(cast.hash, context)
@@ -687,15 +785,41 @@ const getFarcasterCasts = async ({
 
 const getFarcasterFollowing = async (fid, limit, cursor) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const following = await Links.find({
-    fid,
-    type: "follow",
-    timestamp: { $lt: offset || Date.now() },
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  const memcached = getMemcachedClient();
+  let following;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterFollowing:${fid}:${limit}:${cursor}`
+      );
+      if (data) {
+        following = JSON.parse(data.value).map((follow) => new Links(follow));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (!following) {
+    following = await Links.find({
+      fid,
+      type: "follow",
+      timestamp: { $lt: offset || Date.now() },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      deletedAt: null,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterFollowing:${fid}:${limit}:${cursor}`,
+          JSON.stringify(following)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const followingPromises = following.map((follow) =>
     getFarcasterUserByFid(follow.targetFid)
@@ -714,15 +838,43 @@ const getFarcasterFollowing = async (fid, limit, cursor) => {
 
 const getFarcasterFollowers = async (fid, limit, cursor) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const followers = await Links.find({
-    targetFid: fid,
-    type: "follow",
-    timestamp: { $lt: offset || Date.now() },
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  const memcached = getMemcachedClient();
+  let followers;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterFollowers:${fid}:${limit}:${cursor}`
+      );
+      if (data) {
+        followers = JSON.parse(data.value).map(
+          (follower) => new Links(follower)
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (!followers) {
+    followers = await Links.find({
+      targetFid: fid,
+      type: "follow",
+      timestamp: { $lt: offset || Date.now() },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      deletedAt: null,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterFollowers:${fid}:${limit}:${cursor}`,
+          JSON.stringify(followers)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const followerPromises = followers.map((follow) =>
     getFarcasterUserByFid(follow.fid)
@@ -740,15 +892,44 @@ const getFarcasterFollowers = async (fid, limit, cursor) => {
 };
 
 const getFarcasterCastReactions = async (hash, limit, cursor) => {
+  const memCached = getMemcachedClient();
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const reactions = await Reactions.find({
-    targetHash: hash,
-    timestamp: { $lt: offset || Date.now() },
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  let reactions;
+  if (cursor) {
+    try {
+      const data = await memCached.get(
+        `getFarcasterCastReactions:${hash}:${limit}:${cursor}`
+      );
+      if (data) {
+        reactions = JSON.parse(data.value).map(
+          (reaction) => new Reactions(reaction)
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (!reactions) {
+    reactions = await Reactions.find({
+      targetHash: hash,
+      timestamp: { $lt: offset || Date.now() },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      deletedAt: null,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+    if (cursor) {
+      try {
+        await memCached.set(
+          `getFarcasterCastReactions:${hash}:${limit}:${cursor}`,
+          JSON.stringify(reactions)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const reactionPromises = reactions.map((reaction) =>
     getFarcasterUserByFid(reaction.fid)
@@ -767,15 +948,42 @@ const getFarcasterCastReactions = async (hash, limit, cursor) => {
 
 const getFarcasterCastLikes = async (hash, limit, cursor) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const likes = await Reactions.find({
-    targetHash: hash,
-    reactionType: ReactionType.REACTION_TYPE_LIKE,
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    timestamp: { $lt: offset || Date.now() },
-    deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  const memcached = getMemcachedClient();
+  let likes;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterCastLikes:${hash}:${limit}:${cursor}`
+      );
+      if (data) {
+        likes = JSON.parse(data.value).map((like) => new Reactions(like));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (!likes) {
+    likes = await Reactions.find({
+      targetHash: hash,
+      reactionType: ReactionType.REACTION_TYPE_LIKE,
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      timestamp: { $lt: offset || Date.now() },
+      deletedAt: null,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterCastLikes:${hash}:${limit}:${cursor}`,
+          JSON.stringify(likes)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const likePromises = likes.map((like) => getFarcasterUserByFid(like.fid));
   const likeData = await Promise.all(likePromises);
@@ -792,13 +1000,39 @@ const getFarcasterCastLikes = async (hash, limit, cursor) => {
 
 const getFarcasterCastRecasters = async (hash, limit, cursor) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const recasts = await Reactions.find({
-    targetHash: hash,
-    reactionType: ReactionType.REACTION_TYPE_RECAST,
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    timestamp: { $lt: offset || Date.now() },
-    deletedAt: null,
-  }).limit(limit);
+  const memcached = getMemcachedClient();
+  let recasts;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterCastRecasters:${hash}:${limit}:${cursor}`
+      );
+      if (data) {
+        recasts = JSON.parse(data.value).map((recast) => new Reactions(recast));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (!recasts) {
+    recasts = await Reactions.find({
+      targetHash: hash,
+      reactionType: ReactionType.REACTION_TYPE_RECAST,
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      timestamp: { $lt: offset || Date.now() },
+      deletedAt: null,
+    }).limit(limit);
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterCastRecasters:${hash}:${limit}:${cursor}`,
+          JSON.stringify(recasts)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   const recastPromises = recasts.map((recast) =>
     getFarcasterUserByFid(recast.fid)
@@ -908,27 +1142,76 @@ const getFarcasterFeed = async ({
 };
 
 const getFarcasterUnseenNotificationsCount = async ({ lastSeen, context }) => {
+  if (!context.fid) return 0;
+  const memcached = getMemcachedClient();
+  try {
+    const data = await memcached.get(
+      `getFarcasterUnseenNotificationsCount:${context.fid}`
+    );
+    if (data) {
+      return data.value;
+    }
+  } catch (e) {
+    console.error(e);
+  }
   // cursor is "timestamp"-"id of last notification"
   const count = await Notifications.countDocuments({
     toFid: context.fid,
     timestamp: { $gt: lastSeen },
     deletedAt: null,
   });
+
+  try {
+    await memcached.set(
+      `getFarcasterUnseenNotificationsCount:${context.fid}`,
+      count
+    );
+  } catch (e) {
+    console.error(e);
+  }
+
   return count;
 };
 
 const getFarcasterNotifications = async ({ limit, cursor, context }) => {
   // cursor is "timestamp"-"id of last notification"
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-  const notifications = await Notifications.find({
-    toFid: context.fid,
-    timestamp: { $lt: offset || Date.now() },
-    fromFid: { $ne: context.fid },
-    id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-    deletedAt: null,
-  })
-    .sort({ timestamp: -1 })
-    .limit(limit);
+  const memcached = getMemcachedClient();
+  let notifications;
+  if (cursor) {
+    try {
+      const data = await memcached.get(
+        `getFarcasterNotifications:${context.fid}:${limit}:${cursor}`
+      );
+      if (data) {
+        notifications = JSON.parse(data.value).map((n) => new Notifications(n));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (!notifications) {
+    notifications = await Notifications.find({
+      toFid: context.fid,
+      timestamp: { $lt: offset || Date.now() },
+      fromFid: { $ne: context.fid },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      deletedAt: null,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+
+    if (cursor) {
+      try {
+        await memcached.set(
+          `getFarcasterNotifications:${context.fid}:${limit}:${cursor}`,
+          JSON.stringify(notifications)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
   let next = null;
   if (notifications.length === limit) {
     next = `${notifications[notifications.length - 1].timestamp.getTime()}-${
@@ -988,4 +1271,5 @@ module.exports = {
   getFarcasterUserByConnectedAddress,
   getConnectedAddressForFid,
   createOrFindExternalFarcasterUser,
+  postMessage,
 };

@@ -27,14 +27,10 @@ const {
   getFarcasterNotifications,
   getFarcasterUserAndLinksByFid,
   getFarcasterUserAndLinksByUsername,
+  postMessage,
 } = require("../helpers/farcaster");
 
-const { Messages } = require("../models/farcaster");
-const {
-  Message,
-  getSSLHubRpcClient,
-  fromFarcasterTime,
-} = require("@farcaster/hub-nodejs");
+const { getSSLHubRpcClient } = require("@farcaster/hub-nodejs");
 const { requireAuth } = require("../helpers/auth-middleware");
 const { getMemcachedClient } = require("../connectmemcached");
 
@@ -62,11 +58,14 @@ const authContext = async (req, res, next) => {
       throw new Error("jwt must be provided");
     }
     const account = await Account.findById(data.payload.id);
-    const fid = FCHubService.getFidByAccount(account);
+    if (!account) {
+      throw new Error(`Account id ${data.payload.id} not found`);
+    }
+    const fid = await FCHubService.getFidByAccount(account);
     req.context = {
       ...(req.context || {}),
       accountId: data.payload.id,
-      fid,
+      fid: fid,
       account,
       hubClient,
     };
@@ -78,31 +77,13 @@ const authContext = async (req, res, next) => {
     req.context = {
       ...(req.context || {}),
       accountId: null,
+      fid: null,
+      account: null,
+      hubClient,
     };
   }
   next();
 };
-
-const CacheService = new _CacheService();
-
-const FARCASTER_KEY = "farcaster-express-endpoint";
-
-const WARPCAST_SIGNIN_READY =
-  process.env.NODE_ENV === "production" ? false : true; // We need warpcast signin since we are using @farquest
-
-function farcasterTimeToDate(time) {
-  if (time === undefined) return undefined;
-  if (time === null) return null;
-  const result = fromFarcasterTime(time);
-  if (result.isErr()) throw result.error;
-  return new Date(result.value);
-}
-
-function bytesToHex(bytes) {
-  if (bytes === undefined) return undefined;
-  if (bytes === null) return null;
-  return `0x${Buffer.from(bytes).toString("hex")}`;
-}
 
 app.get("/v2/feed", [authContext, limiter], async (req, res) => {
   try {
@@ -546,57 +527,21 @@ app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
 
 const v2PostMessage = async (req, res) => {
   try {
-    const isExternal = req.body.isExternal || false;
-    let message = Message.fromJSON(req.body.message);
-    if (!isExternal) {
-      const hubResult = await req.context.hubClient.submitMessage(message);
-      const unwrapped = hubResult.unwrapOr(null);
-      if (!unwrapped) {
-        console.error("Could not send message");
-        return res.status(400).json({ message: "Could not send message" });
-      } else {
-        message = {
-          ...unwrapped,
-          hash: unwrapped.hash,
-          signer: unwrapped.signer,
-        };
-      }
-    }
-    const now = new Date();
-    let messageData = {
-      fid: message.data.fid,
-      createdAt: now,
-      updatedAt: now,
-      messageType: message.data.type,
-      timestamp: farcasterTimeToDate(message.data.timestamp),
-      hash: bytesToHex(message.hash),
-      hashScheme: message.hashScheme,
-      signature: bytesToHex(message.signature),
-      signatureScheme: message.signatureScheme,
-      signer: bytesToHex(message.signer),
-      raw: bytesToHex(Message.encode(message).finish()),
-      // deletedAt: operation === "delete" ? now : null,
-      // prunedAt: operation === "prune" ? now : null,
-      // revokedAt: operation === "revoke" ? now : null,
-      external: isExternal,
-      unindexed: true,
-    };
-
-    await Messages.create(messageData);
-
-    if (process.env.NODE_ENV !== "production" && process.env.CLEAR_CACHE) {
-      const memcached = getMemcachedClient();
-      await memcached.cmd("flush_all", { noreply: true });
-      console.log("Cleared memcached due to CLEAR_CACHE");
-    }
-
-    return res.json({ result: messageData, source: "v2" });
-  } catch (e) {
-    Sentry.captureException(e);
-    console.error(e);
-    return res.status(500).json({
-      error: "Internal Server Error",
+    const result = await postMessage({
+      isExternal: req.body.isExternal || false,
+      messageJSON: req.body.message,
+      hubClient: req.context.hubClient,
+      shouldClearCache:
+        process.env.NODE_ENV !== "production" && process.env.CLEAR_CACHE,
+      memcachedClient: getMemcachedClient(),
+      errorHandler: (error) => {
+        Sentry.captureException(error);
+        console.error(error);
+      },
     });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

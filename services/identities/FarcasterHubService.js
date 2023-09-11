@@ -19,14 +19,25 @@ class FarcasterHubService {
     const profile = await getFarcasterUserByFid(existingRecoverer.id);
     return profile;
   }
-  getFidByAccount(account) {
+  async getFidByAccount(account) {
     if (!account) return null;
     const existingRecoverer = account.recoverers?.find?.((r) => {
       return r.type === "FARCASTER_SIGNER";
     });
-    if (!existingRecoverer) return null;
+    if (!existingRecoverer) {
+      // external account, fid is address
+      await account.populate("addresses");
+      const address = account.addresses[0].address;
+      return address;
+    }
 
     return existingRecoverer.id;
+  }
+  isExternalAccount(account) {
+    const existingRecoverer = account.recoverers?.find?.((r) => {
+      return r.type === "FARCASTER_SIGNER";
+    });
+    return !existingRecoverer;
   }
 }
 
