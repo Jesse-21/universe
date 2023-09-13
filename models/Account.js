@@ -206,7 +206,7 @@ class AccountClass {
 
       accountId = accountAddress?.account;
       if (!accountId) {
-        throw new Error(`AccountAddress not found for ${address}!`);
+        return null;
       }
       try {
         await memcachedClient.set(

@@ -28,6 +28,7 @@ const {
   getFarcasterUserAndLinksByFid,
   getFarcasterUserAndLinksByUsername,
   postMessage,
+  searchFarcasterUserByMatch,
 } = require("../helpers/farcaster");
 
 const { getSSLHubRpcClient } = require("@farcaster/hub-nodejs");
@@ -599,6 +600,30 @@ const v2SignedKeyRequest = async (req, res) => {
 app.post("/v2/message", authContext, v2PostMessage);
 
 app.get("/v2/signed-key-requests", limiter, v2SignedKeyRequest);
+
+app.get("/v2/search-user-by-match", limiter, async (req, res) => {
+  try {
+    const match = req.query.match;
+    const limit = Math.min(parseInt(req.query.limit || 10), 50);
+
+    if (!match) {
+      return res.status(400).json({
+        error: "match is invalid",
+      });
+    }
+
+    const users = await searchFarcasterUserByMatch(match, limit);
+
+    return res.json({
+      result: { users },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 module.exports = {
   router: app,

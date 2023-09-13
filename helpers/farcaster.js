@@ -365,6 +365,54 @@ const getFidByCustodyAddress = async (custodyAddress) => {
   return fid.fid;
 };
 
+const searchFarcasterUserByMatch = async (username, limit = 10) => {
+  // convert to hex with 0x prefix
+  const partialHexUsername =
+    "0x" + Buffer.from(username, "ascii").toString("hex");
+
+  const memcached = getMemcachedClient();
+  try {
+    const data = await memcached.get(`searchFarcasterUserByMatch:${username}`);
+    if (data) {
+      return JSON.parse(data.value);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  const users = await UserData.find({
+    $or: [
+      {
+        value: { $regex: `^${partialHexUsername}` },
+        type: UserDataType.USER_DATA_TYPE_USERNAME,
+        deletedAt: null,
+      },
+      {
+        value: { $regex: `^${partialHexUsername}` },
+        type: UserDataType.USER_DATA_TYPE_DISPLAY,
+        deletedAt: null,
+      },
+    ],
+  }).limit(limit);
+
+  const fids = users.map((user) => user.fid);
+
+  const farcasterUsers = await Promise.all(
+    fids.map((fid) => getFarcasterUserByFid(fid))
+  );
+
+  try {
+    await memcached.set(
+      `searchFarcasterUserByMatch:${username}`,
+      JSON.stringify(farcasterUsers)
+    );
+  } catch (e) {
+    console.error(e);
+  }
+
+  return farcasterUsers;
+};
+
 const getFarcasterUserByUsername = async (username, links = false) => {
   // convert to hex with 0x prefix
   const hexUsername = "0x" + Buffer.from(username, "ascii").toString("hex");
@@ -1286,4 +1334,5 @@ module.exports = {
   getConnectedAddressForFid,
   createOrFindExternalFarcasterUser,
   postMessage,
+  searchFarcasterUserByMatch,
 };
