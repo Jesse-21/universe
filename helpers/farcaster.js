@@ -32,6 +32,7 @@ function bytesToHex(bytes) {
 
 const postMessage = async ({
   isExternal = false,
+  externalFid,
   messageJSON,
   hubClient,
   shouldClearCache = false,
@@ -57,7 +58,7 @@ const postMessage = async ({
 
     const now = new Date();
     let messageData = {
-      fid: message.data.fid,
+      fid: isExternal ? externalFid : message.data.fid,
       createdAt: now,
       updatedAt: now,
       messageType: message.data.type,
@@ -138,7 +139,6 @@ const getFarcasterUserByFid = async (fid) => {
   };
 
   let registeredAt = null;
-
   for (const userData of allUserData) {
     if (userData.external) user.external = true;
     registeredAt = registeredAt || userData.createdAt;
@@ -670,17 +670,35 @@ const getFarcasterCastByShortHash = async (
   return await getFarcasterCastByHash(castHash, context);
 };
 
-const getFarcasterAllCastsInThread = async (
-  threadHash,
-  context,
-  limit,
-  cursor = null
-) => {
-  const childrenCasts = await Casts.find({
-    threadHash: threadHash,
-    deletedAt: null,
-  }).sort({ timestamp: -1 });
-  // .limit(_limit);
+const getFarcasterAllCastsInThread = async (threadHash, context) => {
+  const memcached = getMemcachedClient();
+  let childrenCasts;
+
+  try {
+    const data = await memcached.get(
+      `getFarcasterAllCastsInThread:${threadHash}`
+    );
+    if (data) {
+      childrenCasts = JSON.parse(data.value).map((cast) => new Casts(cast));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!childrenCasts) {
+    childrenCasts = await Casts.find({
+      threadHash: threadHash,
+      deletedAt: null,
+    }).sort({ timestamp: -1 });
+    try {
+      await memcached.set(
+        `getFarcasterAllCastsInThread:${threadHash}`,
+        JSON.stringify(childrenCasts)
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   const children = await Promise.all(
     childrenCasts.map((c) => getFarcasterCastByHash(c.hash, context))
@@ -688,11 +706,7 @@ const getFarcasterAllCastsInThread = async (
 
   const parentCastData = await getFarcasterCastByHash(threadHash, context);
 
-  const lastCursor =
-    children.length > 0 ? children[children.length - 1].timestamp : null;
-
-  // Return an array of data and the cursor for the next batch
-  return [[parentCastData, ...children], lastCursor];
+  return [parentCastData, ...children];
 };
 
 const getFarcasterCasts = async ({
@@ -714,7 +728,7 @@ const getFarcasterCasts = async ({
   if (fid) {
     query["fid"] = fid;
   } else if (parentChain) {
-    query["text"] = parentChain;
+    query["parentUrl"] = parentChain;
   } else {
     throw new Error("Must provide fid or parentChain");
   }

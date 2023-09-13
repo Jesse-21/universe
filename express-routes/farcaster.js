@@ -173,18 +173,11 @@ app.get("/v2/all-casts-in-thread", [authContext, limiter], async (req, res) => {
         error: "Missing threadHash",
       });
     }
-    const limit = parseInt(req.query.limit || 100);
-    const cursor = req.query.cursor || null;
 
-    const [casts, next] = await getFarcasterAllCastsInThread(
-      threadHash,
-      req.context,
-      limit,
-      cursor
-    );
+    const casts = await getFarcasterAllCastsInThread(threadHash, req.context);
 
     return res.json({
-      result: { casts, next },
+      result: { casts },
       source: "v2",
     });
   } catch (e) {
@@ -481,6 +474,7 @@ app.post("/v2/notifications/seen", [authContext, limiter], async (req, res) => {
     }
 
     const CacheService = new _CacheService();
+    const memcached = getMemcachedClient();
     await CacheService.set({
       key: `UNSEEN_NOTIFICATIONS_COUNT`,
       params: {
@@ -489,6 +483,15 @@ app.post("/v2/notifications/seen", [authContext, limiter], async (req, res) => {
       value: new Date(),
       expiresAt: null,
     });
+
+    try {
+      await memcached.delete(
+        `getFarcasterUnseenNotificationsCount:${req.context.fid}`,
+        { noreply: true }
+      );
+    } catch (e) {
+      console.error(e);
+    }
 
     return res.json({
       result: { success: true },
@@ -529,6 +532,7 @@ const v2PostMessage = async (req, res) => {
   try {
     const result = await postMessage({
       isExternal: req.body.isExternal || false,
+      externalFid: req.context.fid,
       messageJSON: req.body.message,
       hubClient: req.context.hubClient,
       shouldClearCache:

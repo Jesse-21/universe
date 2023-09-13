@@ -8,6 +8,14 @@ class CacheService extends NormalizeCacheService {
    * Should only be used if you need to create multiple values for same key.
    */
   async setWithDupe({ key, params, value, expiresAt }) {
+    const memcached = getMemcachedClient();
+    try {
+      await memcached.delete(this.normalize({ key, params }), {
+        noreply: true,
+      });
+    } catch (e) {
+      console.error(e);
+    }
     const normalizedKey = this.normalize({ key, params });
     return KeyValueCache.create({
       key: normalizedKey,
@@ -17,6 +25,14 @@ class CacheService extends NormalizeCacheService {
   }
 
   async set({ key, params, value, expiresAt }) {
+    const memcached = getMemcachedClient();
+    try {
+      await memcached.delete(this.normalize({ key, params }), {
+        noreply: true,
+      });
+    } catch (e) {
+      console.error(e);
+    }
     const normalizedKey = this.normalize({ key, params });
     return KeyValueCache.updateOrCreate({
       key: normalizedKey,

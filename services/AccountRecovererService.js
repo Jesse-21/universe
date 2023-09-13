@@ -4,7 +4,11 @@ const fido2 = require("fido2-lib");
 const base64url = require("base64url");
 
 class AccountRecovererService {
-  _accepableRecovererTypes = ["PASSKEY", "FARCASTER_SIGNER"];
+  _accepableRecovererTypes = [
+    "PASSKEY",
+    "FARCASTER_SIGNER",
+    "FARCASTER_SIGNER_EXTERNAL",
+  ];
 
   _bufferToAB(buf) {
     var ab = new ArrayBuffer(buf.length);
@@ -101,11 +105,11 @@ class AccountRecovererService {
    * @param {Account} account
    * @returns Promise<AccountRecoverer>
    */
-  async _addFarcasterSignerRecoverer(account, { address, id }) {
+  async _addFarcasterSignerRecoverer(account, { address, id, type }) {
     return {
-      type: "FARCASTER_SIGNER",
+      type,
       id,
-      pubKey: address,
+      pubKey: address?.toLowerCase?.(),
     };
   }
 
@@ -149,14 +153,22 @@ class AccountRecovererService {
       let recoverer;
       if (type === "PASSKEY") {
         recoverer = await this._addPasskeyRecoverer(account, { signature });
-      } else if (type === "FARCASTER_SIGNER") {
+      } else if (
+        type === "FARCASTER_SIGNER" ||
+        type === "FARCASTER_SIGNER_EXTERNAL"
+      ) {
         recoverer = await this._addFarcasterSignerRecoverer(account, {
           address,
           id,
+          type,
         });
       }
 
       if (account.recoverers) {
+        // dedupe
+        if (account.recoverers.find((r) => r.id === recoverer.id)) {
+          return account;
+        }
         account.recoverers.push(recoverer);
       } else {
         account.recoverers = [recoverer];

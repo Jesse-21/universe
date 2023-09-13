@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const { schema: chainSchema } = require("./chain");
 
 const schema = mongoose.Schema({
-  address: { type: String, index: true, required: true }, // the public address
+  address: { type: String, unique: true, required: true }, // the public address
   chain: chainSchema, // the chain associated with the address (e.g. ETH, BSC, PassKey, etc.)
   account: {
     type: mongoose.Schema.Types.ObjectId,

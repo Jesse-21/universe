@@ -201,8 +201,8 @@ const notificationsSchema = new mongoose.Schema(
 // Indexes for faster queries
 notificationsSchema.index({ toFid: 1, notificationType: 1, deletedAt: 1 });
 notificationsSchema.index({ fromFid: 1, notificationType: 1, deletedAt: 1 });
-notificationsSchema.index({ "payload.linkHash": 1, deletedAt: 1 });
-notificationsSchema.index({ "payload.castHash": 1, deletedAt: 1 });
+notificationsSchema.index({ "payload.linkHash": 1 });
+notificationsSchema.index({ "payload.castHash": 1 });
 
 module.exports = {
   hubSubscriptionsSchema,

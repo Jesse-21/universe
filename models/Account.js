@@ -202,21 +202,12 @@ class AccountClass {
     }
 
     if (!accountId) {
-      const accountAddress = await AccountAddress.aggregate([
-        {
-          $match: {
-            $and: [{ "chain.chainId": chainId }, { address }],
-          },
-        },
-      ]);
+      const accountAddress = await AccountAddress.findOne({ address });
 
-      if (!accountAddress || !accountAddress.length) return null;
-      if (accountAddress.length > 1) {
-        throw new Error(
-          `Multiple accounts found for address ${address} and chainId ${chainId}!`
-        );
+      accountId = accountAddress?.account;
+      if (!accountId) {
+        throw new Error(`AccountAddress not found for ${address}!`);
       }
-      accountId = accountAddress[0].account;
       try {
         await memcachedClient.set(
           `Account:findByAddressAndChainId:${chainId}:${address}`,
