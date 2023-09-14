@@ -7,16 +7,19 @@ const schema = mongoose.Schema(
     rewardClaimed: { type: Boolean, default: false },
     account: {
       type: mongoose.Schema.Types.ObjectId,
-      index: true,
       ref: "Account",
     },
     communityQuest: {
       type: mongoose.Schema.Types.ObjectId,
-      index: true,
       ref: "CommunityQuest",
     },
   },
   { timestamps: true }
 );
+
+schema.index({ isNotified: 1 });
+schema.index({ account: 1 });
+schema.index({ isNotified: 1, account: 1 });
+schema.index({ communityQuest: 1, account: 1 });
 
 module.exports = { schema };

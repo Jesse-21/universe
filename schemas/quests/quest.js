@@ -68,7 +68,6 @@ const schema = mongoose.Schema(
     title: { type: String },
     community: {
       type: mongoose.Schema.Types.ObjectId,
-      index: true,
       ref: "Community",
     },
     schedule: { type: String, enum: ["ONCE", "DAILY", "WEEKLY", "MONTHLY"] },
@@ -82,5 +81,7 @@ const schema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+schema.index({ community: 1 });
 
 module.exports = { schema, questRequirementSchema, questRewardsSchema };

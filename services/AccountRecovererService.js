@@ -166,7 +166,11 @@ class AccountRecovererService {
 
       if (account.recoverers) {
         // dedupe
-        if (account.recoverers.find((r) => r.id === recoverer.id)) {
+        if (
+          account.recoverers.find(
+            (r) => r.id === recoverer.id && r.pubKey === recoverer.pubKey
+          )
+        ) {
           return account;
         }
         account.recoverers.push(recoverer);

@@ -394,8 +394,15 @@ const searchFarcasterUserByMatch = async (username, limit = 10) => {
       },
     ],
   }).limit(limit);
+  const hash = {};
 
-  const fids = users.map((user) => user.fid);
+  const fids = users
+    .map((user) => {
+      if (hash[user.fid]) return null;
+      hash[user.fid] = true;
+      return user.fid;
+    })
+    .filter((fid) => fid !== null);
 
   const farcasterUsers = await Promise.all(
     fids.map((fid) => getFarcasterUserByFid(fid))
@@ -404,7 +411,10 @@ const searchFarcasterUserByMatch = async (username, limit = 10) => {
   try {
     await memcached.set(
       `searchFarcasterUserByMatch:${username}`,
-      JSON.stringify(farcasterUsers)
+      JSON.stringify(farcasterUsers),
+      {
+        lifetime: 60 * 60, // 1 hour cache
+      }
     );
   } catch (e) {
     console.error(e);
