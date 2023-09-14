@@ -7,8 +7,10 @@ const { Service: _CacheService } = require("../services/cache/CacheService");
 const {
   Service: _FarcasterHubService,
 } = require("../services/identities/FarcasterHubService");
+const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { Account } = require("../models/Account");
 const axios = require("axios").default;
+const { prod } = require("../helpers/registrar");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -616,6 +618,33 @@ app.get("/v2/search-user-by-match", limiter, async (req, res) => {
 
     return res.json({
       result: { users },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/v2/get-address-passes", limiter, async (req, res) => {
+  try {
+    const address = req.query.address;
+    const AlchemyService = new _AlchemyService({
+      apiKey: prod().NODE_URL, // force use prod for BEB collection
+      chain: prod().NODE_NETWORK, // force use prod for BEB collection
+    });
+
+    const data = await AlchemyService.getNFTs({
+      owner: address,
+      contractAddresses: [prod().REGISTRAR_ADDRESS],
+    });
+    let passes = (data["ownedNfts"] || []).map((nft) => {
+      return nft["title"];
+    });
+
+    return res.json({
+      result: { passes },
       source: "v2",
     });
   } catch (e) {
