@@ -630,6 +630,27 @@ app.get("/v2/search-user-by-match", limiter, async (req, res) => {
 app.get("/v2/get-address-passes", limiter, async (req, res) => {
   try {
     const address = req.query.address;
+
+    if (!address) {
+      return res.status(400).json({
+        error: "address is invalid",
+      });
+    }
+
+    const memcached = getMemcachedClient();
+
+    try {
+      const data = await memcached.get(`getAddressPasses:${address}`);
+      if (data) {
+        return res.json({
+          result: { passes: JSON.parse(data.value) },
+          source: "v2",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     const AlchemyService = new _AlchemyService({
       apiKey: prod().NODE_URL, // force use prod for BEB collection
       chain: prod().NODE_NETWORK, // force use prod for BEB collection
@@ -642,6 +663,18 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
     let passes = (data["ownedNfts"] || []).map((nft) => {
       return nft["title"];
     });
+
+    try {
+      await memcached.set(
+        `getAddressPasses:${address}`,
+        JSON.stringify(passes),
+        {
+          lifetime: 60, // 60s cache
+        }
+      );
+    } catch (e) {
+      console.error(e);
+    }
 
     return res.json({
       result: { passes },
