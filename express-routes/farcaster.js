@@ -656,13 +656,46 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
       chain: prod().NODE_NETWORK, // force use prod for BEB collection
     });
 
-    const data = await AlchemyService.getNFTs({
-      owner: address,
-      contractAddresses: [prod().REGISTRAR_ADDRESS],
-    });
-    let passes = (data["ownedNfts"] || []).map((nft) => {
-      return nft["title"];
-    });
+    let isHolder = null;
+
+    try {
+      const data = await memcached.get(`getAddressPasses_isHolder:${address}`);
+      if (data) {
+        isHolder = data.value;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    if (isHolder === null) {
+      isHolder = await AlchemyService.isHolderOfCollection({
+        wallet: address,
+        contractAddress: prod().REGISTRAR_ADDRESS,
+      });
+      try {
+        await memcached.set(
+          `getAddressPasses_isHolder:${address}`,
+          JSON.stringify(isHolder),
+          {
+            lifetime: isHolder ? 60 * 60 * 24 : 60, // 1 day cache if holder, 60s cache if not
+          }
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let passes;
+    if (isHolder) {
+      const data = await AlchemyService.getNFTs({
+        owner: address,
+        contractAddresses: [prod().REGISTRAR_ADDRESS],
+      });
+      passes = (data["ownedNfts"] || []).map((nft) => {
+        return nft["title"];
+      });
+    } else {
+      passes = []; // can shortcut
+    }
 
     try {
       await memcached.set(
