@@ -691,9 +691,11 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
         owner: address,
         contractAddresses: [prod().REGISTRAR_ADDRESS],
       });
-      passes = (data["ownedNfts"] || []).map((nft) => {
-        return nft["title"];
-      });
+      passes = (data["ownedNfts"] || [])
+        .map((nft) => {
+          return nft["title"];
+        })
+        .filter(Boolean);
     } else {
       passes = []; // can shortcut
     }
