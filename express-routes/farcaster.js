@@ -677,7 +677,7 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
           `getAddressPasses_isHolder:${address}`,
           JSON.stringify(isHolder),
           {
-            lifetime: isHolder ? 60 * 60 * 24 : 60, // 1 day cache if holder, 60s cache if not
+            lifetime: isHolder ? 60 * 60 * 24 : 10, // 1 day cache if holder, 10s cache if not
           }
         );
       } catch (e) {
