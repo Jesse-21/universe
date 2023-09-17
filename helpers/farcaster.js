@@ -632,6 +632,7 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
   let textBuffer = Buffer.from(text, "utf-8");
 
   for (let i = 0; i < mentionUsers.length; i++) {
+    if (!mentionUsers[i]) continue;
     // Assuming mentionsPositions consider newlines as bytes, so no newline adjustment
     const adjustedMentionPosition = cast.mentionsPositions[i];
     const mentionUsername = mentionUsers[i].username;
