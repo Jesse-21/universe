@@ -20,6 +20,7 @@ class FarcasterServiceV2 {
       following: profile.followingCount,
       registeredAt: profile.registeredAt,
       bio: profile.bio?.text,
+      external: profile.external,
     };
   }
   async getProfileByAddress(address) {

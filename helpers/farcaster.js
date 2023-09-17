@@ -1159,7 +1159,7 @@ const getFarcasterFeed = async ({
 
   // determine time 24 hours ago
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const threshold = 200;
+  const threshold = 150;
 
   // create a basic query for casts
   let query = {
