@@ -11,6 +11,7 @@ const {
   UserDataType,
   ReactionType,
   Notifications,
+  MessageType,
 } = require("../models/farcaster");
 
 const { getMemcachedClient } = require("../connectmemcached");
@@ -31,18 +32,43 @@ function bytesToHex(bytes) {
 }
 
 const postMessage = async ({
-  isExternal = false,
+  isExternal = false, // we override with external below if we are replying to an external cast
   externalFid,
   messageJSON,
   hubClient,
   shouldClearCache = false,
   memcachedClient,
   errorHandler = (error) => console.error(error),
+  bodyOverrides,
 }) => {
   try {
+    let external = isExternal;
     let message = Message.fromJSON(messageJSON);
+    if (
+      !external &&
+      [
+        MessageType.MESSAGE_TYPE_CAST_ADD,
+        MessageType.MESSAGE_TYPE_CAST_REMOVE,
+      ].includes(message.type)
+    ) {
+      // lets try to derive external if any of the parent casts are external
+      if (
+        message.type == MessageType.MESSAGE_TYPE_CAST_ADD &&
+        message.data.castAddBody.parentCastId
+      ) {
+        const parentCast = await Casts.findOne({
+          hash: bytesToHex(message.data.castAddBody.parentCastId.hash),
+        });
+        external = parentCast?.external || external;
+      } else if (message.type == MessageType.MESSAGE_TYPE_CAST_REMOVE) {
+        const parentCast = await Casts.findOne({
+          hash: bytesToHex(message.data.castRemoveBody.targetHash),
+        });
+        external = parentCast?.external || external;
+      }
+    }
 
-    if (!isExternal) {
+    if (!external) {
       const hubResult = await hubClient.submitMessage(message);
       const unwrapped = hubResult.unwrapOr(null);
       if (!unwrapped) {
@@ -58,7 +84,7 @@ const postMessage = async ({
 
     const now = new Date();
     let messageData = {
-      fid: isExternal ? externalFid : message.data.fid,
+      fid: external ? externalFid : message.data.fid,
       createdAt: now,
       updatedAt: now,
       messageType: message.data.type,
@@ -69,8 +95,9 @@ const postMessage = async ({
       signatureScheme: message.signatureScheme,
       signer: bytesToHex(message.signer),
       raw: bytesToHex(Message.encode(message).finish()),
-      external: isExternal,
+      external,
       unindexed: true,
+      bodyOverrides,
     };
 
     await Messages.create(messageData);

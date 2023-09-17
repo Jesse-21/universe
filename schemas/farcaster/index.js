@@ -27,6 +27,7 @@ const messagesSchema = new mongoose.Schema(
     raw: { type: String, required: true },
     external: { type: Boolean, default: false },
     unindexed: { type: Boolean, default: false },
+    bodyOverrides: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true }
 );

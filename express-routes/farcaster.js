@@ -545,6 +545,7 @@ const v2PostMessage = async (req, res) => {
         Sentry.captureException(error);
         console.error(error);
       },
+      bodyOverrides: req.body.bodyOverrides,
     });
     res.json(result);
   } catch (error) {
