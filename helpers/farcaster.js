@@ -1337,6 +1337,7 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
         timestamp: notification.timestamp.getTime(),
         actor,
         content,
+        id: notification.id,
       };
       if (notification.notificationType === "reaction") {
         returnData.reactionType = notification.payload.reactionType;
