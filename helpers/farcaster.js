@@ -393,9 +393,10 @@ const getFidByCustodyAddress = async (custodyAddress) => {
 };
 
 const searchFarcasterUserByMatch = async (username, limit = 10) => {
+  if (!username) return [];
   // convert to hex with 0x prefix
   const partialHexUsername =
-    "0x" + Buffer.from(username, "ascii").toString("hex");
+    "0x" + Buffer.from(username.toLowerCase(), "ascii").toString("hex");
 
   const memcached = getMemcachedClient();
   try {
@@ -1321,7 +1322,10 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
 
   const data = await Promise.all(
     notifications.map(async (notification) => {
-      const actor = await getFarcasterUserByFid(notification.fromFid);
+      const actor = await getFarcasterUserAndLinksByFid({
+        fid: notification.fromFid,
+        context,
+      });
 
       let content = {};
       if (

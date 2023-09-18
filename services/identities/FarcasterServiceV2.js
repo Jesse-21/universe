@@ -13,7 +13,7 @@ class FarcasterServiceV2 {
    * at schemas/identities/farcaster.js */
   _cleanProfile(profile = {}) {
     return {
-      _id: parseInt(profile.fid),
+      _id: profile.fid,
       username: profile.username,
       displayName: profile.displayName,
       farcasterAddress: profile.custodyAddress, // profile.address is not the same as connectedAddress!
