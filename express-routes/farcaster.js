@@ -532,10 +532,11 @@ app.get("/v2/notifications", [authContext, limiter], async (req, res) => {
 });
 
 const v2PostMessage = async (req, res) => {
+  const externalFid = req.context.fid;
   try {
     const result = await postMessage({
-      isExternal: req.body.isExternal || false,
-      externalFid: req.context.fid,
+      isExternal: req.body.isExternal || externalFid.startsWith("0x") || false,
+      externalFid,
       messageJSON: req.body.message,
       hubClient: req.context.hubClient,
       shouldClearCache:
@@ -549,6 +550,8 @@ const v2PostMessage = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
+    Sentry.captureException(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -693,9 +696,16 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
       });
       passes = (data["ownedNfts"] || [])
         .map((nft) => {
-          return nft["title"];
+          let title = nft["title"];
+          // if title doesn't end with .beb, lets add it:
+          if (!title?.endsWith(".beb")) {
+            title = `${title}.beb`;
+          }
+          return title;
         })
-        .filter(Boolean);
+        .filter((title) => {
+          return title && title !== "no_metadata_refresh_beb_quest.beb";
+        });
     } else {
       passes = []; // can shortcut
     }

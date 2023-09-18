@@ -3,6 +3,7 @@ const axios = require("axios").default;
 const {
   getFarcasterUserByUsername,
   getFarcasterUserByConnectedAddress,
+  getFarcasterUserByFid,
   getConnectedAddressForFid,
 } = require("../../helpers/farcaster");
 
@@ -24,7 +25,10 @@ class FarcasterServiceV2 {
     };
   }
   async getProfileByAddress(address) {
-    const farcaster = await getFarcasterUserByConnectedAddress(address);
+    let farcaster = await getFarcasterUserByConnectedAddress(address);
+    if (!farcaster) {
+      farcaster = await getFarcasterUserByFid(address);
+    }
     if (!farcaster) return null;
     return { ...this._cleanProfile(farcaster), address };
   }
