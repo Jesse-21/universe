@@ -230,10 +230,8 @@ const getFarcasterUserByFid = async (fid) => {
   return user;
 };
 
-const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
-  const user = await getFarcasterUserByFid(fid);
-  if (!context.fid || fid === context.fid) return user;
-  if (!user) return null;
+const getFarcasterLinksByFid = async ({ fid, context }) => {
+  if (!context.fid || fid === context.fid) return [false, false];
 
   const memcached = getMemcachedClient();
 
@@ -241,7 +239,7 @@ const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
 
   try {
     const data = await memcached.get(
-      `getFarcasterUserAndLinksByFid_${context.fid}:${fid}`
+      `getFarcasterLinksByFid_${context.fid}:${fid}`
     );
     if (data) {
       links = JSON.parse(data.value);
@@ -265,6 +263,49 @@ const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
         deletedAt: null,
       }),
     ]);
+    links = {
+      isFollowing: !!isFollowing,
+      isFollowedBy: !!isFollowedBy,
+    };
+    try {
+      await memcached.set(
+        `getFarcasterLinksByFid_${context.fid}:${fid}`,
+        JSON.stringify(links)
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return {
+    ...links,
+  };
+};
+
+const getFarcasterUserAndLinksByFid = async ({ fid, context }) => {
+  const user = await getFarcasterUserByFid(fid);
+  if (!context.fid || fid === context.fid) return user;
+  if (!user) return null;
+
+  const memcached = getMemcachedClient();
+
+  let links;
+
+  try {
+    const data = await memcached.get(
+      `getFarcasterUserAndLinksByFid_${context.fid}:${fid}`
+    );
+    if (data) {
+      links = JSON.parse(data.value);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!links) {
+    const { isFollowing, isFollowedBy } = await getFarcasterLinksByFid({
+      fid,
+      context,
+    });
     links = {
       isFollowing,
       isFollowedBy,
@@ -544,7 +585,7 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
     if (!contextData) {
       cast = await Casts.findOne({ hash, deletedAt: null });
       if (!cast) return null;
-      const [isSelfLike, isSelfRecast] = await Promise.all([
+      const [isSelfLike, isSelfRecast, links] = await Promise.all([
         Reactions.exists({
           targetHash: cast.hash,
           fid: context.fid,
@@ -557,10 +598,12 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
           reactionType: ReactionType.REACTION_TYPE_RECAST,
           deletedAt: null,
         }),
+        getFarcasterLinksByFid({ fid: cast.fid, context }),
       ]);
       contextData = {
         isSelfLike,
         isSelfRecast,
+        links,
       };
       try {
         await memcached.set(
@@ -576,7 +619,16 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
   try {
     const data = await memcached.get(`getFarcasterCastByHash:${hash}`);
     if (data) {
-      return { ...JSON.parse(data.value), ...contextData };
+      const cachedCast = JSON.parse(data.value);
+      return {
+        ...cachedCast,
+        ...contextData,
+        author: {
+          // merge context links (follows) with cached author
+          ...cachedCast.author,
+          ...contextData.links,
+        },
+      };
     }
   } catch (e) {
     console.error(e);
@@ -606,7 +658,7 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
       deletedAt: null,
     }),
     getFarcasterUserByFid(cast.parentFid),
-    getFarcasterUserAndLinksByFid({ fid: cast.fid, context }),
+    getFarcasterUserByFid(cast.fid),
     Reactions.find({
       targetHash: cast.hash,
       reactionType: ReactionType.REACTION_TYPE_RECAST,
@@ -704,7 +756,15 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
     console.error(e);
   }
 
-  return { ...data, ...contextData };
+  return {
+    ...data,
+    ...contextData,
+    author: {
+      // merge context links (follows) with cached author
+      ...data.author,
+      ...contextData.links,
+    },
+  };
 };
 
 const getFarcasterFeedCastByHash = async (hash, context = {}) => {
@@ -1322,10 +1382,7 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
 
   const data = await Promise.all(
     notifications.map(async (notification) => {
-      const actor = await getFarcasterUserAndLinksByFid({
-        fid: notification.fromFid,
-        context,
-      });
+      const actor = await getFarcasterUserByFid(notification.fromFid);
 
       let content = {};
       if (
