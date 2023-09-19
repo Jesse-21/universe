@@ -818,7 +818,7 @@ const getFarcasterAllCastsInThread = async (threadHash, context) => {
     childrenCasts = await Casts.find({
       threadHash: threadHash,
       deletedAt: null,
-    }).sort({ timestamp: -1 });
+    }).sort({ timestamp: 1 });
     try {
       await memcached.set(
         `getFarcasterAllCastsInThread:${threadHash}`,
