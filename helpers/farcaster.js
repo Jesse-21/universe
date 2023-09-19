@@ -1264,18 +1264,20 @@ const getFarcasterFeed = async ({
   const uniqueFids = {};
   // filter by unique hashes and unique fids
   const uniqueCasts = filteredCastData.reduce((acc, cast) => {
-    if (!acc[cast.hash] && !uniqueFids[cast.author.fid]) {
-      acc[cast.hash] = cast;
-      uniqueFids[cast.author.fid] = uniqueFids[cast.author.fid]
-        ? uniqueFids[cast.author.fid] + 1
-        : 1;
-    } else if (!uniqueFids[cast.author.fid]) {
-      // If the hash already exists, compare childrenCasts lengths
-      if (cast.childrenCasts.length > acc[cast.hash].childrenCasts.length) {
+    if (cast.author?.fid) {
+      if (!acc[cast.hash] && !uniqueFids[cast.author.fid]) {
         acc[cast.hash] = cast;
         uniqueFids[cast.author.fid] = uniqueFids[cast.author.fid]
           ? uniqueFids[cast.author.fid] + 1
           : 1;
+      } else if (!uniqueFids[cast.author.fid]) {
+        // If the hash already exists, compare childrenCasts lengths
+        if (cast.childrenCasts.length > acc[cast.hash].childrenCasts.length) {
+          acc[cast.hash] = cast;
+          uniqueFids[cast.author.fid] = uniqueFids[cast.author.fid]
+            ? uniqueFids[cast.author.fid] + 1
+            : 1;
+        }
       }
     }
 
