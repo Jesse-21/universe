@@ -44,6 +44,30 @@ const Casts =
   mongoose.models.Casts || mongoose.model("farcaster.Casts", castsSchema);
 
 class ReactionsClass {
+  static async countDistinct(matchArgs) {
+    if (!matchArgs) {
+      return 0;
+    }
+    const aggregationResult = await this.aggregate([
+      {
+        $match: matchArgs,
+      },
+      {
+        $group: {
+          _id: "$fid",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    return aggregationResult.length > 0 ? aggregationResult[0].count : 0;
+  }
+
   static ping() {
     console.log("model: ReactionsClass");
   }
