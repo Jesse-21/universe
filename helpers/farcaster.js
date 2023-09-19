@@ -1169,7 +1169,7 @@ const getFarcasterFeed = async ({
 
   // determine time 24 hours ago
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const threshold = 150;
+  const threshold = 175;
 
   // create a basic query for casts
   let query = {
@@ -1227,16 +1227,24 @@ const getFarcasterFeed = async ({
   // filter out undefined
   const filteredCastData = castData.filter((cast) => !!cast);
 
-  // filter by unique hashes
+  const uniqueFids = {};
+  // filter by unique hashes and unique fids
   const uniqueCasts = filteredCastData.reduce((acc, cast) => {
-    if (!acc[cast.hash]) {
+    if (!acc[cast.hash] && !uniqueFids[cast.author.fid]) {
       acc[cast.hash] = cast;
-    } else {
+      uniqueFids[cast.author.fid] = uniqueFids[cast.author.fid]
+        ? uniqueFids[cast.author.fid] + 1
+        : 1;
+    } else if (!uniqueFids[cast.author.fid]) {
       // If the hash already exists, compare childrenCasts lengths
       if (cast.childrenCasts.length > acc[cast.hash].childrenCasts.length) {
         acc[cast.hash] = cast;
+        uniqueFids[cast.author.fid] = uniqueFids[cast.author.fid]
+          ? uniqueFids[cast.author.fid] + 1
+          : 1;
       }
     }
+
     return acc;
   }, {});
 
