@@ -698,7 +698,7 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
         .map((nft) => {
           let title = nft["title"];
           // if title doesn't end with .beb, lets add it:
-          if (!title?.endsWith(".beb")) {
+          if (title && !title.endsWith(".beb")) {
             title = `${title}.beb`;
           }
           return title;

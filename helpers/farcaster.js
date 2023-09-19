@@ -13,6 +13,11 @@ const {
   Notifications,
   MessageType,
 } = require("../models/farcaster");
+const { Service: _AlchemyService } = require("../services/AlchemyService");
+const { config } = require("../helpers/registrar");
+const {
+  getHexTokenIdFromLabel,
+} = require("../helpers/get-token-id-from-label");
 
 const { getMemcachedClient } = require("../connectmemcached");
 const { Message, fromFarcasterTime } = require("@farcaster/hub-nodejs");
@@ -53,18 +58,47 @@ const postMessage = async ({
     ) {
       // lets try to derive external if any of the parent casts are external
       if (
-        message.type == MessageType.MESSAGE_TYPE_CAST_ADD &&
+        message.data.type == MessageType.MESSAGE_TYPE_CAST_ADD &&
         message.data.castAddBody.parentCastId
       ) {
         const parentCast = await Casts.findOne({
           hash: bytesToHex(message.data.castAddBody.parentCastId.hash),
         });
         external = parentCast?.external || external;
-      } else if (message.type == MessageType.MESSAGE_TYPE_CAST_REMOVE) {
+      } else if (message.data.type == MessageType.MESSAGE_TYPE_CAST_REMOVE) {
         const parentCast = await Casts.findOne({
           hash: bytesToHex(message.data.castRemoveBody.targetHash),
         });
         external = parentCast?.external || external;
+      }
+    }
+    if (
+      external &&
+      message.data.type === MessageType.MESSAGE_TYPE_USER_DATA_ADD &&
+      message.data.userDataBody.type === UserDataType.USER_DATA_TYPE_USERNAME
+    ) {
+      const AlchemyService = new _AlchemyService({
+        apiKey: config().NODE_URL, // force use prod for BEB collection
+        chain: config().NODE_NETWORK, // force use prod for BEB collection
+      });
+      const username = Buffer.from(message.data.userDataBody.value)
+        .toString("ascii")
+        .replace(".beb", "");
+      const usernameTokenId = getHexTokenIdFromLabel(username);
+      const data = await AlchemyService.getNFTs({
+        owner: externalFid,
+        contractAddresses: [config().REGISTRAR_ADDRESS],
+      });
+      const validPasses = (data["ownedNfts"] || [])
+        .map((nft) => {
+          return nft["id"]?.["tokenId"];
+        })
+        .filter((tokenId) => tokenId);
+
+      if (!validPasses.includes(usernameTokenId)) {
+        throw new Error(
+          `Invalid UserData for external user, could not find ${username}/${usernameTokenId} in validPasses=${validPasses}`
+        );
       }
     }
 
