@@ -2,10 +2,13 @@ const app = require("express").Router();
 const Sentry = require("@sentry/node");
 const rateLimit = require("express-rate-limit");
 const { Service: _CacheService } = require("../services/cache/CacheService");
-
+const { AccountInvite } = require("../models/AccountInvite");
 const {
   validateAndConvertAddress,
 } = require("../helpers/validate-and-convert-address");
+const {
+  Service: _FarcasterHubService,
+} = require("../services/identities/FarcasterHubService");
 
 const CacheService = new _CacheService();
 
@@ -37,6 +40,44 @@ app.post("/:referralCode", limiter, async (req, res) => {
     return res.json({
       code: 200,
       success: true,
+    });
+  } catch (e) {
+    console.error(e);
+    Sentry.captureException(e);
+    return res.json({
+      code: 500,
+      success: false,
+      message: e.message,
+    });
+  }
+});
+
+app.get("/get-user/:referralCode", limiter, async (req, res) => {
+  try {
+    const referralCode = req.params.referralCode;
+    const accountInviteCode = await AccountInvite.findOne({
+      code: referralCode,
+    });
+    if (!accountInviteCode) {
+      return res.json({
+        code: 200,
+        success: false,
+      });
+    }
+    const withAccount = await accountInviteCode.populate("account");
+    const account = withAccount.account;
+    if (!account) {
+      return res.json({
+        code: 200,
+        success: false,
+      });
+    }
+    const FarcasterService = new _FarcasterHubService();
+    const profile = await FarcasterService.getProfileByAccount(account);
+    return res.json({
+      code: 200,
+      success: true,
+      profile,
     });
   } catch (e) {
     console.error(e);

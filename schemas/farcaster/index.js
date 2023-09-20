@@ -46,7 +46,7 @@ const castsSchema = new mongoose.Schema(
     parentUrl: String,
     text: { type: String },
     embeds: String,
-    mentions: [Number],
+    mentions: [String],
     mentionsPositions: [Number],
     external: { type: Boolean, default: false },
     threadHash: { type: String },
