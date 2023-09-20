@@ -1,6 +1,6 @@
 const axios = require("axios").default;
 const Sentry = require("@sentry/node");
-const TIMEOUT_MS = 20_000;
+const TIMEOUT_MS = 15_000;
 
 class AlchemyService {
   constructor({ apiKey, chain = "eth-mainnet" }) {
