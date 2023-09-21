@@ -603,7 +603,7 @@ const v2SignedKeyRequest = async (req, res) => {
   }
 };
 
-app.post("/v2/message", authContext, v2PostMessage);
+app.post("/v2/message", [limiter, authContext], v2PostMessage);
 
 app.get("/v2/signed-key-requests", limiter, v2SignedKeyRequest);
 
