@@ -39,8 +39,13 @@ const { getMemcachedClient } = require("../connectmemcached");
 
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 3_000, // 3s
-  max: 50, // limit each IP to 50 requests per windowMs
+  windowMs: 3_000,
+  max: 25,
+  message: "Too many requests, please try again later.",
+});
+const heavyLimiter = rateLimit({
+  windowMs: 1_000,
+  max: 3,
   message: "Too many requests, please try again later.",
 });
 
@@ -603,7 +608,7 @@ const v2SignedKeyRequest = async (req, res) => {
   }
 };
 
-app.post("/v2/message", [limiter, authContext], v2PostMessage);
+app.post("/v2/message", [heavyLimiter, authContext], v2PostMessage);
 
 app.get("/v2/signed-key-requests", limiter, v2SignedKeyRequest);
 
