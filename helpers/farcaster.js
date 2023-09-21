@@ -857,9 +857,9 @@ const getFarcasterCasts = async ({
   };
 
   if (fid) {
-    query["fid"] = fid;
+    query.fid = fid;
   } else if (parentChain) {
-    query["parentUrl"] = parentChain;
+    query.parentUrl = parentChain;
     query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD };
   } else {
     throw new Error("Must provide fid or parentChain");
