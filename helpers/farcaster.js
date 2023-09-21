@@ -148,6 +148,8 @@ const postMessage = async ({
   }
 };
 
+const GLOBAL_SCORE_THRESHOLD = 175;
+
 const createOrFindExternalFarcasterUser = async (address) => {
   if (!address) return null;
   const existing = await Fids.findOne({ fid: address, deletedAt: null });
@@ -858,6 +860,7 @@ const getFarcasterCasts = async ({
     query["fid"] = fid;
   } else if (parentChain) {
     query["parentUrl"] = parentChain;
+    query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD };
   } else {
     throw new Error("Must provide fid or parentChain");
   }
@@ -1203,14 +1206,13 @@ const getFarcasterFeed = async ({
 
   // determine time 24 hours ago
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const threshold = 175;
 
   // create a basic query for casts
   let query = {
     timestamp: { $lt: offset || Date.now() },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
-    globalScore: { $gt: threshold },
+    globalScore: { $gt: GLOBAL_SCORE_THRESHOLD },
   };
 
   // modify query for trending
