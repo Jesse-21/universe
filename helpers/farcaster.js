@@ -149,6 +149,7 @@ const postMessage = async ({
 };
 
 const GLOBAL_SCORE_THRESHOLD = 175;
+const GLOBAL_SCORE_THRESHOLD_CHANNEL = 25;
 
 const createOrFindExternalFarcasterUser = async (address) => {
   if (!address) return null;
@@ -860,7 +861,7 @@ const getFarcasterCasts = async ({
     query.fid = fid;
   } else if (parentChain) {
     query.parentUrl = parentChain;
-    query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD };
+    query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD_CHANNEL };
   } else {
     throw new Error("Must provide fid or parentChain");
   }
