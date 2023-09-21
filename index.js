@@ -49,7 +49,7 @@ const { createDataLoaders } = require("./graphql/dataloaders");
 
 const app = express();
 // https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues
-app.set("trust proxy", 2); // increase based on how many proxies are in front of the server
+app.set("trust proxy", process.env.TRUST_PROXY_OVERRIDE || 2); // increase based on how many proxies are in front of the server
 
 const httpServer = http.createServer(app);
 
