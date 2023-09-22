@@ -34,14 +34,15 @@ class AccountRecovererService {
       const f2l = new fido2.Fido2Lib({
         timeout: 60000,
         challengeSize: 52,
-        rpId: process.env.NODE_ENV === "production" ? "beb.quest" : "localhost",
-        rpName: "beb.quest", // replace with your application's name
+        rpId:
+          process.env.NODE_ENV === "production" ? "cast.quest" : "localhost",
+        rpName: "cast.quest", // replace with your application's name
       });
       const attestationExpectations = {
         challenge,
         origin:
           process.env.NODE_ENV === "production"
-            ? "https://beb.quest"
+            ? "https://cast.quest"
             : "http://localhost:5678",
         factor: "either",
       };
