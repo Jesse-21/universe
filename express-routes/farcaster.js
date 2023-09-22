@@ -702,14 +702,14 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
       passes = (data["ownedNfts"] || [])
         .map((nft) => {
           let title = nft["title"];
-          // if title doesn't end with .beb, lets add it:
-          if (title && !title.endsWith(".beb")) {
-            title = `${title}.beb`;
-          }
+          // Lets set passes as .cast
+          title = title
+            ? `${title.replace(".beb", "").replace(".cast", "")}.cast`
+            : null;
           return title;
         })
         .filter((title) => {
-          return title && title !== "no_metadata_refresh_beb_quest.beb";
+          return title && title !== "no_metadata_refresh_cast_quest.cast";
         });
     } else {
       passes = []; // can shortcut

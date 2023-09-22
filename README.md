@@ -32,7 +32,7 @@ contract.
    [Heroku](https://www.heroku.com/), etc).
 3. Once you have a hosted url, you can set this path in the BEBverse
    [resolver smart contracts](https://github.com/castprotocol/contracts). For
-   example, `foo.beb` would resolve to your host at
+   example, `foo.cast` would resolve to your host at
    `example-load-balancer-1234567890.us-west-2.elb.amazonaws.com`. See our
    [self-hosting guide](https://docs.cast.quest/selfhosting#configuring-the-resolver-contract)
    for more details!

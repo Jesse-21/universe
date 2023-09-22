@@ -81,11 +81,13 @@ app.get("/domain/:domain", lightLimiter, async (req, res) => {
     ) {
       throw Error("inputDomain invalid!");
     }
-    if (inputDomain.includes(".beb")) {
+    if (inputDomain.includes(".beb") || inputDomain.includes(".cast")) {
       if (inputDomain.split(".").length != 2) {
         throw Error("inputDomain cannot contain subdomains!");
       }
-      const inputDomainSplit = inputDomain.split(".beb");
+      const inputDomainSplit = inputDomain.includes(".beb")
+        ? inputDomain.split(".beb")
+        : inputDomain.split(".cast");
       if (inputDomainSplit[1].length > 0) {
         throw Error("inputDomain extension incorrect!");
       }
@@ -94,7 +96,7 @@ app.get("/domain/:domain", lightLimiter, async (req, res) => {
     }
 
     validateName(inputDomain);
-    const rawDomain = inputDomain.replace(".beb", "");
+    const rawDomain = inputDomain.replace(".beb", "").replace(".cast", "");
 
     const existing = await Metadata.findOne({
       uri: keccak256(utf8ToHex(rawDomain)),
@@ -156,7 +158,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
     });
     if (!metadata) {
       const errorData = {
-        name: `no_metadata_refresh_beb_quest.beb`,
+        name: `no_metadata_refresh_cast_quest.cast`,
         description: `This domain does not have metadata, navigate to cast.quest and search your domain to refresh!`,
       };
       return res.json(errorData);
@@ -217,7 +219,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
         "text-shadow",
         "-1px 0 #111111, 0 1px #111111, 1px 0 #111111, 0 -1px #111111, 1px 2px 0px #111111"
       )
-      .text(`${rawDomain}.beb`);
+      .text(`${rawDomain}.cast`);
 
     const svg = body.select(".container").html();
 
@@ -229,8 +231,8 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
     }
 
     let data = {
-      name: `${rawDomain}.beb`,
-      description: `Check the status of ${rawDomain}.beb on cast.quest, and try far.quest 👁️`,
+      name: `${rawDomain}.cast`,
+      description: `Check the status of ${rawDomain}.cast on cast.quest, and try far.quest 👁️`,
       image,
       attributes: [
         {

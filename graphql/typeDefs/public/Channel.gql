@@ -25,7 +25,7 @@ type ChannelRecipient {
   channel: Channel
   recipientType: RecipientType
   recipient: Recipient
-  slug: String # unique slugs like "address@bebdomain.beb" or "role@bebdomain.beb"
+  slug: String # unique slugs like "address@bebdomain.cast" or "role@bebdomain.cast"
 }
 
 type ChannelCurrentAccountPermission {

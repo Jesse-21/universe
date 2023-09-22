@@ -19,7 +19,7 @@ class ChannelMutationService extends ChannelService {
   }
 
   /**
-   * @param {String} recipients an array of strings, each string is a recipient in the format of locale@bebDomain.beb
+   * @param {String} recipients an array of strings, each string is a recipient in the format of locale@bebDomain.cast
    * @returns ChannelRecipientsInput[]
    */
   async _convertChannelRecipients({ recipients }) {

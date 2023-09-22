@@ -83,7 +83,8 @@ const postMessage = async ({
       });
       const username = Buffer.from(message.data.userDataBody.value)
         .toString("ascii")
-        .replace(".beb", "");
+        .replace(".beb", "")
+        .replace(".cast", "");
       const usernameTokenId = getHexTokenIdFromLabel(username);
       const data = await AlchemyService.getNFTs({
         owner: externalFid,

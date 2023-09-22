@@ -340,7 +340,7 @@ describe("AccountService tests", () => {
               name: "channel for account",
             },
             communityId: community._id,
-            recipients: [`${mockAddress}@${community.bebdomain}.beb`],
+            recipients: [`${mockAddress}@${community.bebdomain}.cast`],
           },
           { account: owner }
         );
@@ -356,7 +356,7 @@ describe("AccountService tests", () => {
               name: "channel for role",
             },
             communityId: community._id,
-            recipients: [`${roles[0].slug}@${community.bebdomain}.beb`],
+            recipients: [`${roles[0].slug}@${community.bebdomain}.cast`],
           },
           { account: owner }
         );
@@ -408,7 +408,7 @@ describe("AccountService tests", () => {
               name: "invalid channel for account",
             },
             communityId: community._id,
-            recipients: [`${getRandomAddress()}@${community.bebdomain}.beb`],
+            recipients: [`${getRandomAddress()}@${community.bebdomain}.cast`],
           },
           { account: owner }
         );

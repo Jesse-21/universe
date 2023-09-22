@@ -15,7 +15,7 @@ const schema = mongoose.Schema(
     //     1: role,
     // }
     recipientType: { type: Number, index: true, required: true },
-    // role@bebdomain.beb or address@bebdomain.beb
+    // role@bebdomain.cast or address@bebdomain.cast
     slug: { type: String, index: true, required: true },
     channel: {
       type: mongoose.Schema.Types.ObjectId,

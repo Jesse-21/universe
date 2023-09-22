@@ -94,7 +94,7 @@ describe("ChannelService tests", () => {
           {
             recipientId: recipient._id,
             recipientType: 0,
-            slug: `${recipientAddress}@${goodCommunity.bebdomain}.beb`,
+            slug: `${recipientAddress}@${goodCommunity.bebdomain}.cast`,
           },
         ],
       },

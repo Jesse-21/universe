@@ -24,7 +24,7 @@ function validateName(name) {
     throw new Error("Domain cannot have invalid characters");
   }
 
-  if (!validRegex.test(_name.replace(".beb", ""))) {
+  if (!validRegex.test(_name.replace(".beb", "").replace(".cast", ""))) {
     throw new Error("Domain cannot have invalid characters valid=(A-Za-z0-9_)");
   }
 

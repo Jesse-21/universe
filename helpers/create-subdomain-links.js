@@ -5,7 +5,7 @@ const dev = {
 };
 
 const prod = {
-  COOKIE_DOMAIN: ".beb.xyz",
+  COOKIE_DOMAIN: ".cast.quest",
   URL_PREFIX: "https://",
   URL_SUFFIX: "",
 };
