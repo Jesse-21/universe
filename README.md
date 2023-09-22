@@ -1,17 +1,17 @@
-# Universe, a beb.quest Host Implementation
+# Universe, a cast.quest Host Implementation
 
 <img src="./.misc/header.png" width="300" />
 
-Universe is an implementation of a beb.quest Host. Universes are open-source
+Universe is an implementation of a cast.quest Host. Universes are open-source
 hosts for
-[beb.quest, a protocol making crypto exploration fun](https://beb.quest).
+[cast.quest, a protocol making crypto exploration fun](https://cast.quest).
 
 This is an early work that is subject to heavy changes, see our
-[Github Issues](https://github.com/bebprotocol/dimension/issues) if you wish to
+[Github Issues](https://github.com/castprotocol/dimension/issues) if you wish to
 contribute.
 
 **See our developer documents at
-[`beb.quest Dimension GraphQL APIs`](https://docs.beb.quest/developers).**
+[`cast.quest Dimension GraphQL APIs`](https://docs.cast.quest/developers).**
 
 ## Self-hosting Your Universe
 
@@ -20,35 +20,35 @@ contribute.
 We've provided a starter `Dockerfile` for you, with `MONGO_URL` and `JWT_SECRET`
 as `ARG` parameters.
 
-We have a [self-hosting guide on our docs](https://docs.beb.quest/selfhosting)
+We have a [self-hosting guide on our docs](https://docs.cast.quest/selfhosting)
 which walks through Railway deployment all the way to using our resolver
 contract.
 
 1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a
    hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-   or [Railway with our tutorial](https://docs.beb.quest/selfhosting).
+   or [Railway with our tutorial](https://docs.cast.quest/selfhosting).
 2. You'll also need to deploy this Dockerfile to a hosting location of your
    preference ([Railway](https://railway.app),
    [Heroku](https://www.heroku.com/), etc).
 3. Once you have a hosted url, you can set this path in the BEBverse
-   [resolver smart contracts](https://github.com/bebprotocol/contracts). For
+   [resolver smart contracts](https://github.com/castprotocol/contracts). For
    example, `foo.beb` would resolve to your host at
    `example-load-balancer-1234567890.us-west-2.elb.amazonaws.com`. See our
-   [self-hosting guide](https://docs.beb.quest/selfhosting#configuring-the-resolver-contract)
+   [self-hosting guide](https://docs.cast.quest/selfhosting#configuring-the-resolver-contract)
    for more details!
 
 ## Contribution Guidelines
 
-The **bebprotocol/universe** repo follows the
+The **castprotocol/universe** repo follows the
 [conventional commits guidelines](https://www.conventionalcommits.org/en/v1.0.0/#summary),
 please be sure to respect them when committing.
 
 When opening a Pull Request and you are not already a core contributor to
-[@bebprotocol](https://github.com/bebprotocol), be sure to explain your pull
+[@castprotocol](https://github.com/castprotocol), be sure to explain your pull
 request in greater detail so there's less churn when reviewing and we can get
 your changes landed ASAP, thank you!
 
-## Developing in the bebprotocol/universe repo
+## Developing in the castprotocol/universe repo
 
 Welcome to the setup guide for Universe! To start, you'll need
 [node.js](https://github.com/nvm-sh/nvm),
@@ -57,7 +57,7 @@ Welcome to the setup guide for Universe! To start, you'll need
 configured locally.
 
 Once you have node.js, yarn and mongodb, you'll need to fill the following
-environment variables to have a fully operational beb.quest instance on
+environment variables to have a fully operational cast.quest instance on
 localhost:
 
 ### .env file setup
@@ -74,5 +74,5 @@ running instance, and play around with graphql commands at
 
 ## Useful Links
 
-- [Register a beb.quest Dimension](https://beb.quest)
-- [Protocol Documentation](https://docs.beb.quest)
+- [Register a cast.quest Dimension](https://cast.quest)
+- [Protocol Documentation](https://docs.cast.quest)

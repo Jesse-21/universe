@@ -148,8 +148,8 @@ const postMessage = async ({
   }
 };
 
-const GLOBAL_SCORE_THRESHOLD = 175;
-const GLOBAL_SCORE_THRESHOLD_CHANNEL = 25;
+const GLOBAL_SCORE_THRESHOLD = 100;
+const GLOBAL_SCORE_THRESHOLD_CHANNEL = 5;
 
 const createOrFindExternalFarcasterUser = async (address) => {
   if (!address) return null;
