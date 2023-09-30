@@ -97,9 +97,12 @@ const postMessage = async ({
         .filter((tokenId) => tokenId);
 
       if (!validPasses.includes(usernameTokenId)) {
-        throw new Error(
-          `Invalid UserData for external user, could not find ${username}/${usernameTokenId} in validPasses=${validPasses}`
-        );
+        const invalidPassesError = `Invalid UserData for external user, could not find ${username}/${usernameTokenId} in validPasses=${validPasses}`;
+        if (process.env.NODE_ENV === "production") {
+          throw new Error(invalidPassesError);
+        } else {
+          console.log(invalidPassesError);
+        }
       }
     }
 
@@ -682,7 +685,8 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
     if (!mentionUsers[i]) continue;
     // Assuming mentionsPositions consider newlines as bytes, so no newline adjustment
     const adjustedMentionPosition = cast.mentionsPositions[i];
-    const mentionUsername = mentionUsers[i].username;
+    const mentionUsername =
+      mentionUsers[i].username || "fid:" + mentionUsers[i].fid;
 
     const mentionLink = `@${mentionUsername}`;
     const mentionLinkBuffer = Buffer.from(mentionLink, "utf-8");
@@ -1378,7 +1382,10 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
 
   const data = await Promise.all(
     notifications.map(async (notification) => {
-      const actor = await getFarcasterUserByFid(notification.fromFid);
+      const actor = await getFarcasterUserAndLinksByFid({
+        fid: notification.fromFid,
+        context,
+      });
 
       let content = {};
       if (
@@ -1431,4 +1438,6 @@ module.exports = {
   createOrFindExternalFarcasterUser,
   postMessage,
   searchFarcasterUserByMatch,
+  GLOBAL_SCORE_THRESHOLD,
+  GLOBAL_SCORE_THRESHOLD_CHANNEL,
 };
