@@ -903,7 +903,9 @@ const getFarcasterCasts = async ({
     getFarcasterCastByHash(cast.hash, context)
   );
   const castData = await Promise.all(castPromises);
-  const parentHashPromises = castData.map((cast) => {
+  // filter out null in castData
+  const castDataFinal = castData.filter((cast) => cast);
+  const parentHashPromises = castDataFinal.map((cast) => {
     if (cast.parentHash) {
       // return the root cast with childrenCasts
       const root = getFarcasterCastByHash(cast.parentHash, context);
@@ -913,7 +915,7 @@ const getFarcasterCasts = async ({
     }
   });
   const parentData = await Promise.all(parentHashPromises);
-  const finalData = castData.map((cast, index) => {
+  const finalData = castDataFinal.map((cast, index) => {
     if (cast.parentHash && parentData[index]) {
       return {
         ...parentData[index],

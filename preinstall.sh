@@ -12,4 +12,15 @@ if ! command -v memcached &> /dev/null; then
     brew install memcached
 fi
 
+# Start memcached service
 brew services start memcached
+
+# Check if MongoDB Community is installed
+if ! brew list | grep mongodb-community &> /dev/null; then
+    echo "MongoDB Community not found. Installing via Homebrew..."
+    brew tap mongodb/brew
+    brew install mongodb-community
+fi
+
+# Start MongoDB Community service
+brew services start mongodb/brew/mongodb-community
