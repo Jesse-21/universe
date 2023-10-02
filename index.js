@@ -68,9 +68,9 @@ if (process.env.SENTRY_DSN) {
     introspection: process.env.NODE_ENV === "development",
     cache: "bounded",
     csrfPrevention: true,
-    formatError: (e) => {
-      Sentry.captureException(e);
-      console.error(e);
+    formatError: (_formattedError, error) => {
+      Sentry.captureException(error);
+      console.error(error);
       return new Error("Internal server error");
     },
     plugins: [
