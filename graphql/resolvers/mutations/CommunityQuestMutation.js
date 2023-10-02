@@ -88,8 +88,12 @@ const resolvers = {
           message: "Successfully claimed quest reward",
         };
       } catch (e) {
-        Sentry.captureException(e);
-        console.error(e);
+        if (
+          !(e.message || "").includes("Reward cannot be claimed at this time")
+        ) {
+          Sentry.captureException(e);
+          console.error(e);
+        }
         return {
           code: "500",
           success: false,
@@ -146,8 +150,12 @@ const resolvers = {
           message: "Successfully claimed quest reward",
         };
       } catch (e) {
-        Sentry.captureException(e);
-        console.error(e);
+        if (
+          !(e.message || "").includes("Reward cannot be claimed at this time")
+        ) {
+          Sentry.captureException(e);
+          console.error(e);
+        }
         return {
           code: "500",
           success: false,
@@ -202,8 +210,12 @@ const resolvers = {
           message: "Successfully claimed quest reward",
         };
       } catch (e) {
-        Sentry.captureException(e);
-        console.error(e);
+        if (
+          !(e.message || "").includes("Reward cannot be claimed at this time")
+        ) {
+          Sentry.captureException(e);
+          console.error(e);
+        }
         return {
           code: "500",
           success: false,
