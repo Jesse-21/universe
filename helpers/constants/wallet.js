@@ -14,7 +14,7 @@ const prod = () => {
 const dev = () => {
   return {
     API_KEY: process.env.OPT_GOERLI_API_KEY,
-    DEFAULT_URI: "https://protocol.cast.quest/graphql",
+    DEFAULT_URI: "https://protocol.wield.co/graphql",
     NODE_NETWORK: "opt-goerli",
     CHAIN_ID: 420,
     FACTORY_CONTRACT_ADDRESS: constants.factoryContractAddress,

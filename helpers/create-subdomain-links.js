@@ -5,7 +5,7 @@ const dev = {
 };
 
 const prod = {
-  COOKIE_DOMAIN: ".cast.quest",
+  COOKIE_DOMAIN: ".wield.co",
   URL_PREFIX: "https://",
   URL_SUFFIX: "",
 };

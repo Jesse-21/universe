@@ -21,7 +21,7 @@ const mustBeBEBHolder = async (token) => {
     });
     if (!isOwner)
       throw new Error(
-        "Due to demand, you must own a BEB domain to use this feature. Register one for free at cast.quest and contribute to the network!"
+        "Due to demand, you must own a BEB domain to use this feature. Register one for free at Wield and contribute to the network!"
       );
     return true;
   } catch (e) {

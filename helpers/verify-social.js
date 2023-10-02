@@ -19,7 +19,7 @@ const verifyTwitter = async (url, text) => {
 
   const html = data.html;
 
-  return html.includes("@castprotocol");
+  return html.includes("@wieldprotocol");
 };
 
 module.exports = {

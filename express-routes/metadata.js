@@ -159,7 +159,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
     if (!metadata) {
       const errorData = {
         name: `no_metadata_refresh_cast_quest.cast`,
-        description: `This domain does not have metadata, navigate to cast.quest and search your domain to refresh!`,
+        description: `This domain does not have metadata, navigate to Wield and search your domain to refresh!`,
       };
       return res.json(errorData);
     }
@@ -232,7 +232,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
 
     let data = {
       name: `${rawDomain}.cast`,
-      description: `Check the status of ${rawDomain}.cast on cast.quest, and try far.quest 👁️`,
+      description: `Check the status of ${rawDomain}.cast on Wield, and try far.quest 👁️`,
       image,
       attributes: [
         {

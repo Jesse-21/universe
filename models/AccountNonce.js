@@ -15,12 +15,12 @@ class AccountNonceClass {
   }
 
   async getMessageToSign() {
-    const msg = `@castprotocol/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${this.nonce.length} ${this.nonce}`;
+    const msg = `@wieldprotocol/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${this.nonce.length} ${this.nonce}`;
     return msg;
   }
 
   async decodeAddressBySignature(signature) {
-    const msg = `@castprotocol/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${this.nonce.length} ${this.nonce}`;
+    const msg = `@wieldprotocol/universe wants you to sign in with your Ethereum account, secured with a signed message:\n ${this.nonce.length} ${this.nonce}`;
     const msgBufferHex = bufferToHex(Buffer.from(msg, "utf8"));
     const address = recoverPersonalSignature({
       data: msgBufferHex,

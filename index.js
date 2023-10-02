@@ -121,7 +121,7 @@ if (process.env.SENTRY_DSN) {
   app.get("/", (_req, res) => {
     res.json({
       message:
-        "Welcome to a cast.quest Dimensions Host running github.com/castprotocol/universe, see /graphql for the API!",
+        "Welcome to a Wield Dimensions Host running github.com/wieldprotocol/universe, see /graphql for the API!",
     });
   });
 
