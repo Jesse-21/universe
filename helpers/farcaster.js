@@ -243,7 +243,7 @@ const getFarcasterUserByFid = async (fid) => {
         if (!found.bio) {
           user.bio.text = convertedData;
           // find "@" mentions not inside a link
-          const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+)/g;
+          const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+(\.[a-z]{2,})*)/g;
           let match;
           while ((match = mentionRegex.exec(convertedData))) {
             user.bio.mentions.push(match[1]);
