@@ -110,7 +110,7 @@ const postMessage = async ({
       const hubResult = await hubClient.submitMessage(message);
       const unwrapped = hubResult.unwrapOr(null);
       if (!unwrapped) {
-        throw new Error("Could not send message");
+        throw new Error(`Could not send message: ${hubResult?.error}`);
       } else {
         message = {
           ...unwrapped,

@@ -14,18 +14,11 @@ to contribute.
 
 ## Self-hosting Your Universe
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/_1eUPs)
-
 We've provided a starter `Dockerfile` for you, with `MONGO_URL` and `JWT_SECRET`
 as `ARG` parameters.
 
-We have a [self-hosting guide on our docs](https://docs.wield.co/selfhosting)
-which walks through Railway deployment all the way to using our resolver
-contract.
-
 1. You'll need a MongoDB server, either by deploying MongoDB yourself or using a
-   hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-   or [Railway with our tutorial](https://docs.wield.co/selfhosting).
+   hosted solution such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 2. You'll also need to deploy this Dockerfile to a hosting location of your
    preference ([Railway](https://railway.app),
    [Heroku](https://www.heroku.com/), etc).

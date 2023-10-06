@@ -33,7 +33,10 @@ const {
   searchFarcasterUserByMatch,
 } = require("../helpers/farcaster");
 
-const { getSSLHubRpcClient } = require("@farcaster/hub-nodejs");
+const {
+  getInsecureHubRpcClient,
+  getSSLHubRpcClient,
+} = require("@farcaster/hub-nodejs");
 const { requireAuth } = require("../helpers/auth-middleware");
 const { getMemcachedClient } = require("../connectmemcached");
 
@@ -52,7 +55,11 @@ const heavyLimiter = rateLimit({
 let _hubClient;
 
 const authContext = async (req, res, next) => {
-  const hubClient = _hubClient || getSSLHubRpcClient(process.env.HUB_ADDRESS);
+  const hubClient =
+    _hubClient ||
+    (process.env.HUB_SECURE === "SECURE"
+      ? getSSLHubRpcClient(process.env.HUB_ADDRESS)
+      : getInsecureHubRpcClient(process.env.HUB_ADDRESS));
   _hubClient = hubClient;
 
   try {
