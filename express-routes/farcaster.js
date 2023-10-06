@@ -104,13 +104,13 @@ app.get("/v2/feed", [authContext, limiter], async (req, res) => {
   try {
     const limit = parseInt(req.query.limit || 20);
     const cursor = req.query.cursor || null;
-    const trending = req.query.trending || false;
+    const explore = req.query.explore === "true";
 
     let [casts, next] = await getFarcasterFeed({
       limit,
       cursor,
       context: req.context,
-      trending,
+      explore,
     });
 
     return res.json({
@@ -210,6 +210,7 @@ app.get("/v2/casts", [authContext, limiter], async (req, res) => {
     const parentChain = req.query.parentChain;
     const limit = Math.min(req.query.limit || 10, 100);
     const cursor = req.query.cursor || null;
+    const explore = req.query.explore === "true";
 
     if (!fid && !parentChain) {
       return res.status(400).json({
@@ -223,6 +224,7 @@ app.get("/v2/casts", [authContext, limiter], async (req, res) => {
       limit,
       cursor,
       context: req.context,
+      explore,
     });
 
     return res.json({

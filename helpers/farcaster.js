@@ -852,6 +852,7 @@ const getFarcasterCasts = async ({
   limit,
   cursor,
   context,
+  explore = false,
 }) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const memcached = getMemcachedClient();
@@ -866,7 +867,9 @@ const getFarcasterCasts = async ({
     query.fid = fid;
   } else if (parentChain) {
     query.parentUrl = parentChain;
-    query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD_CHANNEL };
+    if (explore) {
+      query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD_CHANNEL };
+    }
   } else {
     throw new Error("Must provide fid or parentChain");
   }
@@ -875,7 +878,7 @@ const getFarcasterCasts = async ({
   if (cursor) {
     try {
       const data = await memcached.get(
-        `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}`
+        `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}:${explore}`
       );
       if (data) {
         casts = JSON.parse(data.value).map((cast) => new Casts(cast));
@@ -890,7 +893,7 @@ const getFarcasterCasts = async ({
     if (cursor) {
       try {
         await memcached.set(
-          `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}`,
+          `getFarcasterCasts:${fid}:${parentChain}:${limit}:${cursor}:${explore}`,
           JSON.stringify(casts)
         );
       } catch (e) {
@@ -1206,7 +1209,7 @@ const getFarcasterFeed = async ({
   limit = 10,
   cursor = null,
   context = {},
-  trending = false,
+  explore = false,
 }) => {
   const memCached = getMemcachedClient();
   // cursor is "timestamp"-"id of last cast"
@@ -1220,12 +1223,10 @@ const getFarcasterFeed = async ({
     timestamp: { $lt: offset || Date.now() },
     id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
     deletedAt: null,
-    globalScore: { $gt: GLOBAL_SCORE_THRESHOLD },
   };
 
-  // modify query for trending
-  if (trending) {
-    query.timestamp = { $gt: oneDayAgo, ...query.timestamp };
+  if (explore) {
+    query.globalScore = { $gt: GLOBAL_SCORE_THRESHOLD };
   }
 
   // find casts based on the query
@@ -1235,7 +1236,7 @@ const getFarcasterFeed = async ({
       const data = await memCached.get(
         `getFarcasterFeed:${
           context?.fid || "global"
-        }:${trending}:${limit}:${cursor}`
+        }:${explore}:${limit}:${cursor}`
       );
       if (data) {
         casts = JSON.parse(data.value).map((cast) => new Casts(cast));
@@ -1246,15 +1247,13 @@ const getFarcasterFeed = async ({
   }
 
   if (!casts) {
-    casts = await Casts.find(query)
-      .sort(trending ? { globalScore: -1, timestamp: -1 } : { timestamp: -1 })
-      .limit(limit);
+    casts = await Casts.find(query).sort({ timestamp: -1 }).limit(limit);
     try {
       if (cursor) {
         await memCached.set(
           `getFarcasterFeed:${
             context?.fid || "global"
-          }:${trending}:${limit}:${cursor}`,
+          }:${explore}:${limit}:${cursor}`,
           JSON.stringify(casts)
         );
       }
