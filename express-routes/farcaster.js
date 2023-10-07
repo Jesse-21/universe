@@ -9,6 +9,7 @@ const {
 } = require("../services/identities/FarcasterHubService");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { Account } = require("../models/Account");
+const { ApiKey } = require("../models/ApiKey");
 const axios = require("axios").default;
 const { prod } = require("../helpers/registrar");
 const {
@@ -40,16 +41,29 @@ const {
 const { requireAuth } = require("../helpers/auth-middleware");
 const { getMemcachedClient } = require("../connectmemcached");
 
+const getLimit = (multiplier) => {
+  return async (req, res) => {
+    // query ApiKeys to get the limit and return the multiplier * baseMultiplier or 0
+    if (process.env.NODE_ENV !== "production") {
+      // use ApiKey with memcached
+      return multiplier;
+    }
+
+    // fallback to multiplier in production for now
+    return multiplier;
+  };
+};
+
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000,
-  max: 25,
-  message: "Too many requests, please try again later.",
+  max: getLimit(25),
+  message: "Too many requests or invalid API key, please try again later.",
 });
 const heavyLimiter = rateLimit({
   windowMs: 1_000,
-  max: 3,
-  message: "Too many requests, please try again later.",
+  max: getLimit(3),
+  message: "Too many requests or invalid API key, please try again later.",
 });
 
 let _hubClient;
