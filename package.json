@@ -1,6 +1,6 @@
 {
   "name": "universe",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:wieldprotocol/universe.git",
@@ -55,7 +55,7 @@
     "ethers": "^5.6.9",
     "expo-server-sdk": "^3.6.0",
     "express": "^4.17.2",
-    "express-rate-limit": "^6.7.0",
+    "express-rate-limit": "^7.1.0",
     "fido2-lib": "^3.4.1",
     "form-data": "^4.0.0",
     "formidable": "^2.0.1",

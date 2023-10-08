@@ -41,29 +41,76 @@ const {
 const { requireAuth } = require("../helpers/auth-middleware");
 const { getMemcachedClient } = require("../connectmemcached");
 
-const getLimit = (multiplier) => {
-  return async (req, res) => {
-    // query ApiKeys to get the limit and return the multiplier * baseMultiplier or 0
-    if (process.env.NODE_ENV !== "production") {
-      // use ApiKey with memcached
-      return multiplier;
+const apiKeyCache = new Map(); // two layers of cache, in memory and memcached
+
+const getLimit = (baseMultiplier) => {
+  // query ApiKeys to get the multiplier and return the multiplier * baseMultiplier or 0
+  return async (req, _res) => {
+    const key = req.header("API-KEY");
+    if (!key) {
+      const err = `Missing API-KEY header! Returning 0 for ${req.url}`;
+      console.error(err);
+      Sentry.captureMessage(err);
+      return 0;
+    }
+    const memcached = getMemcachedClient();
+    let apiKey;
+
+    if (apiKeyCache.has(key)) {
+      apiKey = apiKeyCache.get(key);
+    } else {
+      try {
+        const data = await memcached.get(`getLimit:${key}`);
+        if (data) {
+          apiKey = new ApiKey(JSON.parse(data.value));
+          apiKeyCache.set(key, apiKey);
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
-    // fallback to multiplier in production for now
-    return multiplier;
+    if (!apiKey) {
+      apiKey = await ApiKey.findOne({ key });
+      if (apiKey) {
+        apiKeyCache.set(key, apiKey);
+        try {
+          await memcached.set(
+            `getLimit:${key}`,
+            JSON.stringify(apiKey),
+            { lifetime: 60 * 60 } // 1 hour
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    if (!apiKey) {
+      const err = `API-KEY ${key} not found! Returning 0 for ${req.url}`;
+      console.error(err);
+      Sentry.captureMessage(err);
+      return 0;
+    }
+
+    return Math.ceil(baseMultiplier * apiKey.multiplier);
   };
 };
 
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000,
-  max: getLimit(25),
-  message: "Too many requests or invalid API key, please try again later.",
+  max: getLimit(2.5),
+  message:
+    "Too many requests or invalid API key! See docs.wield.co for more info.",
+  validate: { limit: false },
 });
 const heavyLimiter = rateLimit({
   windowMs: 1_000,
-  max: getLimit(3),
-  message: "Too many requests or invalid API key, please try again later.",
+  max: getLimit(0.3),
+  message:
+    "Too many requests or invalid API key! See docs.wield.co for more info.",
+  validate: { limit: false },
 });
 
 let _hubClient;

@@ -6,6 +6,9 @@ const schema = mongoose.Schema({
   key: { type: String, required: true, unique: true },
   description: { type: String, required: true },
   multiplier: { type: Number, required: true },
+  email: { type: String },
 });
+
+schema.index({ key: 1 });
 
 module.exports = { schema };

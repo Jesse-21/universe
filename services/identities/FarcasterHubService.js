@@ -11,6 +11,9 @@ class FarcasterHubService {
         r.type === "FARCASTER_SIGNER" || r.type === "FARCASTER_SIGNER_EXTERNAL"
       );
     });
+    if (!existingRecoverer) {
+      return null;
+    }
     // if (!existingRecoverer) {
     //   // external account, create or find profile
     //   await account.populate("addresses");

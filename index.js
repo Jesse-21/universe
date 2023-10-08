@@ -139,7 +139,7 @@ if (process.env.SENTRY_DSN) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage"
+      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage, API-KEY"
     );
 
     next();
