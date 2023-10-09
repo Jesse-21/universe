@@ -55,7 +55,7 @@ app.post("/create", heavyLimiter, async (req, res) => {
     const apiKey = await ApiKey.create({
       description,
       email,
-      multiplier: 0.1,
+      multiplier: 1,
       key: generateKey(),
     });
 
