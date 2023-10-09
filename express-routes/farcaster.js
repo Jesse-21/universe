@@ -16,6 +16,7 @@ const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
   getFarcasterUserByCustodyAddress,
+  getFarcasterUserByConnectedAddress,
   getFarcasterCastByHash,
   getFarcasterAllCastsInThread,
   getFarcasterCasts,
@@ -449,7 +450,7 @@ app.get("/v2/following", limiter, async (req, res) => {
   }
 });
 
-app.get("/v2/fid-by-address", [limiter], async (req, res) => {
+app.get("/v2/user-by-connected-address", [limiter], async (req, res) => {
   try {
     const address = (req.query.address || "").toLowerCase();
 
@@ -459,10 +460,10 @@ app.get("/v2/fid-by-address", [limiter], async (req, res) => {
       });
     }
 
-    const fid = await getFidByCustodyAddress(address);
+    const user = await getFarcasterUserByConnectedAddress(address);
 
     return res.json({
-      result: { fid },
+      result: { user },
       source: "v2",
     });
   } catch (e) {
