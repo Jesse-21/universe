@@ -54,14 +54,6 @@ app.set("trust proxy", process.env.TRUST_PROXY_OVERRIDE || 2); // increase based
 
 const httpServer = http.createServer(app);
 
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 1.0,
-  });
-}
-
 (async () => {
   const server = new ApolloServer({
     typeDefs,
@@ -175,6 +167,14 @@ if (process.env.SENTRY_DSN) {
     async (argv) => {
       dotenv.config({ path: argv.env });
       process.env.MODE = argv.selfHosted ? "self-hosted" : "default";
+
+      if (process.env.SENTRY_DSN) {
+        Sentry.init({
+          dsn: process.env.SENTRY_DSN,
+          environment: process.env.NODE_ENV || "development",
+          tracesSampleRate: 1.0,
+        });
+      }
 
       let REQUIRED_ENV_VARS = ["JWT_SECRET", "MONGO_URL", "NODE_ENV"];
 

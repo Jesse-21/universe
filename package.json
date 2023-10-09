@@ -1,13 +1,13 @@
 {
   "name": "universe",
-  "version": "2.2.10",
+  "version": "2.2.11",
   "main": "README.md",
   "license": "AGPL-3.0",
   "repository": "git@github.com:wieldprotocol/universe.git",
   "author": "Beb, Inc. <gm@wield.co>",
   "scripts": {
     "start": "node ./index.js",
-    "dev": "sh preinstall.sh && NODE_ENV=development nodemon ./index.js",
+    "dev": "NODE_ENV=development nodemon ./index.js",
     "test": "yarn jest --watchAll --runInBand",
     "lint": "npx eslint graphql/*.js helpers/*.js models/*.js schemas/*.js express-routes/*.js *.js --fix",
     "migrate:create": "migrate create",

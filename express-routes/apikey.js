@@ -28,37 +28,51 @@ const generateKey = () => {
 };
 
 app.post("/create", heavyLimiter, async (req, res) => {
-  const { description, email } = req.body;
+  try {
+    const { description, email } = req.body;
 
-  if (!email || !email.includes("@")) {
+    if (!email || !email.includes("@")) {
+      return res.json({
+        code: "400",
+        success: false,
+        message: "Invalid email address!",
+      });
+    }
+
+    if (!description || description.length < 5) {
+      return res.json({
+        code: "400",
+        success: false,
+        message: "Description must be longer than 5 characters",
+      });
+    }
+
+    const apiKey = await ApiKey.create({
+      description,
+      email,
+      multiplier: 0.1,
+      key: generateKey(),
+    });
+
+    Sentry.captureMessage(
+      `New API key created for ${apiKey.email} with ${apiKey.description}! key=${apiKey.key}`
+    );
+
     return res.json({
-      code: "400",
+      code: "201",
+      success: true,
+      message: "Successfully created API key!",
+      key: apiKey.key,
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.json({
+      code: "500",
       success: false,
-      message: "Invalid email address!",
+      message: "Internal server error!",
     });
   }
-
-  if (!description || description.length < 5) {
-    return res.json({
-      code: "400",
-      success: false,
-      message: "Description must be longer than 5 characters",
-    });
-  }
-
-  const apiKey = await ApiKey.create({
-    description,
-    email,
-    multiplier: 0.1,
-    key: generateKey(),
-  });
-
-  res.json({
-    code: "201",
-    success: true,
-    message: "Successfully created API key!",
-    key: apiKey.key,
-  });
 });
 
 module.exports = {
