@@ -451,9 +451,9 @@ app.get("/v2/following", limiter, async (req, res) => {
 
 app.get("/v2/fid-by-address", [limiter], async (req, res) => {
   try {
-    const address = req.query.address;
+    const address = (req.query.address || "").toLowerCase();
 
-    if (!address) {
+    if (!address || address.length < 10) {
       return res.status(400).json({
         error: "address is invalid",
       });
@@ -734,9 +734,9 @@ app.get("/v2/search-user-by-match", limiter, async (req, res) => {
 
 app.get("/v2/get-address-passes", limiter, async (req, res) => {
   try {
-    const address = req.query.address;
+    const address = (req.query.address || "").toLowerCase();
 
-    if (!address) {
+    if (!address || address.length < 10) {
       return res.status(400).json({
         error: "address is invalid",
       });

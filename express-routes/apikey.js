@@ -31,7 +31,12 @@ app.post("/create", heavyLimiter, async (req, res) => {
   try {
     const { description, email } = req.body;
 
-    if (!email || !email.includes("@")) {
+    const isValidEmail = (email) => {
+      const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return re.test(email);
+    };
+
+    if (!isValidEmail(email)) {
       return res.json({
         code: "400",
         success: false,
