@@ -15,6 +15,7 @@ const { prod } = require("../helpers/registrar");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
+  getFarcasterUserByCustodyAddress,
   getFarcasterCastByHash,
   getFarcasterAllCastsInThread,
   getFarcasterCasts,
@@ -437,6 +438,31 @@ app.get("/v2/following", limiter, async (req, res) => {
 
     return res.json({
       result: { users, next },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/fid-by-address", [limiter], async (req, res) => {
+  try {
+    const address = req.query.address;
+
+    if (!address) {
+      return res.status(400).json({
+        error: "address is invalid",
+      });
+    }
+
+    const fid = await getFidByCustodyAddress(address);
+
+    return res.json({
+      result: { fid },
       source: "v2",
     });
   } catch (e) {
