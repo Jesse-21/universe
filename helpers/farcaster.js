@@ -138,7 +138,15 @@ const postMessage = async ({
       bodyOverrides,
     };
 
-    await Messages.create(messageData);
+    try {
+      await Messages.create(messageData);
+    } catch (e) {
+      if ((e?.code || 0) === 11000) {
+        console.error("Message with this hash already exists, skipping!");
+      } else {
+        throw e;
+      }
+    }
 
     if (shouldClearCache) {
       await memcachedClient.cmd("flush_all", { noreply: true });
@@ -406,6 +414,29 @@ const getConnectedAddressForFid = async (fid) => {
   }
 
   return claim.address;
+};
+
+const getCustodyAddressByFid = async (fid) => {
+  if (!fid) return null;
+  const memcached = getMemcachedClient();
+  try {
+    const data = await memcached.get(`getCustodyAddressByFid:${fid}`);
+    if (data) {
+      return data.value;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  const data = await Fids.findOne({ fid, deletedAt: null });
+  if (!data) return null;
+
+  try {
+    await memcached.set(`getCustodyAddressByFid:${fid}`, data.custodyAddress);
+  } catch (e) {
+    console.error(e);
+  }
+
+  return data.custodyAddress;
 };
 
 const getFidByCustodyAddress = async (custodyAddress) => {
@@ -1429,6 +1460,7 @@ module.exports = {
   getFarcasterCastByShortHash,
   getFarcasterFeed,
   getFidByCustodyAddress,
+  getCustodyAddressByFid,
   getFarcasterUserByCustodyAddress,
   getFarcasterNotifications,
   getFarcasterUnseenNotificationsCount,

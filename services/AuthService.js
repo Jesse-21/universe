@@ -4,13 +4,13 @@ const { bufferToHex } = require("ethereumjs-util");
 const { recoverPersonalSignature } = require("@metamask/eth-sig-util");
 const base64url = require("base64url");
 const mongoose = require("mongoose");
-
 const axios = require("axios").default;
 const { Account } = require("../models/Account");
 const { AccountAddress } = require("../models/AccountAddress");
 const { AccountCommunity } = require("../models/AccountCommunity");
 const { AccountNonce } = require("../models/AccountNonce");
 const { getCustodyAddress, getCurrentUser } = require("../helpers/warpcast");
+const { getFidByCustodyAddress } = require("../helpers/farcaster");
 const {
   Service: _AccountRecovererService,
 } = require("./AccountRecovererService");
@@ -215,6 +215,61 @@ class AuthService {
   }
 
   /**
+   * Authenticate an account with warpcast
+   * @returns Promise<Account>
+   */
+  async authByFid({
+    address: custodyAddress,
+    id: signerAddress,
+    chainId,
+    signature,
+  }) {
+    try {
+      console.log(custodyAddress, signerAddress, chainId, signature);
+
+      /** step1: verify the user has a verified sigature from custodyAddress */
+      const { account } = await this.verifySignature({
+        address: custodyAddress,
+        chainId,
+        signature,
+      });
+
+      if (account?.deleted) throw new Error("Account is deleted");
+
+      /** step2: If already cached the recoverer/signer then return account */
+      const existingRecoverer = account.recoverers?.find?.((r) => {
+        return r.type === "FARCASTER_SIGNER" && r.pubKey === signerAddress;
+      });
+      if (existingRecoverer) {
+        return account;
+      } else {
+        // step3: if no existing recoverer/signer then check if it exists in key registry
+        const RecovererService = new _AccountRecovererService();
+        const fid = await RecovererService.verifyFarcasterSignerAndGetFid(
+          account,
+          {
+            signerAddress,
+            custodyAddress,
+          }
+        );
+        if (!fid) {
+          // the signer has not been added to key registry
+          throw new Error("Invalid signer");
+        }
+        // step4: if valid signer then add to account
+        const updatedAccount = await RecovererService.addRecoverer(account, {
+          type: "FARCASTER_SIGNER",
+          address: signerAddress,
+          id: fid,
+        });
+        return updatedAccount;
+      }
+    } catch (e) {
+      console.log(e);
+      throw new Error("Invalid token");
+    }
+  }
+  /**
    * Authenticate an account with PassKey
    * @returns Promise<Account>
    */
@@ -313,6 +368,13 @@ class AuthService {
         address,
         token: signature,
         fid: id,
+        chainId,
+      });
+    } else if (type === "FID") {
+      account = await this.authByFid({
+        address,
+        signature,
+        id,
         chainId,
       });
     } else {

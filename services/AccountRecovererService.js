@@ -2,6 +2,16 @@ const { Service: _CacheService } = require("../services/cache/CacheService");
 const { generateChallenge } = require("../helpers/generate-challenge");
 const fido2 = require("fido2-lib");
 const base64url = require("base64url");
+const ethers = require("ethers");
+const {
+  abi: keyRegistrarAbi,
+  address: keyRegistrarAddress,
+} = require("../helpers/abi/key-registrar");
+const {
+  abi: idRegistrarAbi,
+  address: idRegistrarAddress,
+} = require("../helpers/abi/id-registrar");
+const { getProvider } = require("../helpers/alchemy-provider");
 
 class AccountRecovererService {
   _accepableRecovererTypes = [
@@ -111,6 +121,40 @@ class AccountRecovererService {
       id,
       pubKey: address?.toLowerCase?.(),
     };
+  }
+
+  /**
+   * Verify an address is a signer to a fid
+   * @param {Account} account
+   * @param {String} address signer address or key
+   * @param {String} fid FID to verify
+   * @returns Promise<Boolean>
+   */
+  async verifyFarcasterSignerAndGetFid(_, { signerAddress, custodyAddress }) {
+    const alchemyProvider = getProvider({
+      network: 10,
+      node: process.env.OPTIMISM_NODE_URL,
+    });
+
+    const keyRegistrar = new ethers.Contract(
+      keyRegistrarAddress,
+      keyRegistrarAbi,
+      alchemyProvider
+    );
+    const idRegistrar = new ethers.Contract(
+      idRegistrarAddress,
+      idRegistrarAbi,
+      alchemyProvider
+    );
+
+    const fid = await idRegistrar.idOf(custodyAddress);
+    if (!fid) {
+      throw new Error("Address does not own a valid FID");
+    }
+    const exist = await keyRegistrar.keyDataOf(fid, signerAddress);
+
+    // state 1 = added, 0 = not added, 2 = removed
+    return exist?.state === 1 ? fid : null;
   }
 
   /**

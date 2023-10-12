@@ -5,12 +5,17 @@ const {
 
 class FarcasterHubService {
   async getProfileByAccount(account) {
+    let existingRecoverer;
     if (!account) return null;
-    const existingRecoverer = account.recoverers?.find?.((r) => {
-      return (
-        r.type === "FARCASTER_SIGNER" || r.type === "FARCASTER_SIGNER_EXTERNAL"
-      );
+    existingRecoverer = account.recoverers?.find?.((r) => {
+      return r.type === "FARCASTER_SIGNER";
     });
+    if (!existingRecoverer) {
+      // try finding external
+      existingRecoverer = account.recoverers?.find?.((r) => {
+        return r.type === "FARCASTER_SIGNER_EXTERNAL";
+      });
+    }
     if (!existingRecoverer) {
       return null;
     }
@@ -26,9 +31,17 @@ class FarcasterHubService {
   }
   async getFidByAccount(account) {
     if (!account) return null;
-    const existingRecoverer = account.recoverers?.find?.((r) => {
-      return r.type === "FARCASTER_SIGNER" || "FARCASTER_SIGNER_EXTERNAL";
+
+    let existingRecoverer = account.recoverers?.find?.((r) => {
+      return r.type === "FARCASTER_SIGNER";
     });
+
+    if (!existingRecoverer) {
+      // try finding external
+      existingRecoverer = account.recoverers?.find?.((r) => {
+        return r.type === "FARCASTER_SIGNER_EXTERNAL";
+      });
+    }
     if (!existingRecoverer) {
       // external account, fid is address
       await account.populate("addresses");

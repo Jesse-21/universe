@@ -51,7 +51,6 @@ const getLimit = (baseMultiplier) => {
     const key = req.header("API-KEY");
     if (!key) {
       const err = `Missing API-KEY header! Returning 0 for ${req.url}`;
-      console.error(err);
       Sentry.captureMessage(err);
       return 0;
     }
@@ -148,7 +147,10 @@ const authContext = async (req, res, next) => {
       hubClient,
     };
   } catch (e) {
-    if (!e.message.includes("jwt must be provided")) {
+    if (
+      !e.message.includes("jwt must be provided") &&
+      !e.message.includes("jwt malformed")
+    ) {
       Sentry.captureException(e);
       console.error(e);
     }
@@ -654,7 +656,12 @@ const v2PostMessage = async (req, res) => {
   } catch (error) {
     Sentry.captureException(error);
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    let e = "Internal Server Error";
+    if (error?.message?.includes("no storage")) {
+      e =
+        "No storage for this FID. Make sure you have a wallet with purchased storage unit.";
+    }
+    res.status(500).json({ error: e });
   }
 };
 
