@@ -136,8 +136,8 @@ const resolvers = {
     backpackClaimed: async (parent) => {
       return await AccountQueryService.backpackClaimed(parent);
     },
-    identities: async (parent) => {
-      return AccountQueryService.identities(parent);
+    identities: async (parent, args) => {
+      return AccountQueryService.identities(parent, args);
     },
     invite: async (parent) => {
       const invite = await AccountInvite.findOrCreate({

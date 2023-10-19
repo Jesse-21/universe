@@ -12,6 +12,7 @@ const { Account } = require("../models/Account");
 const { ApiKey } = require("../models/ApiKey");
 const axios = require("axios").default;
 const { prod } = require("../helpers/registrar");
+
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -138,7 +139,10 @@ const authContext = async (req, res, next) => {
     if (!account) {
       throw new Error(`Account id ${data.payload.id} not found`);
     }
-    const fid = await FCHubService.getFidByAccount(account);
+    const fid = await FCHubService.getFidByAccount(
+      account,
+      data.payload.isExternal
+    );
     req.context = {
       ...(req.context || {}),
       accountId: data.payload.id,

@@ -31,7 +31,7 @@ class AuthService {
    * @param {Account} account
    * @returns Promise<Account, AccountNonce, String>
    */
-  async _generateNonceAndAccessToken({ account }) {
+  async _generateNonceAndAccessToken({ account, extra = {} }) {
     if (!account) throw new Error("Account not found");
     const accountNonce = await AccountNonce.findOne({
       account: account._id,
@@ -40,7 +40,7 @@ class AuthService {
     /** step1: generate new nonce for the user */
     await accountNonce.generateNewNonce();
     /** step2: generate a jwt token and pass over to the client */
-    const accessToken = await generateNewAccessTokenFromAccount(account);
+    const accessToken = await generateNewAccessTokenFromAccount(account, extra);
     return { account, accountNonce, accessToken };
   }
 
@@ -225,8 +225,6 @@ class AuthService {
     signature,
   }) {
     try {
-      console.log(custodyAddress, signerAddress, chainId, signature);
-
       /** step1: verify the user has a verified sigature from custodyAddress */
       const { account } = await this.verifySignature({
         address: custodyAddress,
@@ -254,7 +252,9 @@ class AuthService {
         );
         if (!fid) {
           // the signer has not been added to key registry
-          throw new Error("Invalid signer");
+          throw new Error(
+            "Invalid signer! If this error persists, try logging out and logging in again."
+          );
         }
         // step4: if valid signer then add to account
         const updatedAccount = await RecovererService.addRecoverer(account, {
@@ -357,6 +357,7 @@ class AuthService {
    */
   async authenticate({ address, chainId, signature, type = "SIGNATURE", id }) {
     let account = null;
+    let isExternal = true; // non farcaster user
     if (type === "PASSKEY") {
       account = await this.authByPassKey({
         signature,
@@ -370,6 +371,7 @@ class AuthService {
         fid: id,
         chainId,
       });
+      isExternal = false;
     } else if (type === "FID") {
       account = await this.authByFid({
         address,
@@ -377,6 +379,7 @@ class AuthService {
         id,
         chainId,
       });
+      isExternal = false;
     } else {
       /** step1: authenticate with correct provider */
       // @TODO use type instead
@@ -387,17 +390,11 @@ class AuthService {
       }
     }
 
-    /** step2: 'join' default community if account does not have one */
-    if (process.env.DEFAULT_COMMUNITY_ID) {
-      await AccountCommunity.findOrCreate({
-        accountId: account._id,
-        communityId: mongoose.Types.ObjectId(process.env.DEFAULT_COMMUNITY_ID),
-        joined: true,
-      });
-    }
-
     /** step3: regenerate nonce and access token */
-    return this._generateNonceAndAccessToken({ account });
+    return this._generateNonceAndAccessToken({
+      account,
+      extra: { isExternal },
+    });
   }
 
   /**

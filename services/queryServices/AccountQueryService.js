@@ -128,11 +128,11 @@ class AccountQueryService extends AccountService {
       const FarcasterService = new FarcasterHubService();
       return {
         _id: account._id,
-        farcaster: async () => {
-          // if (account.identities?.farcaster?.username) {
-          //   return account.identities.farcaster;
-          // }
-          const profile = await FarcasterService.getProfileByAccount(account);
+        farcaster: async (args = {}, context) => {
+          const profile = await FarcasterService.getProfileByAccount(
+            account,
+            context.isExternal
+          );
           return profile;
         },
         ens: async () => {

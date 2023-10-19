@@ -93,6 +93,7 @@ const httpServer = http.createServer(app);
           return {
             ...context,
             accountId: data.payload.id,
+            isExternal: data.payload.isExternal,
           };
         } catch (e) {
           try {
@@ -132,7 +133,7 @@ const httpServer = http.createServer(app);
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage, API-KEY"
+      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage, API-KEY, signer"
     );
 
     next();
