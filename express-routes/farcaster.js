@@ -108,7 +108,7 @@ const limiter = rateLimit({
   validate: { limit: false },
 });
 const heavyLimiter = rateLimit({
-  windowMs: 1_000,
+  windowMs: 2_000,
   max: getLimit(0.3),
   message:
     "Too many requests or invalid API key! See docs.wield.co for more info.",
