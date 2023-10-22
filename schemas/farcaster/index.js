@@ -212,6 +212,32 @@ notificationsSchema.index({ fromFid: 1, notificationType: 1, deletedAt: 1 });
 notificationsSchema.index({ "payload.linkHash": 1 });
 notificationsSchema.index({ "payload.castHash": 1 });
 
+const offerSchema = new mongoose.Schema(
+  {
+    buyerAddress: { type: String, required: true },
+    fid: { type: String, required: true },
+    deadline: { type: Number, required: true },
+    buyerSignature: { type: String, required: true },
+    accepted: { type: Boolean, default: false },
+    acceptedAt: { type: Date },
+    canceledAt: { type: Date },
+  },
+  { timestamps: true }
+);
+
+const listingSchema = new mongoose.Schema(
+  {
+    ownerAddress: { type: String, required: true },
+    fid: { type: String, required: true },
+    salt: { type: Number, required: true },
+    minFee: { type: Number, required: true },
+    ownerSignature: { type: String, required: true },
+    deadline: { type: Number, required: true },
+    canceledAt: { type: Date },
+  },
+  { timestamps: true }
+);
+
 module.exports = {
   hubSubscriptionsSchema,
   messagesSchema,
@@ -224,4 +250,6 @@ module.exports = {
   fnamesSchema,
   linksSchema,
   notificationsSchema,
+  offerSchema,
+  listingSchema,
 };
