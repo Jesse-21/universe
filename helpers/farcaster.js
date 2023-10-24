@@ -1484,7 +1484,7 @@ const completeMarketplaceV1Listing = async (req, res) => {
     res.json({ listing: newListing });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: e.message });
   }
 };
 

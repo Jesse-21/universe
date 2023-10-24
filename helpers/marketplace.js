@@ -1,5 +1,6 @@
 const MarketplaceV1 = require("./abi/marketplace-v1.json");
 const MarketplaceV1Proxy = require("./abi/marketplace-v1-proxy.json");
+const { abi: idRegistrarAbi } = require("../helpers/abi/id-registrar");
 
 const dev = () => {
   return {
@@ -11,6 +12,8 @@ const dev = () => {
     CHAIN_ID: 420,
     NODE_URL: process.env.OPT_GOERLI_API_KEY,
     NODE_NETWORK: "opt-goerli",
+    ID_REGISTRY_ABI: idRegistrarAbi,
+    ID_REGISTRY_ADDRESS: "0x43Be7849F724E7CA7D56BDeCeCb277adb99b8A83",
   };
 };
 
@@ -23,6 +26,8 @@ const prod = () => {
     CHAIN_ID: 10,
     NODE_URL: process.env.OPTIMISM_NODE_URL,
     NODE_NETWORK: "opt-mainnet",
+    ID_REGISTRY_ABI: idRegistrarAbi,
+    ID_REGISTRY_ADDRESS: "0x00000000fcaf86937e41ba038b4fa40baa4b780a",
   };
 };
 

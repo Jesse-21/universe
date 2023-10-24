@@ -22,7 +22,15 @@ class MarketplaceService {
       alchemyProvider
     );
 
+    const idRegistry = new ethers.Contract(
+      config().ID_REGISTRY_ADDRESS,
+      config().ID_REGISTRY_ABI,
+      alchemyProvider
+    );
+
     this.marketplace = marketplace;
+    this.idRegistry = idRegistry;
+    this.alchemyProvider = alchemyProvider;
   }
 
   /**
@@ -61,27 +69,21 @@ class MarketplaceService {
    * Get partial marketplace listing
    * @returns {Promise<string>} - address of owner
    */
-  async createListing({ fid, ownerAddress }) {
+  async createListing({ fid }) {
     const generateSalt = () => Math.floor(Math.random() * 1000000);
     try {
       const salt = generateSalt();
-      if (!fid || !ownerAddress) {
-        throw new Error("Missing fid or ownerAddress or minfee or deadline");
+      if (!fid) {
+        throw new Error("Missing fid");
       }
       const memcached = getMemcachedClient();
       const existing = await memcached.get(`partialListing:${fid}`);
       if (existing) {
         return JSON.parse(existing.value);
       }
-      const proxyVaultAddress = await this.getProxyAddress({
-        address: ownerAddress,
-        salt,
-      });
       const partialListing = {
-        ownerAddress,
         salt,
         fid,
-        proxyVaultAddress,
       };
 
       await memcached.set(
@@ -99,8 +101,18 @@ class MarketplaceService {
    * Complete marketplace listing
    * @returns {Promise<string>} - address of owner
    */
-  async completeListing({ ownerSignature, minFee, deadline, fid }) {
+  async completeListing({
+    ownerSignature,
+    minFee,
+    deadline,
+    fid,
+    ownerAddress,
+  }) {
     try {
+      const verifyFid = await this.idRegistry.idOf(ownerAddress);
+      if (verifyFid !== fid) {
+        throw new Error("Invalid FID");
+      }
       if (!fid) {
         throw new Error("Missing fid or ownerAddress or minfee or deadline");
       }
@@ -112,11 +124,16 @@ class MarketplaceService {
       await memcached.delete(`partialListing:${fid}`);
       const parsedValue = JSON.parse(partialData.value);
 
+      const proxyVaultAddress = await this.getProxyAddress({
+        address: ownerAddress,
+        salt: parsedValue.salt,
+      });
+
       // verify signature is valid
       const isValidSignature = await this.marketplace.verifyListSig(
         fid,
-        parsedValue.ownerAddress,
-        parsedValue.proxyVaultAddress,
+        ownerAddress,
+        proxyVaultAddress,
         deadline,
         ownerSignature
       );
@@ -130,9 +147,11 @@ class MarketplaceService {
         { fid },
         {
           ...parsedValue,
+          ownerAddress,
           ownerSignature: ownerSignature,
           minFee: minFee,
           deadline: deadline,
+          proxyVaultAddress,
         },
         { upsert: true }
       );
@@ -146,6 +165,26 @@ class MarketplaceService {
     } catch (e) {
       throw new Error(e);
     }
+  }
+
+  async cancelListing({ listingId }) {
+    const listing = await Listings.findOne({ fid: listingId });
+    if (!listing) {
+      throw new Error("Listing not found");
+    }
+    const proxyContract = new ethers.Contract(
+      listing.proxyVaultAddress,
+      config().FID_MARKETPLACE_PROXY_V1_ABI,
+      this.alchemyProvider
+    );
+    const isListed = await proxyContract.isListed();
+    if (isListed) {
+      throw new Error("Listing not cancelled");
+    }
+
+    listing.canceledAt = new Date();
+    const updatedListing = await listing.save();
+    return updatedListing;
   }
 }
 
