@@ -180,6 +180,19 @@ linksSchema.index({ targetFid: 1, type: 1, deletedAt: 1 });
 linksSchema.index({ fid: 1, targetFid: 1, type: 1 });
 linksSchema.index({ fid: 1, targetFid: 1, type: 1, deletedAt: 1 });
 
+const storageSchema = new mongoose.Schema(
+  {
+    deletedAt: Date,
+    timestamp: { type: Date, required: true },
+    fid: { type: String, required: true },
+    units: { type: Number, required: true },
+    expiry: { type: Date, required: true },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const notificationsSchema = new mongoose.Schema(
   {
     // Timestamp when the notification was generated
@@ -225,6 +238,9 @@ const offerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+offerSchema.index({ buyerAddress: 1, canceledAt: 1 });
+offerSchema.index({ fid: 1, canceledAt: 1 });
+
 const listingSchema = new mongoose.Schema(
   {
     ownerAddress: { type: String, required: true },
@@ -234,9 +250,15 @@ const listingSchema = new mongoose.Schema(
     ownerSignature: { type: String, required: true },
     deadline: { type: Number, required: true },
     canceledAt: { type: Date },
+    boughtAt: { type: Date },
+    buyerAddress: { type: String },
+    proxyVaultAddress: { type: String, required: true },
   },
   { timestamps: true }
 );
+
+listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
+listingSchema.index({ fid: 1, canceledAt: 1 });
 
 module.exports = {
   hubSubscriptionsSchema,
@@ -252,4 +274,5 @@ module.exports = {
   notificationsSchema,
   offerSchema,
   listingSchema,
+  storageSchema,
 };

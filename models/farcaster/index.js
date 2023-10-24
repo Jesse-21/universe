@@ -12,6 +12,9 @@ const {
   fnamesSchema,
   linksSchema,
   notificationsSchema,
+  listingSchema,
+  offerSchema,
+  storageSchema,
 } = require("../../schemas/farcaster");
 
 class HubSubscriptionsClass {
@@ -144,10 +147,40 @@ class NotificationsClass {
   }
 }
 
+class StorageClass {
+  static ping() {
+    console.log("model: StorageClass");
+  }
+}
+storageSchema.loadClass(StorageClass);
+const Storage =
+  mongoose.models.Storage || mongoose.model("farcaster.Storage", storageSchema);
+
 notificationsSchema.loadClass(NotificationsClass);
 const Notifications =
   mongoose.models.Notifications ||
   mongoose.model("farcaster.Notifications", notificationsSchema);
+
+class ListingClass {
+  static ping() {
+    console.log("model: ListingClass");
+  }
+}
+
+listingSchema.loadClass(ListingClass);
+const Listings =
+  mongoose.models.Listings ||
+  mongoose.model("farcaster.Listings", listingSchema);
+
+class OfferClass {
+  static ping() {
+    console.log("model: OfferClass");
+  }
+}
+
+offerSchema.loadClass(OfferClass);
+const Offers =
+  mongoose.models.Offers || mongoose.model("farcaster.Offers", offerSchema);
 
 const UserDataType = {
   USER_DATA_TYPE_NONE: 0,
@@ -192,7 +225,10 @@ module.exports = {
   Fnames,
   Links,
   Notifications,
+  Listings,
+  Offers,
   UserDataType,
   ReactionType,
   MessageType,
+  Storage,
 };

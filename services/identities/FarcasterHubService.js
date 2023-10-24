@@ -1,6 +1,7 @@
 const {
   getFarcasterUserByFid,
   createOrFindExternalFarcasterUser,
+  getFarcasterFidByCustodyAddress,
 } = require("../../helpers/farcaster");
 
 class FarcasterHubService {
@@ -43,10 +44,13 @@ class FarcasterHubService {
     if (!account) return null;
     let existingRecoverer = this._getSigner(account, isExternal);
     if (!existingRecoverer) {
-      // external account, fid is address
+      // external account, fid is address or fid of custody address
       await account.populate("addresses");
       const address = account.addresses[0].address;
-      return address;
+      if (isExternal) return address;
+      // return fid of custody addresss
+      const fid = await getFarcasterFidByCustodyAddress(address);
+      return fid;
     }
 
     return existingRecoverer.id;

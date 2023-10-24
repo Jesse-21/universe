@@ -35,6 +35,8 @@ const {
   getFarcasterUserAndLinksByUsername,
   postMessage,
   searchFarcasterUserByMatch,
+  createMarketplaceV1Listing,
+  completeMarketplaceV1Listing,
 } = require("../helpers/farcaster");
 
 const {
@@ -845,6 +847,18 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+app.post(
+  "/marketplace/list/create",
+  [heavyLimiter],
+  createMarketplaceV1Listing
+);
+
+app.post(
+  "/marketplace/list/complete",
+  [heavyLimiter],
+  completeMarketplaceV1Listing
+);
 
 module.exports = {
   router: app,

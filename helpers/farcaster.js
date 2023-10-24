@@ -12,8 +12,12 @@ const {
   ReactionType,
   Notifications,
   MessageType,
+  Listings,
 } = require("../models/farcaster");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
+const {
+  Service: _MarketplaceService,
+} = require("../services/MarketplaceService");
 const { config } = require("../helpers/registrar");
 const {
   getHexTokenIdFromLabel,
@@ -339,6 +343,22 @@ const getFarcasterUserByCustodyAddress = async (custodyAddress) => {
   if (!fid) return null;
 
   return await getFarcasterUserByFid(fid.fid);
+};
+const getFarcasterFidByCustodyAddress = async (custodyAddress) => {
+  if (!custodyAddress) return null;
+  const memcached = getMemcachedClient();
+  try {
+    const data = await memcached.get(
+      `getFarcasterFidByCustodyAddress:${custodyAddress}`
+    );
+    if (data) {
+      return data.value;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  const fid = await Fids.findOne({ custodyAddress, deletedAt: null });
+  return fid?.fid || null;
 };
 
 const getFarcasterUserByConnectedAddress = async (connectedAddress) => {
@@ -1446,6 +1466,28 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
   return [data, next];
 };
 
+const createMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const partialListing = await MarketplaceService.createListing(req.body);
+    res.json({ listing: partialListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const completeMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.completeListing(req.body);
+    res.json({ listing: newListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -1473,4 +1515,7 @@ module.exports = {
   searchFarcasterUserByMatch,
   GLOBAL_SCORE_THRESHOLD,
   GLOBAL_SCORE_THRESHOLD_CHANNEL,
+  completeMarketplaceV1Listing,
+  createMarketplaceV1Listing,
+  getFarcasterFidByCustodyAddress,
 };
