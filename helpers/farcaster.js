@@ -1469,7 +1469,9 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
 const createMarketplaceV1Listing = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
-    const partialListing = await MarketplaceService.createListing(req.body);
+    const partialListing = await MarketplaceService.createListing({
+      fid: req.body.fid,
+    });
     res.json({ listing: partialListing });
   } catch (e) {
     console.error(e);
@@ -1478,6 +1480,17 @@ const createMarketplaceV1Listing = async (req, res) => {
 };
 
 const completeMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.completeListing(req.body);
+    res.json({ listing: newListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const newListing = await MarketplaceService.completeListing(req.body);

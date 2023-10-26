@@ -11,7 +11,7 @@ const dev = () => {
     FID_ADDRESS: "0x43Be7849F724E7CA7D56BDeCeCb277adb99b8A83",
     CHAIN_ID: 420,
     NODE_URL: process.env.OPT_GOERLI_API_KEY,
-    NODE_NETWORK: "opt-goerli",
+    NODE_NETWORK: 420,
     ID_REGISTRY_ABI: idRegistrarAbi,
     ID_REGISTRY_ADDRESS: "0x43Be7849F724E7CA7D56BDeCeCb277adb99b8A83",
   };

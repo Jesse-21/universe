@@ -849,16 +849,18 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
 });
 
 app.post(
-  "/marketplace/list/create",
+  "/v2/marketplace/listings/create",
   [heavyLimiter],
   createMarketplaceV1Listing
 );
 
 app.post(
-  "/marketplace/list/complete",
+  "/v2/marketplace/listings/complete",
   [heavyLimiter],
   completeMarketplaceV1Listing
 );
+
+app.get("/v2/marketplace/listings", [heavyLimiter], createMarketplaceV1Listing);
 
 module.exports = {
   router: app,
