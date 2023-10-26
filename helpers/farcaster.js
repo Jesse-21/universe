@@ -1490,11 +1490,22 @@ const completeMarketplaceV1Listing = async (req, res) => {
   }
 };
 
+const buyMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.buy(req.body);
+    res.json({ success: true, listing: newListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
-    const newListing = await MarketplaceService.completeListing(req.body);
-    res.json({ listing: newListing });
+    const [listings, next] = await MarketplaceService.getListings(req.body);
+    res.json({ listings: listings, next });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -1531,4 +1542,6 @@ module.exports = {
   completeMarketplaceV1Listing,
   createMarketplaceV1Listing,
   getFarcasterFidByCustodyAddress,
+  getMarketplaceV1Listings,
+  buyMarketplaceV1Listing,
 };

@@ -37,6 +37,8 @@ const {
   searchFarcasterUserByMatch,
   createMarketplaceV1Listing,
   completeMarketplaceV1Listing,
+  getMarketplaceV1Listings,
+  buyMarketplaceV1Listing,
 } = require("../helpers/farcaster");
 
 const {
@@ -860,7 +862,13 @@ app.post(
   completeMarketplaceV1Listing
 );
 
-app.get("/v2/marketplace/listings", [heavyLimiter], createMarketplaceV1Listing);
+app.get("/v2/marketplace/listings", [heavyLimiter], getMarketplaceV1Listings);
+
+app.post(
+  "/v2/marketplace/listings/buy",
+  [heavyLimiter],
+  buyMarketplaceV1Listing
+);
 
 module.exports = {
   router: app,

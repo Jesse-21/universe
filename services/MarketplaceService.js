@@ -33,17 +33,25 @@ class MarketplaceService {
     this.alchemyProvider = alchemyProvider;
   }
 
-  async getListings({ sort = "-fid", limit = 20, offset = 0, filters = {} }) {
+  async getListings({ sort = "-fid", limit = 20, cursor = "", filters = {} }) {
     // let matchQuery = this._buildPostFeedMatchQuery({ filters });
+    const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
 
-    const listings = await Listings.aggregate([
-      // { $match: matchQuery },
-      // sort by last created replies
-      { $sort: sort },
-      { $skip: parseInt(offset, 10) },
-      { $limit: parseInt(limit, 10) },
-    ]);
-    return listings;
+    const query = {
+      timestamp: { $lt: offset || Date.now() },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      deletedAt: null,
+    };
+
+    const listings = await Listings.find(query).sort(sort).limit(limit);
+    let next = null;
+    if (listings.length === limit) {
+      next = `${listings[listings.length - 1].timestamp.getTime()}-${
+        listings[listings.length - 1].id
+      }`;
+    }
+
+    return [listings, next];
   }
   /**
    * Get proxy marketplace address
@@ -113,88 +121,91 @@ class MarketplaceService {
    * Complete marketplace listing
    * @returns {Promise<string>} - address of owner
    */
-  async completeListing({ fid, ownerAddress, salt }) {
+  async completeListing({ fid }) {
     try {
-      if (!fid || !ownerAddress) {
-        throw new Error("Missing fid or ownerAddress");
+      if (!fid) {
+        throw new Error("Missing fid");
       }
-
-      const proxyVaultAddress = await this.getProxyAddress({
-        address: ownerAddress,
-        salt: salt,
-      });
-
-      const proxyContract = new ethers.Contract(
-        proxyVaultAddress,
-        config().FID_MARKETPLACE_PROXY_V1_ABI,
-        this.alchemyProvider
-      );
 
       // verify proxyContract is valid and listed
-      const [_fid, isListed, ownerSignature, minFee, deadline, owner] =
-        await Promise.all([
-          proxyContract.fid(),
-          proxyContract.isListed(),
-          proxyContract.ownerSignature(),
-          proxyContract.minFee(),
-          proxyContract.deadline(),
-          proxyContract.owner(),
-        ]);
+      const listing = await this.marketplace.listings(fid);
 
-      if (
-        _fid.toString() !== fid.toString() ||
-        owner.toLowerCase() !== ownerAddress.toLowerCase()
-      ) {
-        throw new Error("Invalid fid for owner address");
-      }
-      if (!isListed) {
+      if (!listing) {
         throw new Error("Fid is not listed");
       }
 
       // if listing already exists, update it
-      const newListing = await Listings.updateOne(
+      await Listings.updateOne(
         { fid },
         {
-          salt,
           fid,
-          ownerAddress,
-          ownerSignature: ownerSignature,
-          minFee: minFee,
-          deadline: deadline,
-          proxyVaultAddress,
+          ownerAddress: listing.ownerAddress,
+          ownerSignature: listing.ownerSignature,
+          minFee: listing.minFee,
+          deadline: listing.deadline,
         },
         { upsert: true }
       );
+      const updatedListing = await Listings.findOne({ fid });
 
       const memcached = getMemcachedClient();
-      await memcached.set(`Listing:${fid}`, JSON.stringify(newListing), {
+      await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing), {
         lifetime:
           // deadline - now
-          (deadline - Math.floor(Date.now() / 1000)) * 100,
+          (listing.deadline - Math.floor(Date.now() / 1000)) * 100,
       });
-      return newListing;
+      return updatedListing;
     } catch (e) {
       throw new Error(e);
     }
   }
 
-  async cancelListing({ listingId }) {
-    const listing = await Listings.findOne({ fid: listingId });
+  async cancelListing({ fid }) {
+    const listing = await Listings.findOne({ fid: fid });
     if (!listing) {
       throw new Error("Listing not found");
     }
-    const proxyContract = new ethers.Contract(
-      listing.proxyVaultAddress,
-      config().FID_MARKETPLACE_PROXY_V1_ABI,
-      this.alchemyProvider
-    );
-    const isListed = await proxyContract.isListed();
-    if (isListed) {
+    const onchainListing = await this.marketplace.listings(fid);
+
+    if (onchainListing) {
       throw new Error("Listing not cancelled");
     }
 
     listing.canceledAt = new Date();
     const updatedListing = await listing.save();
+    return updatedListing;
+  }
+
+  async buy({ txHash }) {
+    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    let updatedListing = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+
+        if (parsed.name === "Listed") {
+          const listing = await Listings.findOne({
+            fid: parsed.args.fid.toString(),
+          });
+          if (!listing) {
+            throw new Error("Listing not found");
+          }
+          listing.boughtAt = new Date();
+          listing.buyerAddress = parsed.args.buyerAddress;
+          updatedListing = await listing.save();
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+    if (!updatedListing) {
+      throw new Error("FID not bought");
+    }
     return updatedListing;
   }
 }

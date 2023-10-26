@@ -5,7 +5,7 @@ const { abi: idRegistrarAbi } = require("../helpers/abi/id-registrar");
 const dev = () => {
   return {
     WETH_ADDRESS: "0x32307adfFE088e383AFAa721b06436aDaBA47DBE",
-    FID_MARKETPLACE_V1_ADDRESS: "0x8d881b939ceb6070a9368aa6d91bc42e30697da9",
+    FID_MARKETPLACE_V1_ADDRESS: "0xab4b492301bd67b6769e8129e06a2743e975559d",
     FID_MARKETPLACE_PROXY_V1_ABI: MarketplaceV1Proxy.abi,
     FID_MARKETPLACE_V1_ABI: MarketplaceV1.abi,
     FID_ADDRESS: "0x43Be7849F724E7CA7D56BDeCeCb277adb99b8A83",
