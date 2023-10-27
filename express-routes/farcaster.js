@@ -38,6 +38,7 @@ const {
   createMarketplaceV1Listing,
   completeMarketplaceV1Listing,
   getMarketplaceV1Listings,
+  getMarketplaceV1Listing,
   buyMarketplaceV1Listing,
 } = require("../helpers/farcaster");
 
@@ -863,6 +864,7 @@ app.post(
 );
 
 app.get("/v2/marketplace/listings", [heavyLimiter], getMarketplaceV1Listings);
+app.get("/v2/marketplace/listing", [heavyLimiter], getMarketplaceV1Listing);
 
 app.post(
   "/v2/marketplace/listings/buy",

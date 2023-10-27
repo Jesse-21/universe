@@ -229,7 +229,7 @@ const offerSchema = new mongoose.Schema(
   {
     buyerAddress: { type: String, required: true },
     fid: { type: String, required: true },
-    deadline: { type: Number, required: true },
+    deadline: { type: String, required: true },
     buyerSignature: { type: String, required: true },
     accepted: { type: Boolean, default: false },
     acceptedAt: { type: Date },
@@ -245,7 +245,7 @@ const listingSchema = new mongoose.Schema(
   {
     ownerAddress: { type: String, required: true },
     fid: { type: String, required: true },
-    minFee: { type: Number, required: true },
+    minFee: { type: String, required: true },
     ownerSignature: { type: String, required: true },
     deadline: { type: Number, required: true },
     canceledAt: { type: Date },
@@ -257,6 +257,22 @@ const listingSchema = new mongoose.Schema(
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1 });
+
+const listingLogSchema = new mongoose.Schema(
+  {
+    eventType: {
+      type: String,
+      required: true,
+      enum: ["Listed", "Bought", "Canceled"],
+    }, // "Listed" or "Bought"
+    fid: { type: String, required: true },
+    from: { type: String },
+    price: {
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
 
 module.exports = {
   hubSubscriptionsSchema,
@@ -273,4 +289,5 @@ module.exports = {
   offerSchema,
   listingSchema,
   storageSchema,
+  listingLogSchema,
 };

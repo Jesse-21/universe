@@ -15,6 +15,7 @@ const {
   listingSchema,
   offerSchema,
   storageSchema,
+  listingLogSchema,
 } = require("../../schemas/farcaster");
 
 class HubSubscriptionsClass {
@@ -172,6 +173,17 @@ const Listings =
   mongoose.models.Listings ||
   mongoose.model("farcaster.Listings", listingSchema);
 
+class ListingLogsClass {
+  static ping() {
+    console.log("model: ListingLogsClass");
+  }
+}
+
+listingLogSchema.loadClass(ListingLogsClass);
+const ListingLogs =
+  mongoose.models.ListingLogs ||
+  mongoose.model("farcaster.ListingLogs", listingLogSchema);
+
 class OfferClass {
   static ping() {
     console.log("model: OfferClass");
@@ -231,4 +243,5 @@ module.exports = {
   ReactionType,
   MessageType,
   Storage,
+  ListingLogs,
 };
