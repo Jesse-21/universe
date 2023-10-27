@@ -7,7 +7,8 @@ const {
   validateAndConvertAddress,
 } = require("../helpers/validate-and-convert-address");
 const { getMemcachedClient } = require("../connectmemcached");
-const { Listings } = require("../models/farcaster");
+const { Listings, ListingLogs, Fids } = require("../models/farcaster");
+const { getFarcasterUserByFid } = require("../helpers/farcaster");
 
 class MarketplaceService {
   constructor() {
@@ -52,25 +53,36 @@ class MarketplaceService {
 
   async getListings({ sort = "-fid", limit = 20, cursor = "", filters = {} }) {
     // let matchQuery = this._buildPostFeedMatchQuery({ filters });
-    const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
-
-    const query = {
-      timestamp: { $lt: offset || Date.now() },
-      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-      canceledAt: null,
-      deadline: { $gt: Math.floor(Date.now() / 1000) },
-    };
-
-    const listings = await Listings.find(query).sort(sort).limit(limit);
-
-    let next = null;
-    if (listings.length === limit) {
-      next = `${listings[listings.length - 1].timestamp.getTime()}-${
-        listings[listings.length - 1].id
-      }`;
+    const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
+    const startsAt = parseInt(offset);
+    const fidsArr = [];
+    for (let i = startsAt; i < startsAt + limit; i++) {
+      fidsArr.push(i.toString());
     }
 
-    return [listings, next];
+    const extraData = await Promise.all(
+      fidsArr.map(async (fid) => {
+        const user = await getFarcasterUserByFid(fid);
+        const listing = await this.getListing({ fid: fid });
+        return {
+          user,
+          listing,
+        };
+      })
+    );
+    const fids = fidsArr.map((fid, index) => {
+      return {
+        fid,
+        ...extraData[index],
+      };
+    });
+
+    let next = null;
+    if (fids.length === limit) {
+      next = `${fids[fids.length - 1].fid}-${fids[fids.length - 1].id}`;
+    }
+
+    return [fids, next];
   }
   /**
    * Get proxy marketplace address
@@ -165,6 +177,12 @@ class MarketplaceService {
         },
         { upsert: true }
       );
+      await ListingLogs.create({
+        eventType: "Listed",
+        fid,
+        from: listing.owner,
+        price: listing.minFee,
+      });
       const updatedListing = await Listings.findOne({ fid });
 
       const memcached = getMemcachedClient();
@@ -189,11 +207,70 @@ class MarketplaceService {
     if (onchainListing) {
       throw new Error("Listing not cancelled");
     }
-
+    listing.fid = `Canceled-${listing.fid}`;
     listing.canceledAt = new Date();
     const updatedListing = await listing.save();
+    await ListingLogs.create({
+      eventType: "Canceled",
+      fid,
+      from: listing.owner,
+      price: listing.minFee,
+    });
     const memcached = getMemcachedClient();
-    await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing));
+    await memcached.delete(`Listing:${fid}`);
+    return updatedListing;
+  }
+
+  async list({ txHash }) {
+    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    let updatedListing = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+        const fid = parsed.args.fid.toString();
+
+        if (parsed.name === "Listed") {
+          await Listings.updateOne(
+            { fid },
+            {
+              fid,
+              ownerAddress: parsed.args.owner,
+              minFee: parsed.args.amount,
+              deadline: parsed.args.deadline,
+            },
+            { upsert: true }
+          );
+
+          const updatedListing = await Listings.findOne({ fid });
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "Listed",
+              fid: parsed.args.fid.toString(),
+              from: parsed.args.owner,
+              price: parsed.args.amount,
+            },
+            {
+              upsert: true,
+            }
+          );
+          const memcached = getMemcachedClient();
+          await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing));
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+    if (!updatedListing) {
+      throw new Error("FID not listed");
+    }
     return updatedListing;
   }
 
@@ -215,16 +292,28 @@ class MarketplaceService {
           if (!listing) {
             throw new Error("Listing not found");
           }
+          listing.fid = `Bought-${listing.fid}`;
           listing.canceledAt = new Date();
           listing.boughtAt = new Date();
           listing.buyerAddress = parsed.args.buyer;
 
           updatedListing = await listing.save();
-          const memcached = getMemcachedClient();
-          await memcached.set(
-            `Listing:${parsed.args.fid.toString()}`,
-            JSON.stringify(updatedListing)
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "Bought",
+              fid: parsed.args.fid.toString(),
+              from: parsed.args.buyer,
+              price: parsed.args.amount,
+            },
+            {
+              upsert: true,
+            }
           );
+          const memcached = getMemcachedClient();
+          await memcached.delete(`Listing:${parsed.args.fid.toString()}`);
           break;
         }
       } catch (error) {

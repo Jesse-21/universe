@@ -12,7 +12,9 @@ const { Account } = require("../models/Account");
 const { ApiKey } = require("../models/ApiKey");
 const axios = require("axios").default;
 const { prod } = require("../helpers/registrar");
-
+const {
+  Service: _MarketplaceService,
+} = require("../services/MarketplaceService");
 const {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -35,11 +37,6 @@ const {
   getFarcasterUserAndLinksByUsername,
   postMessage,
   searchFarcasterUserByMatch,
-  createMarketplaceV1Listing,
-  completeMarketplaceV1Listing,
-  getMarketplaceV1Listings,
-  getMarketplaceV1Listing,
-  buyMarketplaceV1Listing,
 } = require("../helpers/farcaster");
 
 const {
@@ -851,11 +848,50 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
   }
 });
 
-app.post(
-  "/v2/marketplace/listings/create",
-  [heavyLimiter],
-  createMarketplaceV1Listing
-);
+const completeMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.list(req.body);
+    res.json({ listing: newListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const buyMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.buy(req.body);
+    res.json({ success: true, listing: newListing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const getMarketplaceV1Listings = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const [listings, next] = await MarketplaceService.getListings(req.query);
+    console.log("listings", listings);
+    res.json({ listings: listings, next });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const getMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const listing = await MarketplaceService.getListing(req.query);
+    res.json({ listing });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
 
 app.post(
   "/v2/marketplace/listings/complete",

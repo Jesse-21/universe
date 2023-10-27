@@ -267,6 +267,7 @@ const listingLogSchema = new mongoose.Schema(
     }, // "Listed" or "Bought"
     fid: { type: String, required: true },
     from: { type: String },
+    txHash: { type: String },
     price: {
       type: String,
     },
