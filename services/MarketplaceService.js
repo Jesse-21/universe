@@ -45,45 +45,161 @@ class MarketplaceService {
     const query = {
       fid,
       canceledAt: null,
+      deadline: { $gt: Math.floor(Date.now() / 1000) },
     };
     const listing = await Listings.findOne(query);
 
     return listing;
   }
 
-  async getListings({ sort = "-fid", limit = 20, cursor = "", filters = {} }) {
-    // let matchQuery = this._buildPostFeedMatchQuery({ filters });
-    const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
-    const startsAt = parseInt(offset);
-    const fidsArr = [];
-    for (let i = startsAt; i < startsAt + limit; i++) {
-      fidsArr.push(i.toString());
-    }
+  async fetchUserData(fid) {
+    return await getFarcasterUserByFid(fid);
+  }
 
-    const extraData = await Promise.all(
+  async fetchListing(fid) {
+    return await this.getListing({ fid });
+  }
+
+  async fetchDataForFids(fidsArr) {
+    return await Promise.all(
       fidsArr.map(async (fid) => {
-        const user = await getFarcasterUserByFid(fid);
-        const listing = await this.getListing({ fid: fid });
+        const user = await this.fetchUserData(fid);
+        const listing = await this.fetchListing(fid);
         return {
+          fid,
           user,
           listing,
         };
       })
     );
-    const fids = fidsArr.map((fid, index) => {
-      return {
-        fid,
-        ...extraData[index],
-      };
-    });
+  }
+
+  async filterByUserProfile(data) {
+    return data.filter((item) => item.user);
+  }
+
+  // @TODO add filters
+  async getOnlyBuyNowListings({
+    sort = "-minFee",
+    limit = 20,
+    cursor = "",
+    filters = {},
+  }) {
+    const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
+
+    const query = {
+      timestamp: { $lt: offset || Date.now() },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+      canceledAt: null,
+      deadline: { $gt: Math.floor(Date.now() / 1000) },
+    };
+
+    const listings = await Listings.find(query).sort(sort).limit(limit);
+    let extraData = await Promise.all(
+      listings.map(async (listing) => {
+        const user = await this.fetchUserData(listing.fid);
+        return {
+          fid: listing.fid,
+          user,
+          listing,
+        };
+      })
+    );
 
     let next = null;
-    if (fids.length === limit) {
-      next = `${fids[fids.length - 1].fid}-${fids[fids.length - 1].id}`;
+    if (listings.length === limit) {
+      next = `${listings[listings.length - 1].timestamp.getTime()}-${
+        listings[listings.length - 1].id
+      }`;
     }
 
-    return [fids, next];
+    return [extraData.slice(0, limit), next];
   }
+
+  async getListings({ sort = "fid", limit = 20, cursor = "", filters = {} }) {
+    if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
+      return await this.getOnlyBuyNowListings({
+        sort,
+        limit,
+        cursor,
+        filters,
+      });
+    }
+    const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
+    let startsAt = parseInt(offset);
+
+    let fidsArr = [];
+    for (let i = startsAt; i < startsAt + limit; i++) {
+      fidsArr.push(i.toString());
+    }
+    let extraData = await this.fetchDataForFids(fidsArr);
+
+    if (filters.onlyUserProfile) {
+      extraData = this.filterByUserProfile(extraData);
+    }
+
+    // If data is insufficient, continue fetching until the limit is reached
+    while (extraData.length < limit) {
+      startsAt += limit;
+      fidsArr = [];
+      for (let i = startsAt; i < startsAt + limit; i++) {
+        fidsArr.push(i.toString());
+      }
+      const moreData = await this.fetchDataForFids(fidsArr);
+      extraData = [...extraData, ...moreData];
+
+      if (filters.onlyUserProfile) {
+        extraData = this.filterByUserProfile(extraData);
+      }
+    }
+
+    if (sort === "-fid") {
+      extraData.sort((a, b) => parseInt(b.fid) - parseInt(a.fid));
+    }
+
+    let next = null;
+    if (extraData.length === limit) {
+      next = `${extraData[extraData.length - 1].fid}-${
+        extraData[extraData.length - 1].id
+      }`;
+    }
+
+    return [extraData.slice(0, limit), next];
+  }
+
+  // async getListings({ sort = "-fid", limit = 20, cursor = "", filters = {} }) {
+  //   // let matchQuery = this._buildPostFeedMatchQuery({ filters });
+  //   const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
+  //   const startsAt = parseInt(offset);
+  //   const fidsArr = [];
+  //   for (let i = startsAt; i < startsAt + limit; i++) {
+  //     fidsArr.push(i.toString());
+  //   }
+
+  //   const extraData = await Promise.all(
+  //     fidsArr.map(async (fid) => {
+  //       const user = await getFarcasterUserByFid(fid);
+  //       const listing = await this.getListing({ fid: fid });
+  //       return {
+  //         user,
+  //         listing,
+  //       };
+  //     })
+  //   );
+  //   const fids = fidsArr.map((fid, index) => {
+  //     return {
+  //       fid,
+  //       ...extraData[index],
+  //     };
+  //   });
+
+  //   let next = null;
+  //   if (fids.length === limit) {
+  //     next = `${fids[fids.length - 1].fid}-${fids[fids.length - 1].id}`;
+  //   }
+
+  //   return [fids, next];
+  // }
   /**
    * Get proxy marketplace address
    * @returns {Promise<string>} - address of owner

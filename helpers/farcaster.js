@@ -509,6 +509,10 @@ const searchFarcasterUserByMatch = async (username, limit = 10) => {
         type: UserDataType.USER_DATA_TYPE_DISPLAY,
         deletedAt: null,
       },
+      {
+        fid: `${username}`,
+        deletedAt: null,
+      },
     ],
   }).limit(limit);
   const hash = {};

@@ -245,7 +245,7 @@ const listingSchema = new mongoose.Schema(
   {
     ownerAddress: { type: String, required: true },
     fid: { type: String, required: true },
-    minFee: { type: String, required: true },
+    minFee: { type: Number, required: true },
     ownerSignature: { type: String, required: true },
     deadline: { type: Number, required: true },
     canceledAt: { type: Date },
