@@ -819,7 +819,7 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
           return title;
         })
         .filter((title) => {
-          return title && title !== "no_metadata_refresh_cast_quest.cast";
+          return title && !title.includes("no_metadata");
         });
     } else {
       passes = []; // can shortcut

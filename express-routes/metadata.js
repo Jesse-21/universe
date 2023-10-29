@@ -158,7 +158,7 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
     });
     if (!metadata) {
       const errorData = {
-        name: `no_metadata_refresh_cast_quest.cast`,
+        name: `no_metadata_refresh_wield.cast`,
         description: `This domain does not have metadata, navigate to Wield and search your domain to refresh!`,
       };
       return res.json(errorData);
