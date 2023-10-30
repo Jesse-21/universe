@@ -3,6 +3,7 @@ const axios = require("axios").default;
 const {
   getFarcasterUserByUsername,
   getFarcasterUserByConnectedAddress,
+  getFidByCustodyAddress,
   getFarcasterUserByFid,
   getConnectedAddressForFid,
 } = require("../../helpers/farcaster");
@@ -24,14 +25,33 @@ class FarcasterServiceV2 {
       external: profile.external,
     };
   }
-  async getProfileByAddress(address) {
+  async getProfilesByAddress(address) {
+    const cleanProfile = (farcaster) => ({
+      ...this._cleanProfile(farcaster),
+      address,
+    });
+
+    let profiles = [];
+
     let farcaster = await getFarcasterUserByConnectedAddress(address);
-    if (!farcaster) {
-      farcaster = await getFarcasterUserByFid(address);
+    if (farcaster) {
+      profiles.push(cleanProfile(farcaster));
     }
-    if (!farcaster) return null;
-    return { ...this._cleanProfile(farcaster), address };
+    farcaster = await getFarcasterUserByFid(address);
+    if (farcaster) {
+      profiles.push(cleanProfile(farcaster));
+    }
+    let fid = await getFidByCustodyAddress(address);
+    if (fid) {
+      farcaster = await getFarcasterUserByFid(fid);
+      if (farcaster) {
+        profiles.push(cleanProfile(farcaster));
+      }
+    }
+
+    return profiles;
   }
+
   async getProfileByUsername(username) {
     const farcaster = await getFarcasterUserByUsername(username);
     if (!farcaster) return null;

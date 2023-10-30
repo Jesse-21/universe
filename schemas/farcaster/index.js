@@ -103,6 +103,7 @@ const signersSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+signersSchema.index({ fid: 1, signer: 1 });
 
 const verificationsSchema = new mongoose.Schema(
   {
