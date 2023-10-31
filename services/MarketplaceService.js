@@ -125,20 +125,23 @@ class MarketplaceService {
         filters,
       });
     }
-    const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
+    const [offset, lastId] = cursor ? cursor.split("-") : ["1", null];
     let startsAt = parseInt(offset);
+    let endAt = startsAt + parseInt(limit);
 
     let fidsArr = [];
-    for (let i = startsAt; i < startsAt + limit; i++) {
+    for (let i = startsAt; i < endAt; i++) {
       fidsArr.push(i.toString());
     }
+    console.log("startsAt", startsAt, "fidsArr", fidsArr, "limit", limit);
     let extraData = await this.fetchDataForFids(fidsArr);
 
     if (filters.onlyUserProfile) {
       extraData = this.filterByUserProfile(extraData);
     }
+    console.log(extraData.length);
 
-    // If data is insufficient, continue fetching until the limit is reached
+    // // If data is insufficient, continue fetching until the limit is reached
     while (extraData.length < limit) {
       startsAt += limit;
       fidsArr = [];
@@ -158,11 +161,13 @@ class MarketplaceService {
     }
 
     let next = null;
-    if (extraData.length === limit) {
-      next = `${extraData[extraData.length - 1].fid}-${
-        extraData[extraData.length - 1].id
-      }`;
+    if (extraData.length >= limit) {
+      const lastFid = ethers.BigNumber.from(
+        extraData[extraData.length - 1].fid
+      );
+      next = `${lastFid.add(1).toString()}-${lastFid.add(1).toString()}`;
     }
+    console.log(next);
 
     return [extraData.slice(0, limit), next];
   }

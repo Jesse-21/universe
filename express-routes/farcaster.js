@@ -874,7 +874,6 @@ const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const [listings, next] = await MarketplaceService.getListings(req.query);
-    console.log("listings", listings);
     res.json({ listings: listings, next });
   } catch (e) {
     console.error(e);
