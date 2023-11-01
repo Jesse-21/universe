@@ -89,6 +89,7 @@ const reactionsSchema = new mongoose.Schema(
 reactionsSchema.index({ targetHash: 1, deletedAt: 1 });
 reactionsSchema.index({ targetHash: 1, reactionType: 1, deletedAt: 1 });
 reactionsSchema.index({ targetFid: 1, reactionType: 1, deletedAt: 1 });
+reactionsSchema.index({ targetFid: 1, fid: 1, reactionType: 1, deletedAt: 1 });
 
 const signersSchema = new mongoose.Schema(
   {
