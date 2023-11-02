@@ -8,7 +8,10 @@ const {
 } = require("../helpers/validate-and-convert-address");
 const { getMemcachedClient } = require("../connectmemcached");
 const { Listings, ListingLogs, Fids } = require("../models/farcaster");
-const { getFarcasterUserByFid } = require("../helpers/farcaster");
+const {
+  getFarcasterUserByFid,
+  searchFarcasterUserByMatch,
+} = require("../helpers/farcaster");
 
 class MarketplaceService {
   constructor() {
@@ -94,7 +97,7 @@ class MarketplaceService {
       deadline: { $gt: Math.floor(Date.now() / 1000) },
     };
 
-    const listings = await Listings.find(query).sort(sort).limit(limit);
+    const listings = await Listings.find(query).limit(limit).sort(sort);
     let extraData = await Promise.all(
       listings.map(async (listing) => {
         const user = await this.fetchUserData(listing.fid);
@@ -119,6 +122,32 @@ class MarketplaceService {
     return await Fids.countDocuments();
   }
 
+  async searchListings({
+    sort = "fid",
+    limit = 20,
+    cursor = "",
+    filters = {},
+  }) {
+    // @TODO add sort
+    const users = await searchFarcasterUserByMatch(
+      filters.query,
+      limit,
+      "value"
+    );
+
+    const extraData = await Promise.all(
+      users.map(async (user) => {
+        const listing = await this.fetchListing(user.fid);
+        return {
+          fid: user.fid,
+          user,
+          listing,
+        };
+      })
+    );
+    return [extraData, null];
+  }
+
   async getListingsDsc({
     sort = "fid",
     limit = 20,
@@ -138,25 +167,6 @@ class MarketplaceService {
 
     let extraData = await this.fetchDataForFids(fidsArr);
 
-    if (filters.onlyUserProfile) {
-      extraData = this.filterByUserProfile(extraData);
-    }
-
-    // // If data is insufficient, continue fetching until the limit is reached
-    while (extraData.length < limit) {
-      startsAt += limit;
-      fidsArr = [];
-      for (let i = startsAt; i < startsAt + limit; i++) {
-        fidsArr.push(i.toString());
-      }
-      const moreData = await this.fetchDataForFids(fidsArr);
-      extraData = [...extraData, ...moreData];
-
-      if (filters.onlyUserProfile) {
-        extraData = this.filterByUserProfile(extraData);
-      }
-    }
-
     let next = null;
     if (extraData.length >= limit) {
       const lastFid = ethers.BigNumber.from(
@@ -169,7 +179,15 @@ class MarketplaceService {
   }
 
   async getListings({ sort = "fid", limit = 20, cursor = "", filters = {} }) {
-    if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
+    if (filters.query) {
+      // filter by searching users
+      return await this.searchListings({
+        sort,
+        limit,
+        cursor,
+        filters,
+      });
+    } else if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
       return await this.getOnlyBuyNowListings({
         sort,
         limit,
@@ -194,25 +212,6 @@ class MarketplaceService {
     }
 
     let extraData = await this.fetchDataForFids(fidsArr);
-
-    if (filters.onlyUserProfile) {
-      extraData = this.filterByUserProfile(extraData);
-    }
-
-    // // If data is insufficient, continue fetching until the limit is reached
-    while (extraData.length < limit) {
-      startsAt += limit;
-      fidsArr = [];
-      for (let i = startsAt; i < startsAt + limit; i++) {
-        fidsArr.push(i.toString());
-      }
-      const moreData = await this.fetchDataForFids(fidsArr);
-      extraData = [...extraData, ...moreData];
-
-      if (filters.onlyUserProfile) {
-        extraData = this.filterByUserProfile(extraData);
-      }
-    }
 
     let next = null;
     if (extraData.length >= limit) {

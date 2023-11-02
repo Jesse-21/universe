@@ -259,6 +259,7 @@ const listingSchema = new mongoose.Schema(
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1 });
+listingSchema.index({ canceledAt: 1, timestamp: 1, deadline: 1 });
 
 const listingLogSchema = new mongoose.Schema(
   {

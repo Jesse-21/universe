@@ -873,7 +873,10 @@ const buyMarketplaceV1Listing = async (req, res) => {
 const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
-    const [listings, next] = await MarketplaceService.getListings(req.query);
+    const [listings, next] = await MarketplaceService.getListings({
+      ...req.query,
+      filters: JSON.parse(req.query.filters || "{}"),
+    });
     res.json({ listings: listings, next });
   } catch (e) {
     console.error(e);
