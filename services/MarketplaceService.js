@@ -115,31 +115,32 @@ class MarketplaceService {
 
     return [extraData.slice(0, limit), next];
   }
+  async latestFid() {
+    return await Fids.countDocuments();
+  }
 
-  async getListings({ sort = "fid", limit = 20, cursor = "", filters = {} }) {
-    if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
-      return await this.getOnlyBuyNowListings({
-        sort,
-        limit,
-        cursor,
-        filters,
-      });
-    }
-    const [offset, lastId] = cursor ? cursor.split("-") : ["1", null];
+  async getListingsDsc({
+    sort = "fid",
+    limit = 20,
+    cursor = "",
+    filters = {},
+  }) {
+    const [offset, lastId] = cursor
+      ? cursor.split("-")
+      : [await this.latestFid(), null];
     let startsAt = parseInt(offset);
-    let endAt = startsAt + parseInt(limit);
+    let endAt = startsAt - parseInt(limit);
 
     let fidsArr = [];
-    for (let i = startsAt; i < endAt; i++) {
+    for (let i = startsAt; i > endAt; i--) {
       fidsArr.push(i.toString());
     }
-    console.log("startsAt", startsAt, "fidsArr", fidsArr, "limit", limit);
+
     let extraData = await this.fetchDataForFids(fidsArr);
 
     if (filters.onlyUserProfile) {
       extraData = this.filterByUserProfile(extraData);
     }
-    console.log(extraData.length);
 
     // // If data is insufficient, continue fetching until the limit is reached
     while (extraData.length < limit) {
@@ -156,8 +157,61 @@ class MarketplaceService {
       }
     }
 
-    if (sort === "-fid") {
-      extraData.sort((a, b) => parseInt(b.fid) - parseInt(a.fid));
+    let next = null;
+    if (extraData.length >= limit) {
+      const lastFid = ethers.BigNumber.from(
+        extraData[extraData.length - 1].fid
+      );
+      next = `${lastFid.sub(1).toString()}-${lastFid.sub(1).toString()}`;
+    }
+
+    return [extraData.slice(0, limit), next];
+  }
+
+  async getListings({ sort = "fid", limit = 20, cursor = "", filters = {} }) {
+    if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
+      return await this.getOnlyBuyNowListings({
+        sort,
+        limit,
+        cursor,
+        filters,
+      });
+    } else if (sort === "-fid") {
+      return await this.getListingsDsc({
+        sort,
+        limit,
+        cursor,
+        filters,
+      });
+    }
+    const [offset, lastId] = cursor ? cursor.split("-") : ["1", null];
+    let startsAt = parseInt(offset);
+    let endAt = startsAt + parseInt(limit);
+
+    let fidsArr = [];
+    for (let i = startsAt; i < endAt; i++) {
+      fidsArr.push(i.toString());
+    }
+
+    let extraData = await this.fetchDataForFids(fidsArr);
+
+    if (filters.onlyUserProfile) {
+      extraData = this.filterByUserProfile(extraData);
+    }
+
+    // // If data is insufficient, continue fetching until the limit is reached
+    while (extraData.length < limit) {
+      startsAt += limit;
+      fidsArr = [];
+      for (let i = startsAt; i < startsAt + limit; i++) {
+        fidsArr.push(i.toString());
+      }
+      const moreData = await this.fetchDataForFids(fidsArr);
+      extraData = [...extraData, ...moreData];
+
+      if (filters.onlyUserProfile) {
+        extraData = this.filterByUserProfile(extraData);
+      }
     }
 
     let next = null;
@@ -167,7 +221,6 @@ class MarketplaceService {
       );
       next = `${lastFid.add(1).toString()}-${lastFid.add(1).toString()}`;
     }
-    console.log(next);
 
     return [extraData.slice(0, limit), next];
   }
