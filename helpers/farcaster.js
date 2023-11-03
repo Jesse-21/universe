@@ -481,7 +481,11 @@ const getFidByCustodyAddress = async (custodyAddress) => {
   return fid.fid;
 };
 
-const searchFarcasterUserByMatch = async (username, limit = 10) => {
+const searchFarcasterUserByMatch = async (
+  username,
+  limit = 10,
+  sort = "fid"
+) => {
   if (!username) return [];
   // convert to hex with 0x prefix
   const partialHexUsername =
@@ -514,7 +518,9 @@ const searchFarcasterUserByMatch = async (username, limit = 10) => {
         deletedAt: null,
       },
     ],
-  }).limit(limit);
+  })
+    .limit(limit)
+    .sort(sort);
   const hash = {};
 
   const fids = users

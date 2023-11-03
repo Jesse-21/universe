@@ -246,9 +246,10 @@ offerSchema.index({ fid: 1, canceledAt: 1 });
 const listingSchema = new mongoose.Schema(
   {
     ownerAddress: { type: String, required: true },
-    fid: { type: String, required: true },
-    minFee: { type: Number, required: true },
-    ownerSignature: { type: String, required: true },
+    fid: { type: Number, required: true },
+    minFee: { type: String, required: true },
+    // minFee translated to ETH, for easy sorting
+    ethPrice: { type: Number },
     deadline: { type: Number, required: true },
     canceledAt: { type: Date },
     boughtAt: { type: Date },
@@ -258,8 +259,20 @@ const listingSchema = new mongoose.Schema(
 );
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
-listingSchema.index({ fid: 1, canceledAt: 1 });
+listingSchema.index({ id: 1, canceledAt: 1 });
 listingSchema.index({ canceledAt: 1, timestamp: 1, deadline: 1 });
+
+listingSchema.post("find", function (docs) {
+  for (let doc of docs) {
+    doc.minFee = doc.minFee.replace(/^0+/, ""); // This will remove all leading zeros
+  }
+});
+
+listingSchema.post("findOne", function (doc) {
+  if (doc) {
+    doc.minFee = doc.minFee.replace(/^0+/, ""); // This will remove all leading zeros
+  }
+});
 
 const listingLogSchema = new mongoose.Schema(
   {
@@ -268,7 +281,7 @@ const listingLogSchema = new mongoose.Schema(
       required: true,
       enum: ["Listed", "Bought", "Canceled"],
     }, // "Listed" or "Bought"
-    fid: { type: String, required: true },
+    fid: { type: Number, required: true },
     from: { type: String },
     txHash: { type: String },
     price: {

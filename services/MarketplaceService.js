@@ -37,6 +37,15 @@ class MarketplaceService {
     this.alchemyProvider = alchemyProvider;
   }
 
+  // pad number with zeros to 32 bytes for easy sorting in mongodb
+  _padWithZeros(numberString) {
+    const maxLength = 32;
+    while (numberString.length < maxLength) {
+      numberString = "0" + numberString;
+    }
+    return numberString;
+  }
+
   async getListing({ fid }) {
     const memcached = getMemcachedClient();
     const cached = await memcached.get({
@@ -128,7 +137,7 @@ class MarketplaceService {
     cursor = "",
     filters = {},
   }) {
-    // @TODO add sort
+    // @TODO add sort and cursor
     const users = await searchFarcasterUserByMatch(
       filters.query,
       limit,
@@ -321,55 +330,6 @@ class MarketplaceService {
     }
   }
 
-  /**
-   * Complete marketplace listing
-   * @returns {Promise<string>} - address of owner
-   */
-  async completeListing({ fid }) {
-    try {
-      if (!fid) {
-        throw new Error("Missing fid");
-      }
-
-      // verify proxyContract is valid and listed
-      const listing = await this.marketplace.listings(fid);
-
-      if (!listing) {
-        throw new Error("Fid is not listed");
-      }
-
-      // if listing already exists, update it
-      await Listings.updateOne(
-        { fid },
-        {
-          fid,
-          ownerAddress: listing.owner,
-          ownerSignature: listing.ownerSignature,
-          minFee: listing.minFee,
-          deadline: listing.deadline,
-        },
-        { upsert: true }
-      );
-      await ListingLogs.create({
-        eventType: "Listed",
-        fid,
-        from: listing.owner,
-        price: listing.minFee,
-      });
-      const updatedListing = await Listings.findOne({ fid });
-
-      const memcached = getMemcachedClient();
-      await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing), {
-        lifetime:
-          // deadline - now
-          (listing.deadline - Math.floor(Date.now() / 1000)) * 100,
-      });
-      return updatedListing;
-    } catch (e) {
-      throw new Error(e);
-    }
-  }
-
   async cancelListing({ fid }) {
     const listing = await Listings.findOne({ fid: fid });
     if (!listing) {
@@ -404,7 +364,7 @@ class MarketplaceService {
     for (let log of receipt.logs) {
       try {
         const parsed = eventInterface.parseLog(log);
-        const fid = parsed.args.fid.toString();
+        const fid = parsed.args.fid.toNumber();
 
         if (parsed.name === "Listed") {
           await Listings.updateOne(
@@ -412,27 +372,28 @@ class MarketplaceService {
             {
               fid,
               ownerAddress: parsed.args.owner,
-              minFee: parsed.args.amount,
+              minFee: this._padWithZeros(parsed.args.amount.toString()),
               deadline: parsed.args.deadline,
             },
             { upsert: true }
           );
 
-          const updatedListing = await Listings.findOne({ fid });
+          updatedListing = await Listings.findOne({ fid });
           await ListingLogs.updateOne(
             {
               txHash,
             },
             {
               eventType: "Listed",
-              fid: parsed.args.fid.toString(),
+              fid: parsed.args.fid,
               from: parsed.args.owner,
-              price: parsed.args.amount,
+              price: this._padWithZeros(parsed.args.amount.toString()),
             },
             {
               upsert: true,
             }
           );
+
           const memcached = getMemcachedClient();
           await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing));
           break;
@@ -460,7 +421,7 @@ class MarketplaceService {
 
         if (parsed.name === "Bought") {
           const listing = await Listings.findOne({
-            fid: parsed.args.fid.toString(),
+            fid: parsed.args.fid,
           });
           if (!listing) {
             throw new Error("Listing not found");
@@ -477,16 +438,16 @@ class MarketplaceService {
             },
             {
               eventType: "Bought",
-              fid: parsed.args.fid.toString(),
+              fid: parsed.args.fid,
               from: parsed.args.buyer,
-              price: parsed.args.amount,
+              price: this._padWithZeros(parsed.args.amount.toString()),
             },
             {
               upsert: true,
             }
           );
           const memcached = getMemcachedClient();
-          await memcached.delete(`Listing:${parsed.args.fid.toString()}`);
+          await memcached.delete(`Listing:${parsed.args.fid}`);
           break;
         }
       } catch (error) {
