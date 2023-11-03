@@ -911,7 +911,7 @@ const getFarcasterCasts = async ({
   cursor,
   context,
   explore = false,
-  filters,
+  filters = {},
 }) => {
   const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
   const memcached = getMemcachedClient();
@@ -922,9 +922,9 @@ const getFarcasterCasts = async ({
     deletedAt: null,
   };
 
-  if (filters.noReplies) {
+  if (filters?.noReplies) {
     query.parentHash = null;
-  } else if (filters.repliesOnly) {
+  } else if (filters?.repliesOnly) {
     query.parentHash = { $ne: null };
   }
 
