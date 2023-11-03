@@ -278,6 +278,7 @@ app.get("/v2/all-casts-in-thread", [authContext, limiter], async (req, res) => {
 app.get("/v2/casts", [authContext, limiter], async (req, res) => {
   try {
     const fid = req.query.fid;
+    const filters = JSON.parse(req.query.filters || null);
     const parentChain = req.query.parentChain;
     const limit = Math.min(req.query.limit || 10, 100);
     const cursor = req.query.cursor || null;
@@ -296,6 +297,7 @@ app.get("/v2/casts", [authContext, limiter], async (req, res) => {
       cursor,
       context: req.context,
       explore,
+      filters,
     });
 
     return res.json({
