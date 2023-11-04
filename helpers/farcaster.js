@@ -484,7 +484,7 @@ const getFidByCustodyAddress = async (custodyAddress) => {
 const searchFarcasterUserByMatch = async (
   username,
   limit = 10,
-  sort = "fid"
+  sort = "value"
 ) => {
   if (!username) return [];
   // convert to hex with 0x prefix

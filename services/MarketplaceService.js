@@ -1,5 +1,5 @@
 const ethers = require("ethers");
-
+const axios = require("axios");
 const Sentry = require("@sentry/node");
 const { getProvider } = require("../helpers/alchemy-provider");
 const { config } = require("../helpers/marketplace");
@@ -37,6 +37,48 @@ class MarketplaceService {
     this.alchemyProvider = alchemyProvider;
   }
 
+  async _ethToUsd(eth) {
+    try {
+      const memcached = getMemcachedClient();
+      try {
+        const cachedEth = await memcached.get({
+          key: `MarketplaceService_ethToUsd`,
+        });
+        if (cachedEth) {
+          return ethers.BigNumber.from(cachedEth).mul(eth).toString();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      const url = `
+    https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${process.env.ETHERSCAN_API_KEY}`;
+
+      const response = await axios.get(url);
+      const data = response.data;
+      const ethPrice = data.result?.ethusd;
+      if (!ethPrice) {
+        return "0";
+      }
+      try {
+        await memcached.set(
+          `MarketplaceService_ethToUsd`,
+          parseInt(ethPrice).toString(),
+          {
+            lifetime: 60, // 60s
+          }
+        );
+      } catch (e) {
+        console.error(e);
+      }
+
+      return ethers.BigNumber.from(parseInt(ethPrice)).mul(eth).toString();
+    } catch (e) {
+      console.error(e);
+      Sentry.captureException(e);
+      return "0";
+    }
+  }
+
   // pad number with zeros to 32 bytes for easy sorting in mongodb
   _padWithZeros(numberString) {
     const maxLength = 32;
@@ -51,17 +93,29 @@ class MarketplaceService {
     const cached = await memcached.get({
       key: `Listing:${fid}`,
     });
+    let listing;
     if (cached) {
-      return JSON.parse(cached.value);
+      listing = JSON.parse(cached.value);
+    } else {
+      const query = {
+        fid,
+        canceledAt: null,
+        deadline: { $gt: Math.floor(Date.now() / 1000) },
+      };
+      listing = await Listings.findOne(query);
+      listing = listing ? listing._doc : null;
     }
-    const query = {
-      fid,
-      canceledAt: null,
-      deadline: { $gt: Math.floor(Date.now() / 1000) },
-    };
-    const listing = await Listings.findOne(query);
+    if (!listing) return null;
 
-    return listing;
+    const user = await this.fetchUserData(fid);
+    const usdWei = await this._ethToUsd(listing.minFee);
+    const usd = ethers.utils.formatEther(usdWei);
+
+    return {
+      ...listing,
+      usd,
+      user,
+    };
   }
 
   async fetchUserData(fid) {
@@ -233,39 +287,6 @@ class MarketplaceService {
     return [extraData.slice(0, limit), next];
   }
 
-  // async getListings({ sort = "-fid", limit = 20, cursor = "", filters = {} }) {
-  //   // let matchQuery = this._buildPostFeedMatchQuery({ filters });
-  //   const [offset, lastId] = cursor ? cursor.split("-") : ["0", null];
-  //   const startsAt = parseInt(offset);
-  //   const fidsArr = [];
-  //   for (let i = startsAt; i < startsAt + limit; i++) {
-  //     fidsArr.push(i.toString());
-  //   }
-
-  //   const extraData = await Promise.all(
-  //     fidsArr.map(async (fid) => {
-  //       const user = await getFarcasterUserByFid(fid);
-  //       const listing = await this.getListing({ fid: fid });
-  //       return {
-  //         user,
-  //         listing,
-  //       };
-  //     })
-  //   );
-  //   const fids = fidsArr.map((fid, index) => {
-  //     return {
-  //       fid,
-  //       ...extraData[index],
-  //     };
-  //   });
-
-  //   let next = null;
-  //   if (fids.length === limit) {
-  //     next = `${fids[fids.length - 1].fid}-${fids[fids.length - 1].id}`;
-  //   }
-
-  //   return [fids, next];
-  // }
   /**
    * Get proxy marketplace address
    * @returns {Promise<string>} - address of owner
@@ -447,7 +468,10 @@ class MarketplaceService {
             }
           );
           const memcached = getMemcachedClient();
-          await memcached.delete(`Listing:${parsed.args.fid}`);
+          await memcached.set(
+            `Listing:${parsed.args.fid}`,
+            JSON.stringify(updatedListing)
+          );
           break;
         }
       } catch (error) {
