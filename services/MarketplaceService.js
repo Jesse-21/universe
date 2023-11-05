@@ -351,27 +351,52 @@ class MarketplaceService {
     }
   }
 
-  async cancelListing({ fid }) {
-    const listing = await Listings.findOne({ fid: fid });
-    if (!listing) {
-      throw new Error("Listing not found");
-    }
-    const onchainListing = await this.marketplace.listings(fid);
+  async cancelListing({ txHash }) {
+    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+    let updatedListing = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+        const fid = parsed.args.fid.toNumber();
 
-    if (onchainListing) {
-      throw new Error("Listing not cancelled");
+        if (parsed.name === "Canceled") {
+          await Listings.updateOne(
+            { fid },
+            {
+              fid: `Canceled-${fid}`,
+              canceledAt: new Date(),
+            }
+          );
+
+          updatedListing = await Listings.findOne({ fid });
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "Canceled",
+              fid: parsed.args.fid,
+            },
+            {
+              upsert: true,
+            }
+          );
+
+          const memcached = getMemcachedClient();
+          await memcached.delete(`Listing:${fid}`);
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+        throw new Error("Cannot cancel listing, try again later");
+      }
     }
-    listing.fid = `Canceled-${listing.fid}`;
-    listing.canceledAt = new Date();
-    const updatedListing = await listing.save();
-    await ListingLogs.create({
-      eventType: "Canceled",
-      fid,
-      from: listing.owner,
-      price: listing.minFee,
-    });
-    const memcached = getMemcachedClient();
-    await memcached.delete(`Listing:${fid}`);
+    if (!updatedListing) {
+      throw new Error("FID not listed");
+    }
     return updatedListing;
   }
 

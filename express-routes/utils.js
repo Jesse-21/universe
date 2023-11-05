@@ -1,6 +1,9 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
 const { Service: _CacheService } = require("../services/cache/CacheService");
+const {
+  Service: _MarketplaceService,
+} = require("../services/MarketplaceService");
 const { Account } = require("../models/Account");
 const { AccountInvite } = require("../models/AccountInvite");
 const { verifyTwitter } = require("../helpers/verify-social");
@@ -26,7 +29,8 @@ app.get("/eth-to-usd", async (req, res) => {
     });
 
   try {
-    const usd = 0;
+    const MarketplaceService = new _MarketplaceService();
+    const usd = await MarketplaceService._ethToUsd(eth);
 
     return res.json({
       code: 200,
