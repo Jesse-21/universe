@@ -8,7 +8,7 @@ module.exports = {
       client = new MemcacheClient({
         server: {
           server: process.env.MEMCACHED_URL || "localhost:11211",
-          maxConnections: 100,
+          maxConnections: 10,
         },
       });
     }
