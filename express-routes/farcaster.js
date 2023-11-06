@@ -651,9 +651,6 @@ const v2PostMessage = async (req, res) => {
       externalFid,
       messageJSON: req.body.message,
       hubClient: req.context.hubClient,
-      shouldClearCache:
-        process.env.NODE_ENV !== "production" && process.env.CLEAR_CACHE,
-      memcachedClient: getMemcachedClient(),
       errorHandler: (error) => {
         Sentry.captureException(error);
         console.error(error);

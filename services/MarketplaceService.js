@@ -90,9 +90,14 @@ class MarketplaceService {
 
   async getListing({ fid }) {
     const memcached = getMemcachedClient();
-    const cached = await memcached.get({
-      key: `Listing:${fid}`,
-    });
+    let cached;
+    try {
+      cached = await memcached.get({
+        key: `Listing:${fid}`,
+      });
+    } catch (e) {
+      console.error(e);
+    }
     let listing;
     if (cached) {
       listing = JSON.parse(cached.value);
@@ -299,11 +304,15 @@ class MarketplaceService {
     try {
       const memcached = getMemcachedClient();
       let proxyAddress;
-      const cached = await memcached.get({
-        key: `MarketplaceService:getProxyAddress:${address}:${salt}`,
-      });
-      if (cached) {
-        proxyAddress = JSON.parse(cached.value);
+      try {
+        const cached = await memcached.get({
+          key: `MarketplaceService:getProxyAddress:${address}:${salt}`,
+        });
+        if (cached) {
+          proxyAddress = JSON.parse(cached.value);
+        }
+      } catch (e) {
+        console.error(e);
       }
       if (proxyAddress) return proxyAddress;
       proxyAddress = await this.marketplace.getAddress(
@@ -386,7 +395,11 @@ class MarketplaceService {
           );
 
           const memcached = getMemcachedClient();
-          await memcached.delete(`Listing:${fid}`);
+          try {
+            await memcached.delete(`Listing:${fid}`);
+          } catch (e) {
+            console.error(e);
+          }
           break;
         }
       } catch (error) {
@@ -452,7 +465,15 @@ class MarketplaceService {
           );
 
           const memcached = getMemcachedClient();
-          await memcached.set(`Listing:${fid}`, JSON.stringify(updatedListing));
+          try {
+            await memcached.set(
+              `Listing:${fid}`,
+              JSON.stringify(updatedListing)
+            );
+          } catch (e) {
+            console.error(e);
+          }
+
           break;
         }
       } catch (error) {
@@ -515,10 +536,14 @@ class MarketplaceService {
             }
           );
           const memcached = getMemcachedClient();
-          await memcached.set(
-            `Listing:${parsed.args.fid}`,
-            JSON.stringify(updatedListing)
-          );
+          try {
+            await memcached.set(
+              `Listing:${parsed.args.fid}`,
+              JSON.stringify(updatedListing)
+            );
+          } catch (e) {
+            console.error(e);
+          }
           break;
         }
       } catch (error) {

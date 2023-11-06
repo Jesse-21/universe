@@ -42,8 +42,6 @@ const postMessage = async ({
   externalFid,
   messageJSON,
   hubClient,
-  shouldClearCache = false,
-  memcachedClient,
   errorHandler = (error) => console.error(error),
   bodyOverrides,
 }) => {
@@ -147,11 +145,6 @@ const postMessage = async ({
       } else {
         throw e;
       }
-    }
-
-    if (shouldClearCache) {
-      await memcachedClient.cmd("flush_all", { noreply: true });
-      console.log("Cleared memcached due to CLEAR_CACHE");
     }
 
     return { result: messageData, source: "v2" };

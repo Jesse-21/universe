@@ -6,7 +6,10 @@ module.exports = {
   getMemcachedClient: () => {
     if (!client) {
       client = new MemcacheClient({
-        server: process.env.MEMCACHED_URL || "localhost:11211",
+        server: {
+          server: process.env.MEMCACHED_URL || "localhost:11211",
+          maxConnections: 5,
+        },
       });
     }
 
