@@ -1,18 +1,13 @@
 const { MemcacheClient } = require("memcache-client");
 
-let client;
-
 module.exports = {
   getMemcachedClient: () => {
-    if (!client) {
-      client = new MemcacheClient({
-        server: {
-          server: process.env.MEMCACHED_URL || "localhost:11211",
-          maxConnections: 5,
-        },
-      });
-    }
-
-    return client;
+    // always return a new client since this client is unstable when used in multiple threads
+    return new MemcacheClient({
+      server: {
+        server: process.env.MEMCACHED_URL || "localhost:11211",
+        maxConnections: 1,
+      },
+    });
   },
 };
