@@ -100,6 +100,7 @@ class MarketplaceService {
       const query = {
         fid,
         canceledAt: null,
+        boughtAt: null,
         deadline: { $gt: Math.floor(Date.now() / 1000) },
       };
       listing = await Listings.findOne(query);
@@ -157,6 +158,7 @@ class MarketplaceService {
       timestamp: { $lt: offset || Date.now() },
       id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
       canceledAt: null,
+      boughtAt: null,
       deadline: { $gt: Math.floor(Date.now() / 1000) },
     };
 
@@ -319,40 +321,31 @@ class MarketplaceService {
     }
   }
 
-  /**
-   * Get partial marketplace listing
-   * @returns {Promise<string>} - address of owner
-   */
-  async createListing({ fid }) {
-    const generateSalt = () => Math.floor(Math.random() * 1000000);
-    try {
-      const salt = generateSalt();
-      if (!fid) {
-        throw new Error("Missing fid");
-      }
-      const memcached = getMemcachedClient();
-      const existing = await memcached.get(`partialListing:${fid}`);
-      if (existing) {
-        return JSON.parse(existing.value);
-      }
-      const partialListing = {
-        salt,
-        fid,
-      };
+  async getReceipt({ txHash }) {
+    let tries = 0;
+    let receipt;
 
-      await memcached.set(
-        `partialListing:${fid}`,
-        JSON.stringify(partialListing),
-        { lifetime: 60 * 60 } // 1 hour
+    while (tries < 120) {
+      tries += 1;
+      await new Promise((r) => setTimeout(r, 1000));
+
+      receipt = await this.alchemyProvider.getTransactionReceipt(
+        txHash.toString()
       );
-      return partialListing;
-    } catch (e) {
-      throw new Error(e);
+      if (receipt) break;
     }
+    if (tries >= 60) throw new Error("Timeout");
+    return receipt;
   }
 
   async cancelListing({ txHash }) {
-    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    if (!txHash) {
+      throw new Error("Missing txHash");
+    }
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -362,16 +355,23 @@ class MarketplaceService {
         const parsed = eventInterface.parseLog(log);
         const fid = parsed.args.fid.toNumber();
 
+        const query = {
+          fid,
+          boughtAt: null,
+          canceledAt: null,
+        };
+
         if (parsed.name === "Canceled") {
-          await Listings.updateOne(
-            { fid },
+          updatedListing = await Listings.updateOne(
+            query,
             {
-              fid: `Canceled-${fid}`,
               canceledAt: new Date(),
+            },
+            {
+              returnDocument: "after",
             }
           );
 
-          updatedListing = await Listings.findOne({ fid });
           await ListingLogs.updateOne(
             {
               txHash,
@@ -401,7 +401,13 @@ class MarketplaceService {
   }
 
   async list({ txHash }) {
-    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    if (!txHash) throw new Error("Missing txHash");
+
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
+
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -412,19 +418,24 @@ class MarketplaceService {
         const parsed = eventInterface.parseLog(log);
         const fid = parsed.args.fid.toNumber();
 
+        const query = {
+          fid,
+          boughtAt: null,
+          canceledAt: null,
+        };
+
         if (parsed.name === "Listed") {
-          await Listings.updateOne(
-            { fid },
+          updatedListing = await Listings.updateOne(
+            query,
             {
               fid,
               ownerAddress: parsed.args.owner,
               minFee: this._padWithZeros(parsed.args.amount.toString()),
               deadline: parsed.args.deadline,
             },
-            { upsert: true }
+            { upsert: true, returnDocument: "after" }
           );
 
-          updatedListing = await Listings.findOne({ fid });
           await ListingLogs.updateOne(
             {
               txHash,
@@ -455,7 +466,12 @@ class MarketplaceService {
   }
 
   async buy({ txHash }) {
-    const receipt = await this.alchemyProvider.getTransactionReceipt(txHash);
+    if (!txHash) throw new Error("Missing txHash");
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
+
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -466,18 +482,24 @@ class MarketplaceService {
         const parsed = eventInterface.parseLog(log);
 
         if (parsed.name === "Bought") {
-          const listing = await Listings.findOne({
-            fid: parsed.args.fid,
-          });
-          if (!listing) {
-            throw new Error("Listing not found");
-          }
-          listing.fid = `Bought-${listing.fid}`;
-          listing.canceledAt = new Date();
-          listing.boughtAt = new Date();
-          listing.buyerAddress = parsed.args.buyer;
+          const fid = parsed.args.fid.toNumber();
 
-          updatedListing = await listing.save();
+          const query = {
+            fid,
+            boughtAt: null,
+            canceledAt: null,
+          };
+
+          updatedListing = await Listings.updateOne(
+            query,
+            {
+              canceledAt: new Date(),
+              boughtAt: new Date(),
+              buyerAddress: parsed.args.buyer,
+            },
+            { returnDocument: "after" }
+          );
+
           await ListingLogs.updateOne(
             {
               txHash,

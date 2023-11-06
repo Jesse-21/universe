@@ -259,8 +259,12 @@ const listingSchema = new mongoose.Schema(
 );
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
-listingSchema.index({ id: 1, canceledAt: 1 });
+listingSchema.index({ fid: 1, canceledAt: 1 });
+listingSchema.index({ fid: 1, boughtAt: 1 });
+listingSchema.index({ fid: 1, boughtAt: 1, canceledAt: 1 });
 listingSchema.index({ canceledAt: 1, timestamp: 1, deadline: 1 });
+listingSchema.index({ canceledAt: 1, boughtAt: 1, deadline: 1, fid: 1 });
+listingSchema.index({ canceledAt: 1, boughtAt: 1, deadline: 1, fid: 1, id: 1 });
 
 listingSchema.post("find", function (docs) {
   for (let doc of docs) {
