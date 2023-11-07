@@ -14,6 +14,10 @@ const dev = () => {
     NODE_NETWORK: 420,
     ID_REGISTRY_ABI: idRegistrarAbi,
     ID_REGISTRY_ADDRESS: "0x43Be7849F724E7CA7D56BDeCeCb277adb99b8A83",
+    /** Farcaster v2 */
+    ID_REGISTRY_ADDRESS_2: "0x00000000fc6c5f01fc30151999387bb99a9f489b",
+    ID_GATEWAY_ADDRESS: "0x00000000fc25870c6ed6b6c7e41fb078b7656f69",
+    USE_GATEWAYS: true,
   };
 };
 
@@ -28,6 +32,10 @@ const prod = () => {
     NODE_NETWORK: "opt-mainnet",
     ID_REGISTRY_ABI: idRegistrarAbi,
     ID_REGISTRY_ADDRESS: "0x00000000fcaf86937e41ba038b4fa40baa4b780a",
+    /** Farcaster v2 */
+    ID_REGISTRY_ADDRESS_2: "0x00000000fc6c5f01fc30151999387bb99a9f489b",
+    ID_GATEWAY_ADDRESS: "0x00000000fc25870c6ed6b6c7e41fb078b7656f69",
+    USE_GATEWAYS: false,
   };
 };
 

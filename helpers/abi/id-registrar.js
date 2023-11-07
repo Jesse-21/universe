@@ -901,5 +901,9 @@ const abi = [
 
 module.exports = {
   abi,
+  // @deprecated as of 2023-11-06
   address: "0x00000000fcaf86937e41ba038b4fa40baa4b780a",
+  // use these
+  gateway_address: "0x00000000fc25870c6ed6b6c7e41fb078b7656f69", // IdGateway
+  gateway_registry_address: "0x00000000fc6c5f01fc30151999387bb99a9f489b", // IdRegistry
 };

@@ -1,5 +1,6 @@
 const KEY_REGISTRY_ADDRESS = "0x00000000fC9e66f1c6d86D750B4af47fF0Cc343d";
-
+const KEY_REGISTRY_ADDRESS_2 = "0x00000000fc1237824fb747abde0ff18990e59b7e";
+const KEY_GATEWAY_ADDRESS = "0x00000000fc56947c7e7183f8ca4b62398caadf0b";
 const KEY_REGISTRY_ABI = [
   {
     inputs: [
@@ -623,6 +624,10 @@ const KEY_REGISTRY_ABI = [
 ];
 
 module.exports = {
-  address: KEY_REGISTRY_ADDRESS,
   abi: KEY_REGISTRY_ABI,
+  // @deprecated as of 2023-11-06
+  address: KEY_REGISTRY_ADDRESS,
+  // use these instead
+  gateway_address: KEY_GATEWAY_ADDRESS,
+  gateway_registry_address: KEY_REGISTRY_ADDRESS_2,
 };

@@ -185,13 +185,13 @@ class AccountClass {
    * @returns Promise<Account | null>
    */
   static async findByAddressAndChainId({ address: rawAddress, chainId }) {
-    const memcachedClient = getMemcachedClient();
+    const memcached = getMemcachedClient();
     const address = validateAndConvertAddress(rawAddress, chainId);
 
     let accountId;
 
     try {
-      const data = await memcachedClient.get(
+      const data = await memcached.get(
         `Account:findByAddressAndChainId:${chainId}:${address}`
       );
       if (data) {
@@ -209,7 +209,7 @@ class AccountClass {
         return null;
       }
       try {
-        await memcachedClient.set(
+        await memcached.set(
           `Account:findByAddressAndChainId:${chainId}:${address}`,
           accountId.toString()
         );

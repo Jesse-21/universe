@@ -869,6 +869,17 @@ const buyMarketplaceV1Listing = async (req, res) => {
   }
 };
 
+const cancelMarketplaceV1Listing = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newListing = await MarketplaceService.cancelListing(req.body);
+    res.json({ success: true, result: { listing: newListing } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
@@ -907,6 +918,12 @@ app.post(
   "/v2/marketplace/listings/buy",
   [heavyLimiter],
   buyMarketplaceV1Listing
+);
+
+app.post(
+  "/v2/marketplace/listings/cancel",
+  [heavyLimiter],
+  cancelMarketplaceV1Listing
 );
 
 module.exports = {

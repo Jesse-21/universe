@@ -6,12 +6,15 @@ const ethers = require("ethers");
 const {
   abi: keyRegistrarAbi,
   address: keyRegistrarAddress,
+  gateway_registry_address: keyGatewayRegistryAddress,
 } = require("../helpers/abi/key-registrar");
 const {
   abi: idRegistrarAbi,
   address: idRegistrarAddress,
+  gateway_registry_address: idGatewayRegistryAddress,
 } = require("../helpers/abi/id-registrar");
 const { getProvider } = require("../helpers/alchemy-provider");
+const { getFlags } = require("../helpers/flags");
 
 class AccountRecovererService {
   _accepableRecovererTypes = [
@@ -136,13 +139,21 @@ class AccountRecovererService {
       node: process.env.OPTIMISM_NODE_URL,
     });
 
+    const flags = getFlags();
+    const keyAddress = flags.USE_GATEWAYS
+      ? keyGatewayRegistryAddress
+      : keyRegistrarAddress;
+    const idAddress = flags.USE_GATEWAYS
+      ? idGatewayRegistryAddress
+      : idRegistrarAddress;
+
     const keyRegistrar = new ethers.Contract(
-      keyRegistrarAddress,
+      keyAddress,
       keyRegistrarAbi,
       alchemyProvider
     );
     const idRegistrar = new ethers.Contract(
-      idRegistrarAddress,
+      idAddress,
       idRegistrarAbi,
       alchemyProvider
     );
