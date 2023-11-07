@@ -9806,10 +9806,10 @@ media-typer@0.3.0:
   resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
   integrity sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==
 
-memcache-client@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/memcache-client/-/memcache-client-1.0.4.tgz#9fc4df655abe4cc3491a091eac428562fe40fa79"
-  integrity sha512-5lcypm7InlQdT1svBMVCoH97j/Z9mGURwLjvBxl39DNeRg1SCB9Zlp0t+BiAl5HGgaeYnUrTnGattvhaG9gzYA==
+memcache-client@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/memcache-client/-/memcache-client-1.0.5.tgz#7a2eb1f1924b8a87ef7f80a25f42949da4d1eff7"
+  integrity sha512-hUADvh+Cju3eNZ5AWGfNhdI/Y4251pc8Hxq+6RryiVNzMeEnXKQ2z+gyBBAPY4SZnC1nOtp2MJUSsnCWB9t6lg==
   dependencies:
     lodash.defaults "4.2.0"
     memcache-parser "^1.0.0"
