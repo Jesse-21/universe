@@ -1,12 +1,12 @@
 const flagsDev = () => {
   return {
-    USE_GATEWAYS: false,
+    USE_GATEWAYS: true,
   };
 };
 
 const flagsProd = () => {
   return {
-    USE_GATEWAYS: false,
+    USE_GATEWAYS: true,
   };
 };
 

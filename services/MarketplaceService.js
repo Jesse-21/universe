@@ -347,6 +347,11 @@ class MarketplaceService {
     return receipt;
   }
 
+  async getBlockTimestamp(blockNumber) {
+    const block = await this.alchemyProvider.getBlock(blockNumber);
+    return new Date(block.timestamp * 1000); // Convert to JavaScript Date object
+  }
+
   async cancelListing({ txHash }) {
     if (!txHash) {
       throw new Error("Missing txHash");
@@ -355,6 +360,9 @@ class MarketplaceService {
     if (!receipt) {
       throw new Error("Transaction not found");
     }
+
+    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
+    const listingCreationDate = new Date(blockTimestamp);
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -368,6 +376,7 @@ class MarketplaceService {
           fid,
           boughtAt: null,
           canceledAt: null,
+          createdAt: { $lte: listingCreationDate },
         };
 
         if (parsed.name === "Canceled") {
@@ -388,6 +397,7 @@ class MarketplaceService {
             {
               eventType: "Canceled",
               fid: parsed.args.fid,
+              txHash,
             },
             {
               upsert: true,
@@ -421,6 +431,9 @@ class MarketplaceService {
       throw new Error("Transaction not found");
     }
 
+    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
+    const listingCreationDate = new Date(blockTimestamp);
+
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -429,12 +442,14 @@ class MarketplaceService {
     for (let log of receipt.logs) {
       try {
         const parsed = eventInterface.parseLog(log);
+
         const fid = parsed.args.fid.toNumber();
 
         const query = {
           fid,
           boughtAt: null,
           canceledAt: null,
+          createdAt: { $lte: listingCreationDate },
         };
 
         if (parsed.name === "Listed") {
@@ -445,6 +460,7 @@ class MarketplaceService {
               ownerAddress: parsed.args.owner,
               minFee: this._padWithZeros(parsed.args.amount.toString()),
               deadline: parsed.args.deadline,
+              txHash, // the latest txHash
             },
             { upsert: true, returnDocument: "after" }
           );
@@ -458,6 +474,7 @@ class MarketplaceService {
               fid: parsed.args.fid,
               from: parsed.args.owner,
               price: this._padWithZeros(parsed.args.amount.toString()),
+              txHash,
             },
             {
               upsert: true,
@@ -493,6 +510,9 @@ class MarketplaceService {
       throw new Error("Transaction not found");
     }
 
+    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
+    const listingCreationDate = new Date(blockTimestamp);
+
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -509,6 +529,7 @@ class MarketplaceService {
             fid,
             boughtAt: null,
             canceledAt: null,
+            createdAt: { $lte: listingCreationDate },
           };
 
           updatedListing = await Listings.updateOne(
@@ -518,7 +539,7 @@ class MarketplaceService {
               boughtAt: new Date(),
               buyerAddress: parsed.args.buyer,
             },
-            { returnDocument: "after" }
+            { upsert: true, returnDocument: "after" }
           );
 
           await ListingLogs.updateOne(
@@ -530,6 +551,7 @@ class MarketplaceService {
               fid: parsed.args.fid,
               from: parsed.args.buyer,
               price: this._padWithZeros(parsed.args.amount.toString()),
+              txHash,
             },
             {
               upsert: true,

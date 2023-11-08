@@ -25,11 +25,12 @@ const prod = () => {
   return {
     WETH_ADDRESS: "0x4200000000000000000000000000000000000006",
     FID_MARKETPLACE_PROXY_V1_ABI: MarketplaceV1Proxy.abi,
+    FID_MARKETPLACE_V1_ADDRESS: "0x57ce6c12a101c41e790744413f4f5408ac64d8c6",
     FID_MARKETPLACE_V1_ABI: MarketplaceV1.abi,
     FID_ADDRESS: "0x00000000fcaf86937e41ba038b4fa40baa4b780a",
     CHAIN_ID: 10,
     NODE_URL: process.env.OPTIMISM_NODE_URL,
-    NODE_NETWORK: "opt-mainnet",
+    NODE_NETWORK: 10,
     ID_REGISTRY_ABI: idRegistrarAbi,
     ID_REGISTRY_ADDRESS: "0x00000000fcaf86937e41ba038b4fa40baa4b780a",
     /** Farcaster v2 */
@@ -39,5 +40,6 @@ const prod = () => {
   };
 };
 
-const config = process.env.NODE_ENV === "production" ? prod : dev;
+// const config = process.env.NODE_ENV === "production" ? prod : dev;
+const config = prod;
 module.exports = { config, prod, dev };

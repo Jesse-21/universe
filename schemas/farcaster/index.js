@@ -254,15 +254,19 @@ const listingSchema = new mongoose.Schema(
     canceledAt: { type: Date },
     boughtAt: { type: Date },
     buyerAddress: { type: String },
+    txHash: { type: String },
   },
   { timestamps: true }
 );
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1 });
+listingSchema.index({ fid: 1, canceledAt: 1, txHash: 1 });
+listingSchema.index({ fid: 1, txHash: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1, canceledAt: 1 });
-listingSchema.index({ canceledAt: 1, timestamp: 1, deadline: 1 });
+listingSchema.index({ fid: 1, boughtAt: 1, canceledAt: 1, createdAt: 1 });
+listingSchema.index({ canceledAt: 1, createdAt: 1, deadline: 1 });
 listingSchema.index({ canceledAt: 1, boughtAt: 1, deadline: 1, fid: 1 });
 listingSchema.index({ canceledAt: 1, boughtAt: 1, deadline: 1, fid: 1, id: 1 });
 
@@ -286,7 +290,7 @@ const listingLogSchema = new mongoose.Schema(
       enum: ["Listed", "Bought", "Canceled"],
     }, // "Listed" or "Bought"
     fid: { type: Number, required: true },
-    from: { type: String },
+    from: { type: String }, // initiator of the event
     txHash: { type: String },
     price: {
       type: String,
