@@ -810,7 +810,7 @@ const getFarcasterCastByHash = async (hash, context = {}) => {
 
 const getFarcasterFeedCastByHash = async (hash, context = {}) => {
   const cast = await getFarcasterCastByHash(hash, context);
-  if (cast.threadHash) {
+  if (cast?.threadHash) {
     // return the root cast with childrenCasts
     const root = await getFarcasterCastByHash(cast.threadHash, context);
     return {

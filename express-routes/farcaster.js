@@ -663,8 +663,7 @@ const v2PostMessage = async (req, res) => {
     console.error(error);
     let e = "Internal Server Error";
     if (error?.message?.includes("no storage")) {
-      e =
-        "No storage for this FID. Make sure you have a wallet with purchased storage unit.";
+      e = "No active storage for this FID, buy a storage unit at far.quest!";
     }
     res.status(500).json({ error: e });
   }
