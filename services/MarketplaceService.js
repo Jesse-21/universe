@@ -41,7 +41,7 @@ class MarketplaceService {
     try {
       const memcached = getMemcachedClient();
       try {
-        const cachedEth = await memcached.get(`MarketplaceService_ethToUsd`);
+        const cachedEth = await memcached.get("MarketplaceService_ethToUsd");
         if (cachedEth) {
           return ethers.BigNumber.from(cachedEth.value).mul(eth).toString();
         }
@@ -59,7 +59,7 @@ class MarketplaceService {
       }
       try {
         await memcached.set(
-          `MarketplaceService_ethToUsd`,
+          "MarketplaceService_ethToUsd",
           parseInt(ethPrice).toString(),
           {
             lifetime: 60, // 60s
@@ -447,7 +447,7 @@ class MarketplaceService {
         if (parsed.name === "Listed") {
           try {
             const lastFloorRaw = await memcached.get(
-              `MarketplaceService:stats:floor`
+              "MarketplaceService:stats:floor"
             );
             const lastFloor = lastFloorRaw?.value;
             const newFloor = lastFloor
@@ -458,7 +458,7 @@ class MarketplaceService {
                 : lastFloor
               : parsed.args.amount.toString();
 
-            await memcached.set(`MarketplaceService:stats:floor`, newFloor);
+            await memcached.set("MarketplaceService:stats:floor", newFloor);
           } catch (e) {
             console.error(e);
           }
@@ -466,8 +466,8 @@ class MarketplaceService {
         } else if (parsed.name === "Bought") {
           try {
             const [highestSaleRaw, totalVolumeRaw] = await Promise.all([
-              memcached.get(`MarketplaceService:stats:highestSale`),
-              memcached.get(`MarketplaceService:stats:totalVolume`),
+              memcached.get("MarketplaceService:stats:highestSale"),
+              memcached.get("MarketplaceService:stats:totalVolume"),
             ]);
             const highestSale = highestSaleRaw?.value;
             const totalVolume = totalVolumeRaw?.value;
@@ -481,7 +481,7 @@ class MarketplaceService {
               )
             ) {
               await memcached.set(
-                `MarketplaceService:stats:highestSale`,
+                "MarketplaceService:stats:highestSale",
                 saleAmount
               );
             }
@@ -493,7 +493,7 @@ class MarketplaceService {
               : saleAmount;
 
             await memcached.set(
-              `MarketplaceService:stats:totalVolume`,
+              "MarketplaceService:stats:totalVolume",
               newTotalVolume
             );
           } catch (e) {
