@@ -44,7 +44,7 @@ class MarketplaceService {
     });
   }
 
-  async _ethToUsd(eth) {
+  async ethToUsd(eth) {
     try {
       const memcached = getMemcachedClient();
       try {
@@ -117,7 +117,7 @@ class MarketplaceService {
 
     const [user, usdWei] = await Promise.all([
       this.fetchUserData(fid),
-      this._ethToUsd(listing.minFee),
+      this.ethToUsd(listing.minFee),
     ]);
 
     const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
@@ -182,7 +182,7 @@ class MarketplaceService {
       listings.map(async (listing) => {
         const [user, usdWei] = await Promise.all([
           this.fetchUserData(listing.fid),
-          this._ethToUsd(listing.minFee),
+          this.ethToUsd(listing.minFee),
         ]);
 
         const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
