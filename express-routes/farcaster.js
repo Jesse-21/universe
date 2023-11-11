@@ -910,8 +910,8 @@ app.post(
   completeMarketplaceV1Listing
 );
 
-app.get("/v2/marketplace/listings", [heavyLimiter], getMarketplaceV1Listings);
-app.get("/v2/marketplace/listing", [heavyLimiter], getMarketplaceV1Listing);
+app.get("/v2/marketplace/listings", [limiter], getMarketplaceV1Listings);
+app.get("/v2/marketplace/listing", [limiter], getMarketplaceV1Listing);
 
 app.post(
   "/v2/marketplace/listings/buy",

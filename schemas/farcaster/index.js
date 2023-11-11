@@ -248,13 +248,9 @@ const listingSchema = new mongoose.Schema(
     ownerAddress: { type: String, required: true },
     fid: { type: Number, required: true },
     minFee: { type: String, required: true },
-    // minFee translated to ETH, for easy sorting
-    ethPrice: { type: Number },
     deadline: { type: Number, required: true },
-    canceledAt: { type: Date },
-    boughtAt: { type: Date },
-    buyerAddress: { type: String },
     txHash: { type: String },
+    canceledAt: { type: Date },
   },
   { timestamps: true }
 );
@@ -298,6 +294,14 @@ const listingLogSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+listingLogSchema.index({
+  txHash: 1,
+});
+
+listingLogSchema.index({
+  fid: 1,
+});
 
 module.exports = {
   hubSubscriptionsSchema,

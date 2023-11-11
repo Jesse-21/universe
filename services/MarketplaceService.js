@@ -104,9 +104,6 @@ class MarketplaceService {
     } else {
       const query = {
         fid,
-        canceledAt: null,
-        boughtAt: null,
-        deadline: { $gt: Math.floor(Date.now() / 1000) },
       };
       listing = await Listings.findOne(query);
       listing = listing ? listing._doc : null;
@@ -149,7 +146,6 @@ class MarketplaceService {
   async filterByUserProfile(data) {
     return data.filter((item) => item.user);
   }
-
   // @TODO add filters
   async getOnlyBuyNowListings({
     sort = "-minFee",
@@ -163,7 +159,6 @@ class MarketplaceService {
       timestamp: { $lt: offset || Date.now() },
       id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
       canceledAt: null,
-      boughtAt: null,
       deadline: { $gt: Math.floor(Date.now() / 1000) },
     };
 
@@ -356,13 +351,14 @@ class MarketplaceService {
     if (!txHash) {
       throw new Error("Missing txHash");
     }
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Listings.findOne({ fid: existing.fid });
+    }
     const receipt = await this.getReceipt({ txHash });
     if (!receipt) {
       throw new Error("Transaction not found");
     }
-
-    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
-    const listingCreationDate = new Date(blockTimestamp);
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
     );
@@ -374,9 +370,6 @@ class MarketplaceService {
 
         const query = {
           fid,
-          boughtAt: null,
-          canceledAt: null,
-          createdAt: { $lte: listingCreationDate },
         };
 
         if (parsed.name === "Canceled") {
@@ -423,16 +416,93 @@ class MarketplaceService {
     return updatedListing;
   }
 
+  async computeStats({ txHash }) {
+    const receipt = await this.getReceipt({ txHash });
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    const memcached = getMemcachedClient();
+
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+        if (parsed.name === "Listed") {
+          try {
+            const lastFloorRaw = await memcached.get(
+              `MarketplaceService:stats:floor`
+            );
+            const lastFloor = lastFloorRaw?.value;
+            const newFloor = lastFloor
+              ? ethers.BigNumber.from(parsed.args.amount).lt(
+                  ethers.BigNumber.from(lastFloor)
+                )
+                ? parsed.args.amount.toString()
+                : lastFloor
+              : parsed.args.amount.toString();
+
+            await memcached.set(`MarketplaceService:stats:floor`, newFloor);
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        } else if (parsed.name === "Bought") {
+          try {
+            const highestSaleRaw = await memcached.get(
+              `MarketplaceService:stats:highestSale`
+            );
+            const totalVolumeRaw = await memcached.get(
+              `MarketplaceService:stats:totalVolume`
+            );
+            const highestSale = highestSaleRaw?.value;
+            const totalVolume = totalVolumeRaw?.value;
+
+            const saleAmount = parsed.args.amount.toString();
+
+            if (
+              !highestSale ||
+              ethers.BigNumber.from(saleAmount).gt(
+                ethers.BigNumber.from(highestSale)
+              )
+            ) {
+              await memcached.set(
+                `MarketplaceService:stats:highestSale`,
+                saleAmount
+              );
+            }
+
+            const newTotalVolume = totalVolume
+              ? ethers.BigNumber.from(totalVolume)
+                  .add(ethers.BigNumber.from(saleAmount))
+                  .toString()
+              : saleAmount;
+
+            await memcached.set(
+              `MarketplaceService:stats:totalVolume`,
+              newTotalVolume
+            );
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+  }
+
   async list({ txHash }) {
     if (!txHash) throw new Error("Missing txHash");
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Listings.findOne({ fid: existing.fid });
+    }
 
     const receipt = await this.getReceipt({ txHash });
     if (!receipt) {
       throw new Error("Transaction not found");
     }
-
-    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
-    const listingCreationDate = new Date(blockTimestamp);
 
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
@@ -447,20 +517,17 @@ class MarketplaceService {
 
         const query = {
           fid,
-          boughtAt: null,
-          canceledAt: null,
-          createdAt: { $lte: listingCreationDate },
         };
 
         if (parsed.name === "Listed") {
           updatedListing = await Listings.updateOne(
             query,
             {
-              fid,
               ownerAddress: parsed.args.owner,
               minFee: this._padWithZeros(parsed.args.amount.toString()),
               deadline: parsed.args.deadline,
               txHash, // the latest txHash
+              canceledAt: null,
             },
             { upsert: true, returnDocument: "after" }
           );
@@ -500,18 +567,21 @@ class MarketplaceService {
     if (!updatedListing) {
       throw new Error("FID not listed");
     }
+    this.computeStats({ txHash });
     return updatedListing;
   }
 
   async buy({ txHash }) {
     if (!txHash) throw new Error("Missing txHash");
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Listings.findOne({ fid: existing.fid });
+    }
+
     const receipt = await this.getReceipt({ txHash });
     if (!receipt) {
       throw new Error("Transaction not found");
     }
-
-    const blockTimestamp = await this.getBlockTimestamp(receipt.blockNumber);
-    const listingCreationDate = new Date(blockTimestamp);
 
     const eventInterface = new ethers.utils.Interface(
       config().FID_MARKETPLACE_V1_ABI
@@ -527,17 +597,12 @@ class MarketplaceService {
 
           const query = {
             fid,
-            boughtAt: null,
-            canceledAt: null,
-            createdAt: { $lte: listingCreationDate },
           };
 
           updatedListing = await Listings.updateOne(
             query,
             {
               canceledAt: new Date(),
-              boughtAt: new Date(),
-              buyerAddress: parsed.args.buyer,
             },
             { upsert: true, returnDocument: "after" }
           );
@@ -575,6 +640,7 @@ class MarketplaceService {
     if (!updatedListing) {
       throw new Error("FID not bought");
     }
+    this.computeStats({ txHash });
     return updatedListing;
   }
 }
