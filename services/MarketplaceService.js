@@ -148,21 +148,26 @@ class MarketplaceService {
   }
   // @TODO add filters
   async getOnlyBuyNowListings({
-    sort = "-minFee",
+    sort = "fid",
     limit = 20,
     cursor = "",
     filters = {},
   }) {
-    const [offset, lastId] = cursor ? cursor.split("-") : [null, null];
+    const [_offset, lastFid] = cursor ? cursor.split("-") : ["0", null];
+    const offset = parseInt(_offset);
 
     const query = {
-      timestamp: { $lt: offset || Date.now() },
-      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
-      canceledAt: null,
+      // fid:
+      //   sort === "fid"
+      //     ? { $gt: offset || 0 }
+      //     : { $lt: offset || Number.MAX_SAFE_INTEGER },
       deadline: { $gt: Math.floor(Date.now() / 1000) },
     };
 
-    const listings = await Listings.find(query).limit(limit).sort(sort);
+    const listings = await Listings.find(query)
+      .limit(limit)
+      .skip(offset)
+      .sort(sort);
     let extraData = await Promise.all(
       listings.map(async (listing) => {
         const user = await this.fetchUserData(listing.fid);
@@ -174,16 +179,19 @@ class MarketplaceService {
           listing: {
             ...listing._doc,
             usd,
+            user,
           },
         };
       })
     );
 
+    // @TODO implement min fee cursor
     let next = null;
-    if (listings.length === limit) {
-      next = `${listings[listings.length - 1].timestamp.getTime()}-${
-        listings[listings.length - 1].id
-      }`;
+    if (extraData.length >= limit) {
+      const lastFid = ethers.BigNumber.from(
+        extraData[extraData.length - 1].fid
+      );
+      next = `${offset + extraData.length}-${lastFid.toString()}`;
     }
 
     return [extraData.slice(0, limit), next];
