@@ -30,7 +30,7 @@ app.get("/eth-to-usd", async (req, res) => {
 
   try {
     const MarketplaceService = new _MarketplaceService();
-    const usd = await MarketplaceService._ethToUsd(eth);
+    const usd = await MarketplaceService.ethToUsd(eth);
 
     return res.json({
       code: 200,
