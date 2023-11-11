@@ -132,8 +132,10 @@ class MarketplaceService {
   async fetchDataForFids(fidsArr) {
     return await Promise.all(
       fidsArr.map(async (fid) => {
-        const user = await this.fetchUserData(fid);
-        const listing = await this.fetchListing(fid);
+        const [user, listing] = await Promise.all([
+          this.fetchUserData(fid),
+          this.fetchListing(fid),
+        ]);
         return {
           fid,
           user,
@@ -170,8 +172,10 @@ class MarketplaceService {
       .sort(sort);
     let extraData = await Promise.all(
       listings.map(async (listing) => {
-        const user = await this.fetchUserData(listing.fid);
-        const usdWei = await this._ethToUsd(listing.minFee);
+        const [user, usdWei] = await Promise.all([
+          this.fetchUserData(listing.fid),
+          this._ethToUsd(listing.minFee),
+        ]);
         const usd = ethers.utils.formatEther(usdWei);
         return {
           fid: listing.fid,
