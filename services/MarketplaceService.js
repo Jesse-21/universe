@@ -110,8 +110,10 @@ class MarketplaceService {
     }
     if (!listing) return null;
 
-    const user = await this.fetchUserData(fid);
-    const usdWei = await this._ethToUsd(listing.minFee);
+    const [user, usdWei] = await Promise.all([
+      this.fetchUserData(fid),
+      this._ethToUsd(listing.minFee),
+    ]);
     const usd = ethers.utils.formatEther(usdWei);
 
     return {
