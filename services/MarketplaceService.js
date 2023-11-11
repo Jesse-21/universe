@@ -35,6 +35,13 @@ class MarketplaceService {
     this.marketplace = marketplace;
     this.idRegistry = idRegistry;
     this.alchemyProvider = alchemyProvider;
+
+    this.usdFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   async _ethToUsd(eth) {
@@ -112,7 +119,8 @@ class MarketplaceService {
       this.fetchUserData(fid),
       this._ethToUsd(listing.minFee),
     ]);
-    const usd = ethers.utils.formatEther(usdWei);
+
+    const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
 
     return {
       ...listing,
@@ -176,7 +184,8 @@ class MarketplaceService {
           this.fetchUserData(listing.fid),
           this._ethToUsd(listing.minFee),
         ]);
-        const usd = ethers.utils.formatEther(usdWei);
+
+        const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
         return {
           fid: listing.fid,
           user,
