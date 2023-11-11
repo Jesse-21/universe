@@ -41,11 +41,9 @@ class MarketplaceService {
     try {
       const memcached = getMemcachedClient();
       try {
-        const cachedEth = await memcached.get({
-          key: `MarketplaceService_ethToUsd`,
-        });
+        const cachedEth = await memcached.get(`MarketplaceService_ethToUsd`);
         if (cachedEth) {
-          return ethers.BigNumber.from(cachedEth).mul(eth).toString();
+          return ethers.BigNumber.from(cachedEth.value).mul(eth).toString();
         }
       } catch (e) {
         console.error(e);
@@ -319,9 +317,9 @@ class MarketplaceService {
       const memcached = getMemcachedClient();
       let proxyAddress;
       try {
-        const cached = await memcached.get({
-          key: `MarketplaceService:getProxyAddress:${address}:${salt}`,
-        });
+        const cached = await memcached.get(
+          `MarketplaceService:getProxyAddress:${address}:${salt}`
+        );
         if (cached) {
           proxyAddress = JSON.parse(cached.value);
         }
@@ -467,12 +465,10 @@ class MarketplaceService {
           break;
         } else if (parsed.name === "Bought") {
           try {
-            const highestSaleRaw = await memcached.get(
-              `MarketplaceService:stats:highestSale`
-            );
-            const totalVolumeRaw = await memcached.get(
-              `MarketplaceService:stats:totalVolume`
-            );
+            const [highestSaleRaw, totalVolumeRaw] = await Promise.all([
+              memcached.get(`MarketplaceService:stats:highestSale`),
+              memcached.get(`MarketplaceService:stats:totalVolume`),
+            ]);
             const highestSale = highestSaleRaw?.value;
             const totalVolume = totalVolumeRaw?.value;
 
