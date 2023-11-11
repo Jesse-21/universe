@@ -166,10 +166,15 @@ class MarketplaceService {
     let extraData = await Promise.all(
       listings.map(async (listing) => {
         const user = await this.fetchUserData(listing.fid);
+        const usdWei = await this._ethToUsd(listing.minFee);
+        const usd = ethers.utils.formatEther(usdWei);
         return {
           fid: listing.fid,
           user,
-          listing,
+          listing: {
+            ...listing._doc,
+            usd,
+          },
         };
       })
     );
