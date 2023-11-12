@@ -236,12 +236,14 @@ const offerSchema = new mongoose.Schema(
     accepted: { type: Boolean, default: false },
     acceptedAt: { type: Date },
     canceledAt: { type: Date },
+    txHash: { type: String },
   },
   { timestamps: true }
 );
 
 offerSchema.index({ buyerAddress: 1, canceledAt: 1 });
 offerSchema.index({ fid: 1, canceledAt: 1 });
+offerSchema.index({ txHash: 1 });
 
 const listingSchema = new mongoose.Schema(
   {
@@ -260,6 +262,7 @@ listingSchema.index({ fid: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1, txHash: 1 });
 listingSchema.index({ fid: 1, txHash: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1 });
+listingSchema.index({ fid: 1, deadline: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1, canceledAt: 1, createdAt: 1 });
 listingSchema.index({ canceledAt: 1, createdAt: 1, deadline: 1 });
@@ -283,7 +286,14 @@ const listingLogSchema = new mongoose.Schema(
     eventType: {
       type: String,
       required: true,
-      enum: ["Listed", "Bought", "Canceled"],
+      enum: [
+        "Listed",
+        "Bought",
+        "Canceled",
+        "OfferMade",
+        "OfferCanceled",
+        "OfferApproved",
+      ],
     }, // "Listed" or "Bought"
     fid: { type: Number, required: true },
     from: { type: String }, // initiator of the event

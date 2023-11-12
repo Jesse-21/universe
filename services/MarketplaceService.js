@@ -109,6 +109,8 @@ class MarketplaceService {
     } else {
       const query = {
         fid,
+        canceledAt: null,
+        deadline: { $gt: Math.floor(Date.now() / 1000) },
       };
       listing = await Listings.findOne(query);
       listing = listing ? listing._doc : null;
@@ -172,6 +174,7 @@ class MarketplaceService {
       //     ? { $gt: offset || 0 }
       //     : { $lt: offset || Number.MAX_SAFE_INTEGER },
       deadline: { $gt: Math.floor(Date.now() / 1000) },
+      canceledAt: null,
     };
 
     const listings = await Listings.find(query)
@@ -440,6 +443,59 @@ class MarketplaceService {
       throw new Error("FID not listed");
     }
     return updatedListing;
+  }
+
+  async getStats() {
+    try {
+      const [floorListing, highestSaleRaw, totalVolumeRaw, oneEthToUsd] =
+        await Promise.all([
+          await Listings.findOne().sort({ minFee: 1 }),
+          getMemcachedClient().get("MarketplaceService:stats:highestSale"),
+          getMemcachedClient().get("MarketplaceService:stats:totalVolume"),
+          this.ethToUsd(1),
+        ]);
+
+      const highestSale = highestSaleRaw?.value || "0";
+      const totalVolume = totalVolumeRaw?.value || "0";
+
+      return {
+        stats: {
+          floor: {
+            usd: this.usdFormatter.format(
+              ethers.utils.formatEther(
+                ethers.BigNumber.from(floorListing.minFee).mul(oneEthToUsd)
+              )
+            ),
+            wei: floorListing.minFee,
+          },
+          highestSale: {
+            usd: this.usdFormatter.format(
+              ethers.utils.formatEther(
+                ethers.BigNumber.from(highestSale).mul(oneEthToUsd)
+              )
+            ),
+            wei: highestSale,
+          },
+          totalVolume: {
+            usd: this.usdFormatter.format(
+              ethers.utils.formatEther(
+                ethers.BigNumber.from(totalVolume).mul(oneEthToUsd)
+              )
+            ),
+            wei: totalVolume,
+          },
+        },
+        success: true,
+      };
+    } catch (e) {
+      console.log(e);
+      Sentry.captureException(e);
+      // skip
+      return {
+        success: false,
+        stats: {},
+      };
+    }
   }
 
   async computeStats({ txHash }) {

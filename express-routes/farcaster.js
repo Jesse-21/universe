@@ -904,6 +904,17 @@ const getMarketplaceV1Listing = async (req, res) => {
   }
 };
 
+const getMarketplaceV1Stats = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const { stats, success } = await MarketplaceService.getStats();
+    res.json({ stats, success });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 app.post(
   "/v2/marketplace/listings/complete",
   [heavyLimiter],
@@ -911,6 +922,7 @@ app.post(
 );
 
 app.get("/v2/marketplace/listings", [limiter], getMarketplaceV1Listings);
+app.get("/v2/marketplace/stats", [limiter], getMarketplaceV1Stats);
 app.get("/v2/marketplace/listing", [limiter], getMarketplaceV1Listing);
 
 app.post(
