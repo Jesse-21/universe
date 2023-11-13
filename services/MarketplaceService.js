@@ -7,7 +7,7 @@ const {
   validateAndConvertAddress,
 } = require("../helpers/validate-and-convert-address");
 const { getMemcachedClient } = require("../connectmemcached");
-const { Listings, ListingLogs, Fids } = require("../models/farcaster");
+const { Listings, ListingLogs, Fids, Offers } = require("../models/farcaster");
 const {
   getFarcasterUserByFid,
   searchFarcasterUserByMatch,
@@ -353,6 +353,27 @@ class MarketplaceService {
       return null;
     }
   }
+  async getTransactionArguments({ txHash }) {
+    const transaction = await this.alchemyProvider.getTransaction(
+      txHash.toString()
+    );
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    const decodedInput = eventInterface.parseTransaction({
+      data: transaction.data,
+      value: transaction.value,
+    });
+
+    return {
+      functionName: decodedInput.name,
+      args: decodedInput.args,
+    };
+  }
 
   async getReceipt({ txHash }) {
     let tries = 0;
@@ -402,13 +423,14 @@ class MarketplaceService {
         };
 
         if (parsed.name === "Canceled") {
-          updatedListing = await Listings.updateOne(
+          updatedListing = await Listings.findOneAndUpdate(
             query,
             {
+              txHash,
               canceledAt: new Date(),
             },
             {
-              returnDocument: "after",
+              new: true,
             }
           );
 
@@ -418,7 +440,7 @@ class MarketplaceService {
             },
             {
               eventType: "Canceled",
-              fid: parsed.args.fid,
+              fid: fid,
               txHash,
             },
             {
@@ -600,7 +622,7 @@ class MarketplaceService {
         };
 
         if (parsed.name === "Listed") {
-          updatedListing = await Listings.updateOne(
+          updatedListing = await Listings.findOneAndUpdate(
             query,
             {
               ownerAddress: parsed.args.owner,
@@ -609,7 +631,7 @@ class MarketplaceService {
               txHash, // the latest txHash
               canceledAt: null,
             },
-            { upsert: true, returnDocument: "after" }
+            { upsert: true, new: true }
           );
 
           await ListingLogs.updateOne(
@@ -618,7 +640,7 @@ class MarketplaceService {
             },
             {
               eventType: "Listed",
-              fid: parsed.args.fid,
+              fid: fid,
               from: parsed.args.owner,
               price: this._padWithZeros(parsed.args.amount.toString()),
               txHash,
@@ -679,12 +701,13 @@ class MarketplaceService {
             fid,
           };
 
-          updatedListing = await Listings.updateOne(
+          updatedListing = await Listings.findOneAndUpdate(
             query,
             {
+              txHash,
               canceledAt: new Date(),
             },
-            { upsert: true, returnDocument: "after" }
+            { upsert: true, new: true }
           );
 
           await ListingLogs.updateOne(
@@ -693,7 +716,7 @@ class MarketplaceService {
             },
             {
               eventType: "Bought",
-              fid: parsed.args.fid,
+              fid: fid,
               from: parsed.args.buyer,
               price: this._padWithZeros(parsed.args.amount.toString()),
               txHash,
@@ -722,6 +745,231 @@ class MarketplaceService {
     }
     this.computeStats({ txHash });
     return updatedListing;
+  }
+
+  async offer({ txHash }) {
+    if (!txHash) throw new Error("Missing txHash");
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Offers.findOne({ txHash });
+    }
+
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
+
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    let updatedOffer = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+
+        if (parsed.name === "OfferMade") {
+          const fid = parsed.args.fid.toNumber();
+
+          const query = {
+            fid,
+          };
+
+          updatedOffer = await Offers.updateOne(
+            query,
+            {
+              fid,
+              txHash,
+              buyerAddress: parsed.args.buyer,
+              amount: this._padWithZeros(parsed.args.amount.toString()),
+              deadline: parsed.args.deadline,
+            },
+            { upsert: true, new: true }
+          );
+
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "OfferMade",
+              fid: fid,
+              from: parsed.args.buyer,
+              price: this._padWithZeros(parsed.args.amount.toString()),
+              txHash,
+            },
+            {
+              upsert: true,
+            }
+          );
+          const memcached = getMemcachedClient();
+          try {
+            await memcached.set(
+              `Offer:${parsed.args.fid}`,
+              JSON.stringify(updatedOffer)
+            );
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+    if (!updatedOffer) {
+      throw new Error("FID not offered");
+    }
+    this.computeStats({ txHash });
+    return updatedOffer;
+  }
+
+  async cancelOffer({ txHash }) {
+    if (!txHash) throw new Error("Missing txHash");
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Offers.findOne({ txHash });
+    }
+
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
+
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    let updatedOffer = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+
+        if (parsed.name === "OfferCanceled") {
+          const fid = parsed.args.fid.toNumber();
+
+          const query = {
+            fid,
+          };
+
+          updatedOffer = await Offers.findOneAndUpdate(
+            query,
+            {
+              fid,
+              txHash,
+              canceledAt: new Date(),
+            },
+            { upsert: true, new: true }
+          );
+
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "OfferCanceled",
+              fid: fid,
+              from: parsed.args.buyer,
+              txHash,
+            },
+            {
+              upsert: true,
+            }
+          );
+          const memcached = getMemcachedClient();
+          try {
+            await memcached.set(
+              `Offer:${parsed.args.fid}`,
+              JSON.stringify(updatedOffer)
+            );
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+    if (!updatedOffer) {
+      throw new Error("FID offer not canceled");
+    }
+    this.computeStats({ txHash });
+    return updatedOffer;
+  }
+
+  async approveOffer({ txHash }) {
+    if (!txHash) throw new Error("Missing txHash");
+    const existing = await ListingLogs.findOne({ txHash });
+    if (existing) {
+      return await Offers.findOne({ txHash });
+    }
+
+    const receipt = await this.getReceipt({ txHash });
+    if (!receipt) {
+      throw new Error("Transaction not found");
+    }
+
+    const eventInterface = new ethers.utils.Interface(
+      config().FID_MARKETPLACE_V1_ABI
+    );
+
+    let updatedOffer = null;
+    for (let log of receipt.logs) {
+      try {
+        const parsed = eventInterface.parseLog(log);
+
+        if (parsed.name === "OfferApproved") {
+          const fid = parsed.args.fid.toNumber();
+
+          const query = {
+            fid,
+          };
+
+          updatedOffer = await Offers.findOneAndUpdate(
+            query,
+            {
+              txHash,
+              canceledAt: new Date(),
+            },
+            { upsert: true, new: true }
+          );
+
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "OfferApproved",
+              fid: fid,
+              from: parsed.args.buyer,
+              price: this._padWithZeros(parsed.args.amount.toString()),
+              txHash,
+            },
+            {
+              upsert: true,
+            }
+          );
+          const memcached = getMemcachedClient();
+          try {
+            await memcached.set(
+              `Offer:${parsed.args.fid}`,
+              JSON.stringify(updatedOffer)
+            );
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        }
+      } catch (error) {
+        // Log could not be parsed; continue to next log
+      }
+    }
+    if (!updatedOffer) {
+      throw new Error("FID offer not canceled");
+    }
+    this.computeStats({ txHash });
+    return updatedOffer;
   }
 }
 
