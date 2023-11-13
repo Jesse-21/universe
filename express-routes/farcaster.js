@@ -37,6 +37,7 @@ const {
   getFarcasterUserAndLinksByUsername,
   postMessage,
   searchFarcasterUserByMatch,
+  getFarcasterStorageByFid,
 } = require("../helpers/farcaster");
 
 const {
@@ -846,6 +847,12 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/get-farcaster-storage", limiter, async (req, res) => {
+  const data = await getFarcasterStorageByFid(req.query.fid);
+
+  return res.json({ result: { data } });
+});
+
 const completeMarketplaceV1Listing = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
@@ -861,7 +868,7 @@ const buyMarketplaceV1Listing = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const newListing = await MarketplaceService.buy(req.body);
-    res.json({ success: true, result: { listing: newListing } });
+    return res.json({ success: true, result: { listing: newListing } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -872,7 +879,7 @@ const cancelMarketplaceV1Listing = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const newListing = await MarketplaceService.cancelListing(req.body);
-    res.json({ success: true, result: { listing: newListing } });
+    return res.json({ success: true, result: { listing: newListing } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -886,7 +893,7 @@ const getMarketplaceV1Listings = async (req, res) => {
       ...req.query,
       filters: JSON.parse(req.query.filters || "{}"),
     });
-    res.json({ listings: listings, next });
+    return res.json({ listings: listings, next });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -897,7 +904,7 @@ const getMarketplaceV1Listing = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const listing = await MarketplaceService.getListing(req.query);
-    res.json({ listing });
+    return res.json({ listing });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -908,7 +915,7 @@ const getMarketplaceV1Stats = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
     const { stats, success } = await MarketplaceService.getStats();
-    res.json({ stats, success });
+    return res.json({ stats, success });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });

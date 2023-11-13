@@ -194,6 +194,7 @@ const storageSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+storageSchema.index({ fid: 1, deletedAt: 1 });
 
 const notificationsSchema = new mongoose.Schema(
   {

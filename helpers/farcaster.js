@@ -13,6 +13,7 @@ const {
   Notifications,
   MessageType,
   Listings,
+  Storage,
 } = require("../models/farcaster");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { config } = require("../helpers/registrar");
@@ -1473,6 +1474,40 @@ const getFarcasterNotifications = async ({ limit, cursor, context }) => {
   return [data, next];
 };
 
+const getFarcasterStorageByFid = async (fid) => {
+  const memcached = getMemcachedClient();
+  let storage;
+  try {
+    const data = await memcached.get(`getFarcasterStorageByFid:${fid}`);
+    if (data) {
+      storage = JSON.parse(data.value).map((s) => new Storage(s));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!storage) {
+    storage = await Storage.find({ fid, deletedAt: null });
+    try {
+      await memcached.set(
+        `getFarcasterStorageByFid:${fid}`,
+        JSON.stringify(storage)
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  return storage.map((s) => {
+    return {
+      timestamp: s.timestamp,
+      fid: s.fid,
+      units: s.units,
+      expiry: s.expiry,
+    };
+  });
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -1501,4 +1536,5 @@ module.exports = {
   GLOBAL_SCORE_THRESHOLD,
   GLOBAL_SCORE_THRESHOLD_CHANNEL,
   getFarcasterFidByCustodyAddress,
+  getFarcasterStorageByFid,
 };
