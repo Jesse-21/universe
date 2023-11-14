@@ -235,6 +235,7 @@ const offerSchema = new mongoose.Schema(
     deadline: { type: String, required: true },
     canceledAt: { type: Date },
     txHash: { type: String },
+    amount: { type: String, required: true },
   },
   { timestamps: true }
 );

@@ -388,7 +388,7 @@ class MarketplaceService {
       );
       if (receipt) break;
     }
-    if (tries >= 60) throw new Error("Timeout");
+    if (tries >= 120) throw new Error("Timeout");
     return receipt;
   }
 
@@ -776,7 +776,7 @@ class MarketplaceService {
             fid,
           };
 
-          updatedOffer = await Offers.updateOne(
+          updatedOffer = await Offers.findOneAndUpdate(
             query,
             {
               fid,
@@ -971,6 +971,74 @@ class MarketplaceService {
     }
     this.computeStats({ txHash });
     return updatedOffer;
+  }
+
+  async getActivities({ eventType, fid }) {
+    const query = {};
+    if (eventType) {
+      query.eventType = eventType;
+    }
+    if (fid) {
+      query.fid = fid;
+    }
+    const activities = await ListingLogs.find(query).sort({ createdAt: -1 });
+    const decorated = await Promise.all(
+      activities.map(async (a) => {
+        const [user, usdWei] = await Promise.all([
+          this.fetchUserData(a.fid),
+          this.ethToUsd(a.price),
+        ]);
+
+        const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
+
+        return {
+          ...a._doc,
+          usd,
+          user,
+        };
+      })
+    );
+    return decorated;
+  }
+
+  async getOffers({ fid }) {
+    const query = {
+      canceledAt: null,
+    };
+    if (fid) {
+      query.fid = fid;
+    }
+    const offers = await Offers.find(query).sort({ createdAt: -1 });
+    const decorated = await Promise.all(
+      offers.map(async (offer) => {
+        const [user, usdWei] = await Promise.all([
+          this.fetchUserData(offer.fid),
+          this.ethToUsd(offer.amount),
+        ]);
+
+        const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
+
+        return {
+          ...offer._doc,
+          usd,
+          user,
+        };
+      })
+    );
+    return decorated;
+  }
+  async getOffer({ fid, buyerAddress }) {
+    if (!fid || !buyerAddress) {
+      throw new Error("Missing fid or buyerAddress");
+    }
+    const query = {
+      canceledAt: null,
+      fid,
+      buyerAddress,
+    };
+
+    const offer = await Offers.findOne(query);
+    return offer;
   }
 }
 

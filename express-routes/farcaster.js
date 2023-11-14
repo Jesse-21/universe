@@ -955,6 +955,39 @@ const getMarketplaceV1Stats = async (req, res) => {
   }
 };
 
+const getMarketplaceV1Activities = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const activities = await MarketplaceService.getActivities(req.query);
+    return res.json({ result: { activities } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const getMarketplaceV1Offers = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const offers = await MarketplaceService.getOffers(req.query);
+    return res.json({ result: { offers } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const getMarketplaceV1Offer = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const offer = await MarketplaceService.gegetOffertOffers(req.query);
+    return res.json({ result: { offer } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 app.post(
   "/v2/marketplace/listings/complete",
   [heavyLimiter],
@@ -964,6 +997,9 @@ app.post(
 app.get("/v2/marketplace/listings", [limiter], getMarketplaceV1Listings);
 app.get("/v2/marketplace/stats", [limiter], getMarketplaceV1Stats);
 app.get("/v2/marketplace/listing", [limiter], getMarketplaceV1Listing);
+app.get("/v2/marketplace/activities", [limiter], getMarketplaceV1Activities);
+app.get("/v2/marketplace/offers", [limiter], getMarketplaceV1Offers);
+app.get("/v2/marketplace/offer", [limiter], getMarketplaceV1Offer);
 
 app.post(
   "/v2/marketplace/listings/buy",
