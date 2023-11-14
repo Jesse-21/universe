@@ -469,11 +469,12 @@ class MarketplaceService {
 
   async getStats() {
     try {
+      const memcached = getMemcachedClient();
       const [floorListing, highestSaleRaw, totalVolumeRaw, oneEthToUsd] =
         await Promise.all([
-          await Listings.findOne().sort({ minFee: 1 }),
-          getMemcachedClient().get("MarketplaceService:stats:highestSale"),
-          getMemcachedClient().get("MarketplaceService:stats:totalVolume"),
+          Listings.findOne().sort({ minFee: 1 }),
+          memcached.get("MarketplaceService:stats:highestSale"),
+          memcached.get("MarketplaceService:stats:totalVolume"),
           this.ethToUsd(1),
         ]);
 

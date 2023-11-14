@@ -886,6 +886,39 @@ const cancelMarketplaceV1Listing = async (req, res) => {
   }
 };
 
+const completeMarketplaceV1Offer = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newOffer = await MarketplaceService.offer(req.body);
+    res.json({ result: { offer: newOffer }, success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const cancelMarketplaceV1Offer = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newOffer = await MarketplaceService.cancelOffer(req.body);
+    res.json({ result: { offer: newOffer }, success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+const approveMarketplaceV1Offer = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const newOffer = await MarketplaceService.approveOffer(req.body);
+    res.json({ result: { offer: newOffer }, success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 const getMarketplaceV1Listings = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
@@ -942,6 +975,24 @@ app.post(
   "/v2/marketplace/listings/cancel",
   [heavyLimiter],
   cancelMarketplaceV1Listing
+);
+
+app.post(
+  "/v2/marketplace/offers/complete",
+  [heavyLimiter],
+  completeMarketplaceV1Offer
+);
+
+app.post(
+  "/v2/marketplace/offers/cancel",
+  [heavyLimiter],
+  cancelMarketplaceV1Offer
+);
+
+app.post(
+  "/v2/marketplace/offers/accept",
+  [heavyLimiter],
+  approveMarketplaceV1Offer
 );
 
 module.exports = {
