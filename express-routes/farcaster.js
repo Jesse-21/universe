@@ -461,6 +461,31 @@ app.get("/v2/following", limiter, async (req, res) => {
   }
 });
 
+app.get("/v2/user-by-custody-address", [limiter], async (req, res) => {
+  try {
+    const address = (req.query.address || "").toLowerCase();
+
+    if (!address || address.length < 10) {
+      return res.status(400).json({
+        error: "address is invalid",
+      });
+    }
+
+    const user = await getFarcasterUserByCustodyAddress(address);
+
+    return res.json({
+      result: { user },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get("/v2/user-by-connected-address", [limiter], async (req, res) => {
   try {
     const address = (req.query.address || "").toLowerCase();

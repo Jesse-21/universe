@@ -281,7 +281,13 @@ class MarketplaceService {
         cursor,
         filters,
       });
-    } else if (sort === "minFee" || sort === "-minFee" || filters.onlyListing) {
+    } else if (
+      sort === "minFee" ||
+      sort === "-minFee" ||
+      sort === "updatedAt" ||
+      sort === "-updatedAt" ||
+      filters.onlyListing
+    ) {
       return await this.getOnlyBuyNowListings({
         sort,
         limit,
@@ -973,7 +979,7 @@ class MarketplaceService {
     return updatedOffer;
   }
 
-  async getActivities({ eventType, fid }) {
+  async getActivities({ eventType, fid, from }) {
     const query = {};
     if (eventType) {
       query.eventType = eventType;
@@ -981,6 +987,10 @@ class MarketplaceService {
     if (fid) {
       query.fid = fid;
     }
+    if (from) {
+      query.from = from;
+    }
+
     const activities = await ListingLogs.find(query).sort({ createdAt: -1 });
     const decorated = await Promise.all(
       activities.map(async (a) => {
@@ -1001,12 +1011,15 @@ class MarketplaceService {
     return decorated;
   }
 
-  async getOffers({ fid }) {
+  async getOffers({ fid, buyerAddress }) {
     const query = {
       canceledAt: null,
     };
     if (fid) {
       query.fid = fid;
+    }
+    if (buyerAddress) {
+      query.buyerAddress = buyerAddress;
     }
     const offers = await Offers.find(query).sort({ createdAt: -1 });
     const decorated = await Promise.all(
