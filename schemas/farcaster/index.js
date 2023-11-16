@@ -241,6 +241,8 @@ const offerSchema = new mongoose.Schema(
 );
 
 offerSchema.index({ buyerAddress: 1, canceledAt: 1 });
+offerSchema.index({ buyerAddress: 1, fid: 1 });
+offerSchema.index({ buyerAddress: 1, fid: 1, canceledAt: 1 });
 offerSchema.index({ fid: 1, canceledAt: 1 });
 offerSchema.index({ txHash: 1 });
 

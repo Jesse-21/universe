@@ -780,6 +780,7 @@ class MarketplaceService {
 
           const query = {
             fid,
+            buyerAddress: parsed.args.buyer,
           };
 
           updatedOffer = await Offers.findOneAndUpdate(
@@ -857,6 +858,7 @@ class MarketplaceService {
 
           const query = {
             fid,
+            buyerAddress: parsed.args.buyer,
           };
 
           updatedOffer = await Offers.findOneAndUpdate(
@@ -931,6 +933,7 @@ class MarketplaceService {
 
           const query = {
             fid,
+            buyerAddress: parsed.args.buyer,
           };
 
           updatedOffer = await Offers.findOneAndUpdate(
@@ -979,9 +982,9 @@ class MarketplaceService {
     return updatedOffer;
   }
 
-  async getActivities({ eventType, fid, from }) {
+  async getActivities({ eventType, fid, from, limit = 20 }) {
     const query = {};
-    if (eventType) {
+    if (eventType && eventType !== "all") {
       query.eventType = eventType;
     }
     if (fid) {
@@ -991,7 +994,9 @@ class MarketplaceService {
       query.from = from;
     }
 
-    const activities = await ListingLogs.find(query).sort({ createdAt: -1 });
+    const activities = await ListingLogs.find(query)
+      .limit(limit)
+      .sort({ createdAt: -1 });
     const decorated = await Promise.all(
       activities.map(async (a) => {
         const [user, usdWei] = await Promise.all([
