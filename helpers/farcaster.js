@@ -158,19 +158,6 @@ const postMessage = async ({
 const GLOBAL_SCORE_THRESHOLD = 100;
 const GLOBAL_SCORE_THRESHOLD_CHANNEL = 5;
 
-const createOrFindExternalFarcasterUser = async (address) => {
-  if (!address) return null;
-  const existing = await Fids.findOne({ fid: address, deletedAt: null });
-  if (existing) return await getFarcasterUserByFid(existing.fid);
-  const newFid = await Fids.create({
-    fid: address,
-    external: true,
-    custodyAddress: address,
-    deletedAt: null,
-  });
-  return await getFarcasterUserByFid(newFid.fid);
-};
-
 const getFarcasterUserByFid = async (fid) => {
   const memcached = getMemcachedClient();
   try {
@@ -1530,7 +1517,6 @@ module.exports = {
   getFarcasterUserAndLinksByUsername,
   getFarcasterUserByConnectedAddress,
   getConnectedAddressForFid,
-  createOrFindExternalFarcasterUser,
   postMessage,
   searchFarcasterUserByMatch,
   GLOBAL_SCORE_THRESHOLD,

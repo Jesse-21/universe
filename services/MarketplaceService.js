@@ -216,7 +216,26 @@ class MarketplaceService {
     return [extraData.slice(0, limit), next];
   }
   async latestFid() {
-    return await Fids.countDocuments();
+    const memcached = getMemcachedClient();
+    let count;
+    try {
+      const cached = await memcached.get(`MarketplaceService:latestFid`);
+      if (cached) {
+        count = cached.value;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    if (!count) {
+      count = await Fids.countDocuments();
+      try {
+        await memcached.set(`MarketplaceService:latestFid`, count);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    console.log("latestFid", count);
+    return count;
   }
 
   async searchListings({
@@ -479,13 +498,19 @@ class MarketplaceService {
   async getStats() {
     try {
       const memcached = getMemcachedClient();
-      const [floorListing, highestSaleRaw, totalVolumeRaw, oneEthToUsd] =
-        await Promise.all([
-          Listings.findOne().sort({ minFee: 1 }),
-          memcached.get("MarketplaceService:stats:highestSale"),
-          memcached.get("MarketplaceService:stats:totalVolume"),
-          this.ethToUsd(1),
-        ]);
+      const [
+        floorListing,
+        highestOffer,
+        highestSaleRaw,
+        totalVolumeRaw,
+        oneEthToUsd,
+      ] = await Promise.all([
+        Listings.findOne().sort({ minFee: 1 }),
+        Offers.findOne().sort({ amount: -1 }),
+        memcached.get("MarketplaceService:stats:highestSale"),
+        memcached.get("MarketplaceService:stats:totalVolume"),
+        this.ethToUsd(1),
+      ]);
 
       const highestSale = highestSaleRaw?.value || "0";
       const totalVolume = totalVolumeRaw?.value || "0";
@@ -499,6 +524,16 @@ class MarketplaceService {
               )
             ),
             wei: floorListing.minFee,
+          },
+          highestOffer: {
+            usd: this.usdFormatter.format(
+              ethers.utils.formatEther(
+                ethers.BigNumber.from(highestOffer?.amount || "0").mul(
+                  oneEthToUsd
+                )
+              )
+            ),
+            wei: highestOffer?.amount || "0",
           },
           highestSale: {
             usd: this.usdFormatter.format(
@@ -948,6 +983,16 @@ class MarketplaceService {
             { upsert: true, new: true }
           );
 
+          await Listings.updateOne(
+            {
+              fid,
+              canceledAt: null,
+            },
+            {
+              canceledAt: new Date(),
+            }
+          );
+
           await ListingLogs.updateOne(
             {
               txHash,
@@ -957,6 +1002,20 @@ class MarketplaceService {
               fid: fid,
               from: parsed.args.buyer,
               price: updatedOffer.amount,
+              txHash,
+            },
+            {
+              upsert: true,
+            }
+          );
+
+          await ListingLogs.updateOne(
+            {
+              txHash,
+            },
+            {
+              eventType: "Canceled",
+              fid: fid,
               txHash,
             },
             {

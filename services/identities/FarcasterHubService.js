@@ -1,6 +1,5 @@
 const {
   getFarcasterUserByFid,
-  createOrFindExternalFarcasterUser,
   getFarcasterFidByCustodyAddress,
 } = require("../../helpers/farcaster");
 
