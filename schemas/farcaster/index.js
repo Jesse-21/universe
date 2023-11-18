@@ -231,7 +231,7 @@ notificationsSchema.index({ "payload.castHash": 1 });
 const offerSchema = new mongoose.Schema(
   {
     buyerAddress: { type: String, required: true },
-    fid: { type: String, required: true },
+    fid: { type: Number, required: true },
     deadline: { type: String, required: true },
     canceledAt: { type: Date },
     txHash: { type: String },

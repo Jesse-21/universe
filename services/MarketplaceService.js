@@ -45,6 +45,7 @@ class MarketplaceService {
   }
 
   async ethToUsd(eth) {
+    if (!eth) return "0";
     try {
       const memcached = getMemcachedClient();
       try {
@@ -165,7 +166,7 @@ class MarketplaceService {
     cursor = "",
     filters = {},
   }) {
-    const [_offset, lastFid] = cursor ? cursor.split("-") : ["0", null];
+    const [_offset, lastId] = cursor ? cursor.split("-") : ["0", null];
     const offset = parseInt(_offset);
 
     const query = {
@@ -173,6 +174,10 @@ class MarketplaceService {
       //   sort === "fid"
       //     ? { $gt: offset || 0 }
       //     : { $lt: offset || Number.MAX_SAFE_INTEGER },
+      id:
+        sort[0] !== "-"
+          ? { $lt: lastId || Number.MAX_SAFE_INTEGER }
+          : { $gt: lastId || 0 },
       deadline: { $gt: Math.floor(Date.now() / 1000) },
       canceledAt: null,
     };
@@ -180,7 +185,8 @@ class MarketplaceService {
     const listings = await Listings.find(query)
       .limit(limit)
       .skip(offset)
-      .sort(sort);
+      .sort(sort + " _id");
+
     let extraData = await Promise.all(
       listings.map(async (listing) => {
         const [user, usdWei] = await Promise.all([
@@ -201,13 +207,10 @@ class MarketplaceService {
       })
     );
 
-    // @TODO implement min fee cursor
     let next = null;
     if (extraData.length >= limit) {
-      const lastFid = ethers.BigNumber.from(
-        extraData[extraData.length - 1].fid
-      );
-      next = `${offset + extraData.length}-${lastFid.toString()}`;
+      const lastId = extraData[extraData.length - 1].listing._id;
+      next = `${offset + extraData.length}-${lastId.toString()}`;
     }
 
     return [extraData.slice(0, limit), next];
@@ -953,7 +956,7 @@ class MarketplaceService {
               eventType: "OfferApproved",
               fid: fid,
               from: parsed.args.buyer,
-              price: this._padWithZeros(parsed.args.amount.toString()),
+              price: updatedOffer.amount,
               txHash,
             },
             {
@@ -986,6 +989,11 @@ class MarketplaceService {
     const query = {};
     if (eventType && eventType !== "all") {
       query.eventType = eventType;
+      if (eventType === "Bought") {
+        query.eventType = {
+          $in: ["Bought", "OfferApproved"],
+        };
+      }
     }
     if (fid) {
       query.fid = fid;
@@ -1028,7 +1036,7 @@ class MarketplaceService {
     }
     const offers = await Offers.find(query).sort({ createdAt: -1 });
     const decorated = await Promise.all(
-      offers.map(async (offer) => {
+      (offers || []).map(async (offer) => {
         const [user, usdWei] = await Promise.all([
           this.fetchUserData(offer.fid),
           this.ethToUsd(offer.amount),

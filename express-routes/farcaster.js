@@ -102,6 +102,14 @@ const getLimit = (baseMultiplier) => {
   };
 };
 
+const lightLimiter = rateLimit({
+  windowMs: 1_000,
+  max: getLimit(5),
+  message:
+    "Too many requests or invalid API key! See docs.wield.co for more info.",
+  validate: { limit: false },
+});
+
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000,
@@ -1005,7 +1013,7 @@ const getMarketplaceV1Offers = async (req, res) => {
 const getMarketplaceV1Offer = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
-    const offer = await MarketplaceService.gegetOffertOffers(req.query);
+    const offer = await MarketplaceService.getOffer(req.query);
     return res.json({ result: { offer } });
   } catch (e) {
     console.error(e);
@@ -1019,12 +1027,16 @@ app.post(
   completeMarketplaceV1Listing
 );
 
-app.get("/v2/marketplace/listings", [limiter], getMarketplaceV1Listings);
-app.get("/v2/marketplace/stats", [limiter], getMarketplaceV1Stats);
-app.get("/v2/marketplace/listing", [limiter], getMarketplaceV1Listing);
-app.get("/v2/marketplace/activities", [limiter], getMarketplaceV1Activities);
-app.get("/v2/marketplace/offers", [limiter], getMarketplaceV1Offers);
-app.get("/v2/marketplace/offer", [limiter], getMarketplaceV1Offer);
+app.get("/v2/marketplace/listings", [lightLimiter], getMarketplaceV1Listings);
+app.get("/v2/marketplace/stats", [lightLimiter], getMarketplaceV1Stats);
+app.get("/v2/marketplace/listing", [lightLimiter], getMarketplaceV1Listing);
+app.get(
+  "/v2/marketplace/activities",
+  [lightLimiter],
+  getMarketplaceV1Activities
+);
+app.get("/v2/marketplace/offers", [lightLimiter], getMarketplaceV1Offers);
+app.get("/v2/marketplace/offer", [lightLimiter], getMarketplaceV1Offer);
 
 app.post(
   "/v2/marketplace/listings/buy",
