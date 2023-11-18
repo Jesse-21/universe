@@ -21,7 +21,7 @@ const {
   getHexTokenIdFromLabel,
 } = require("../helpers/get-token-id-from-label");
 
-const { getMemcachedClient } = require("../connectmemcached");
+const { getMemcachedClient, getHash } = require("../connectmemcached");
 const { Message, fromFarcasterTime } = require("@farcaster/hub-nodejs");
 
 function farcasterTimeToDate(time) {
@@ -475,7 +475,7 @@ const searchFarcasterUserByMatch = async (
   const memcached = getMemcachedClient();
   try {
     const data = await memcached.get(
-      encodeURIComponent(`searchFarcasterUserByMatch:${username}`)
+      getHash(`searchFarcasterUserByMatch:${username}`)
     );
     if (data) {
       return JSON.parse(data.value);
@@ -520,7 +520,7 @@ const searchFarcasterUserByMatch = async (
 
   try {
     await memcached.set(
-      encodeURIComponent(`searchFarcasterUserByMatch:${username}`),
+      getHash(`searchFarcasterUserByMatch:${username}`),
       JSON.stringify(farcasterUsers),
       {
         lifetime: 60 * 60, // 1 hour cache
@@ -576,7 +576,7 @@ const getFarcasterUserAndLinksByUsername = async ({ username, context }) => {
   const memcached = getMemcachedClient();
   try {
     const data = await memcached.get(
-      encodeURIComponent(`getFarcasterUserAndLinksByUsername_fid:${username}`)
+      getHash(`getFarcasterUserAndLinksByUsername_fid:${username}`)
     );
     if (data) {
       fid = data.value;
@@ -595,9 +595,7 @@ const getFarcasterUserAndLinksByUsername = async ({ username, context }) => {
   if (fid) {
     try {
       await memcached.set(
-        encodeURIComponent(
-          `getFarcasterUserAndLinksByUsername_fid:${username}`
-        ),
+        getHash(`getFarcasterUserAndLinksByUsername_fid:${username}`),
         fid
       );
     } catch (e) {

@@ -5,7 +5,7 @@ const RATE_LIMIT_MAX = 1_000;
 const { Quest } = require("../../../models/quests/Quest");
 const { Community } = require("../../../models/Community");
 
-const { getMemcachedClient } = require("../../../connectmemcached");
+const { getMemcachedClient, getHash } = require("../../../connectmemcached");
 
 const resolvers = {
   QuestQuery: {
@@ -20,9 +20,7 @@ const resolvers = {
 
       const memcached = getMemcachedClient();
       try {
-        const data = await memcached.get(
-          encodeURIComponent(`getQuests:${argsKey}`)
-        );
+        const data = await memcached.get(getHash(`getQuests:${argsKey}`));
         if (data) {
           return JSON.parse(data.value).map((d) => new Quest(d));
         }
@@ -51,7 +49,7 @@ const resolvers = {
       });
       try {
         await memcached.set(
-          encodeURIComponent(`getQuests:${argsKey}`),
+          getHash(`getQuests:${argsKey}`),
           JSON.stringify(data),
           {
             lifetime: 60 * 60, // 1 hour cache

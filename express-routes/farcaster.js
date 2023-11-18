@@ -45,7 +45,7 @@ const {
   getSSLHubRpcClient,
 } = require("@farcaster/hub-nodejs");
 const { requireAuth } = require("../helpers/auth-middleware");
-const { getMemcachedClient } = require("../connectmemcached");
+const { getMemcachedClient, getHash } = require("../connectmemcached");
 
 const apiKeyCache = new Map(); // two layers of cache, in memory and memcached
 
@@ -65,7 +65,7 @@ const getLimit = (baseMultiplier) => {
       apiKey = apiKeyCache.get(key);
     } else {
       try {
-        const data = await memcached.get(encodeURIComponent(`getLimit:${key}`));
+        const data = await memcached.get(getHash(`getLimit:${key}`));
         if (data) {
           apiKey = new ApiKey(JSON.parse(data.value));
           apiKeyCache.set(key, apiKey);
@@ -81,7 +81,7 @@ const getLimit = (baseMultiplier) => {
         apiKeyCache.set(key, apiKey);
         try {
           await memcached.set(
-            encodeURIComponent(`getLimit:${key}`),
+            getHash(`getLimit:${key}`),
             JSON.stringify(apiKey),
             { lifetime: 60 * 60 } // 1 hour
           );

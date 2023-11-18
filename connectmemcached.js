@@ -1,4 +1,5 @@
 const { MemcacheClient } = require("memcache-client");
+const crypto = require("crypto");
 
 let client;
 
@@ -14,5 +15,8 @@ module.exports = {
     }
 
     return client;
+  },
+  getHash: (key) => {
+    return crypto.createHash("sha256").update(key).digest("hex");
   },
 };
