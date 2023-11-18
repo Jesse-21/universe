@@ -20,7 +20,9 @@ const resolvers = {
 
       const memcached = getMemcachedClient();
       try {
-        const data = await memcached.get(`getQuests:${argsKey}`);
+        const data = await memcached.get(
+          encodeURIComponent(`getQuests:${argsKey}`)
+        );
         if (data) {
           return JSON.parse(data.value).map((d) => new Quest(d));
         }
@@ -48,9 +50,13 @@ const resolvers = {
         filters: args.filters,
       });
       try {
-        await memcached.set(`getQuests:${argsKey}`, JSON.stringify(data), {
-          lifetime: 60 * 60, // 1 hour cache
-        });
+        await memcached.set(
+          encodeURIComponent(`getQuests:${argsKey}`),
+          JSON.stringify(data),
+          {
+            lifetime: 60 * 60, // 1 hour cache
+          }
+        );
       } catch (e) {
         console.error(e);
       }

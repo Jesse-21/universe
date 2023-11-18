@@ -245,6 +245,7 @@ offerSchema.index({ buyerAddress: 1, fid: 1 });
 offerSchema.index({ buyerAddress: 1, fid: 1, canceledAt: 1 });
 offerSchema.index({ fid: 1, canceledAt: 1 });
 offerSchema.index({ txHash: 1 });
+offerSchema.index({ canceledAt: 1 });
 
 const listingSchema = new mongoose.Schema(
   {
@@ -260,6 +261,7 @@ const listingSchema = new mongoose.Schema(
 
 listingSchema.index({ ownerAddress: 1, canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1 });
+listingSchema.index({ canceledAt: 1 });
 listingSchema.index({ fid: 1, canceledAt: 1, txHash: 1 });
 listingSchema.index({ fid: 1, txHash: 1 });
 listingSchema.index({ fid: 1, boughtAt: 1 });

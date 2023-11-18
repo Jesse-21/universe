@@ -219,9 +219,9 @@ class MarketplaceService {
     const memcached = getMemcachedClient();
     let count;
     try {
-      const cached = await memcached.get(`MarketplaceService:latestFid`);
-      if (cached) {
-        count = cached.value;
+      const data = await memcached.get(`MarketplaceService:latestFid`);
+      if (data) {
+        count = data.value;
       }
     } catch (e) {
       console.error(e);
@@ -357,11 +357,11 @@ class MarketplaceService {
       const memcached = getMemcachedClient();
       let proxyAddress;
       try {
-        const cached = await memcached.get(
+        const data = await memcached.get(
           `MarketplaceService:getProxyAddress:${address}:${salt}`
         );
-        if (cached) {
-          proxyAddress = JSON.parse(cached.value);
+        if (data) {
+          proxyAddress = JSON.parse(data.value);
         }
       } catch (e) {
         console.error(e);
@@ -505,8 +505,8 @@ class MarketplaceService {
         totalVolumeRaw,
         oneEthToUsd,
       ] = await Promise.all([
-        Listings.findOne().sort({ minFee: 1 }),
-        Offers.findOne().sort({ amount: -1 }),
+        Listings.findOne({ canceledAt: null }).sort({ minFee: 1 }),
+        Offers.findOne({ canceledAt: null }).sort({ amount: -1 }),
         memcached.get("MarketplaceService:stats:highestSale"),
         memcached.get("MarketplaceService:stats:totalVolume"),
         this.ethToUsd(1),

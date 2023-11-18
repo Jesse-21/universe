@@ -65,7 +65,7 @@ const getLimit = (baseMultiplier) => {
       apiKey = apiKeyCache.get(key);
     } else {
       try {
-        const data = await memcached.get(`getLimit:${key}`);
+        const data = await memcached.get(encodeURIComponent(`getLimit:${key}`));
         if (data) {
           apiKey = new ApiKey(JSON.parse(data.value));
           apiKeyCache.set(key, apiKey);
@@ -81,7 +81,7 @@ const getLimit = (baseMultiplier) => {
         apiKeyCache.set(key, apiKey);
         try {
           await memcached.set(
-            `getLimit:${key}`,
+            encodeURIComponent(`getLimit:${key}`),
             JSON.stringify(apiKey),
             { lifetime: 60 * 60 } // 1 hour
           );

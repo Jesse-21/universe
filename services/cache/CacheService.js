@@ -10,9 +10,12 @@ class CacheService extends NormalizeCacheService {
   async setWithDupe({ key, params, value, expiresAt }) {
     const memcached = getMemcachedClient();
     try {
-      await memcached.delete(this.normalize({ key, params }), {
-        noreply: true,
-      });
+      await memcached.delete(
+        encodeURIComponent(this.normalize({ key, params })),
+        {
+          noreply: true,
+        }
+      );
     } catch (e) {
       console.error(e);
     }
@@ -27,9 +30,12 @@ class CacheService extends NormalizeCacheService {
   async set({ key, params, value, expiresAt }) {
     const memcached = getMemcachedClient();
     try {
-      await memcached.delete(this.normalize({ key, params }), {
-        noreply: true,
-      });
+      await memcached.delete(
+        encodeURIComponent(this.normalize({ key, params })),
+        {
+          noreply: true,
+        }
+      );
     } catch (e) {
       console.error(e);
     }
@@ -44,7 +50,9 @@ class CacheService extends NormalizeCacheService {
   async get({ key, params }) {
     const memcached = getMemcachedClient();
     try {
-      const data = await memcached.get(this.normalize({ key, params }));
+      const data = await memcached.get(
+        encodeURIComponent(this.normalize({ key, params }))
+      );
       if (data) {
         return JSON.parse(data.value).value;
       }
@@ -62,7 +70,11 @@ class CacheService extends NormalizeCacheService {
         const options = found.expiresAt
           ? { lifetime: Math.floor((found.expiresAt - new Date()) / 1000) }
           : {};
-        await memcached.set(normalizedKey, found.value, options);
+        await memcached.set(
+          encodeURIComponent(normalizedKey),
+          found.value,
+          options
+        );
       } catch (e) {
         console.error(e);
       }

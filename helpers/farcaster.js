@@ -474,7 +474,9 @@ const searchFarcasterUserByMatch = async (
 
   const memcached = getMemcachedClient();
   try {
-    const data = await memcached.get(`searchFarcasterUserByMatch:${username}`);
+    const data = await memcached.get(
+      encodeURIComponent(`searchFarcasterUserByMatch:${username}`)
+    );
     if (data) {
       return JSON.parse(data.value);
     }
@@ -518,7 +520,7 @@ const searchFarcasterUserByMatch = async (
 
   try {
     await memcached.set(
-      `searchFarcasterUserByMatch:${username}`,
+      encodeURIComponent(`searchFarcasterUserByMatch:${username}`),
       JSON.stringify(farcasterUsers),
       {
         lifetime: 60 * 60, // 1 hour cache
@@ -574,7 +576,7 @@ const getFarcasterUserAndLinksByUsername = async ({ username, context }) => {
   const memcached = getMemcachedClient();
   try {
     const data = await memcached.get(
-      `getFarcasterUserAndLinksByUsername_fid:${username}`
+      encodeURIComponent(`getFarcasterUserAndLinksByUsername_fid:${username}`)
     );
     if (data) {
       fid = data.value;
@@ -593,7 +595,9 @@ const getFarcasterUserAndLinksByUsername = async ({ username, context }) => {
   if (fid) {
     try {
       await memcached.set(
-        `getFarcasterUserAndLinksByUsername_fid:${username}`,
+        encodeURIComponent(
+          `getFarcasterUserAndLinksByUsername_fid:${username}`
+        ),
         fid
       );
     } catch (e) {
