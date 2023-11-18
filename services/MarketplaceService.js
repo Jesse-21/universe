@@ -94,20 +94,45 @@ class MarketplaceService {
     return numberString;
   }
 
-  async getListing({ fid }) {
+  async getBestOffer({ fid }) {
     const memcached = getMemcachedClient();
-    let cached;
+    let offer;
     try {
-      cached = await memcached.get({
-        key: `Listing:${fid}`,
-      });
+      const data = await memcached.get(`getBestOffer:${fid}`);
+      if (data) {
+        offer = new Offers(JSON.parse(data.value));
+      }
     } catch (e) {
       console.error(e);
     }
+
+    if (!offer) {
+      offer = await Offers.findOne({
+        canceledAt: null,
+        fid,
+      }).sort({ amount: -1 });
+
+      try {
+        await memcached.set(`getBestOffer:${fid}`, JSON.stringify(offer));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (!offer) return null;
+    return offer;
+  }
+  async getListing({ fid }) {
+    const memcached = getMemcachedClient();
     let listing;
-    if (cached) {
-      listing = JSON.parse(cached.value);
-    } else {
+    try {
+      const data = await memcached.get(`Listing:${fid}`);
+      if (data) {
+        listing = new Listings(JSON.parse(data.value));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    if (!listing) {
       const query = {
         fid,
         canceledAt: null,
@@ -115,6 +140,11 @@ class MarketplaceService {
       };
       listing = await Listings.findOne(query);
       listing = listing ? listing._doc : null;
+      try {
+        await memcached.set(`Listing:${fid}`, JSON.stringify(listing));
+      } catch (e) {
+        console.error(e);
+      }
     }
     if (!listing) return null;
 
@@ -143,14 +173,16 @@ class MarketplaceService {
   async fetchDataForFids(fidsArr) {
     return await Promise.all(
       fidsArr.map(async (fid) => {
-        const [user, listing] = await Promise.all([
+        const [user, listing, bestOffer] = await Promise.all([
           this.fetchUserData(fid),
           this.fetchListing(fid),
+          this.getBestOffer({ fid }),
         ]);
         return {
           fid,
           user,
           listing,
+          bestOffer,
         };
       })
     );
@@ -478,7 +510,9 @@ class MarketplaceService {
 
           const memcached = getMemcachedClient();
           try {
-            await memcached.delete(`Listing:${fid}`);
+            await memcached.delete(`Listing:${fid}`, {
+              noreply: true,
+            });
           } catch (e) {
             console.error(e);
           }
@@ -498,62 +532,86 @@ class MarketplaceService {
   async getStats() {
     try {
       const memcached = getMemcachedClient();
-      const [
-        floorListing,
-        highestOffer,
-        highestSaleRaw,
-        totalVolumeRaw,
-        oneEthToUsd,
-      ] = await Promise.all([
-        Listings.findOne({ canceledAt: null }).sort({ minFee: 1 }),
-        Offers.findOne({ canceledAt: null }).sort({ amount: -1 }),
-        memcached.get("MarketplaceService:stats:highestSale"),
-        memcached.get("MarketplaceService:stats:totalVolume"),
-        this.ethToUsd(1),
-      ]);
+      let stats;
 
-      const highestSale = highestSaleRaw?.value || "0";
-      const totalVolume = totalVolumeRaw?.value || "0";
+      try {
+        const data = await memcached.get("MarketplaceService:getStats");
+        if (data) {
+          stats = JSON.parse(data.value);
+        }
+      } catch (e) {
+        console.error(e);
+      }
 
-      return {
-        stats: {
-          floor: {
-            usd: this.usdFormatter.format(
-              ethers.utils.formatEther(
-                ethers.BigNumber.from(floorListing.minFee).mul(oneEthToUsd)
-              )
-            ),
-            wei: floorListing.minFee,
-          },
-          highestOffer: {
-            usd: this.usdFormatter.format(
-              ethers.utils.formatEther(
-                ethers.BigNumber.from(highestOffer?.amount || "0").mul(
-                  oneEthToUsd
+      if (!stats) {
+        const [
+          floorListing,
+          highestOffer,
+          highestSaleRaw,
+          totalVolumeRaw,
+          oneEthToUsd,
+        ] = await Promise.all([
+          Listings.findOne({ canceledAt: null }).sort({ minFee: 1 }),
+          Offers.findOne({ canceledAt: null }).sort({ amount: -1 }),
+          memcached.get("MarketplaceService:stats:highestSale"),
+          memcached.get("MarketplaceService:stats:totalVolume"),
+          this.ethToUsd(1),
+        ]);
+
+        const highestSale = highestSaleRaw?.value || "0";
+        const totalVolume = totalVolumeRaw?.value || "0";
+
+        stats = {
+          stats: {
+            floor: {
+              usd: this.usdFormatter.format(
+                ethers.utils.formatEther(
+                  ethers.BigNumber.from(floorListing.minFee).mul(oneEthToUsd)
                 )
-              )
-            ),
-            wei: highestOffer?.amount || "0",
+              ),
+              wei: floorListing.minFee,
+            },
+            highestOffer: {
+              usd: this.usdFormatter.format(
+                ethers.utils.formatEther(
+                  ethers.BigNumber.from(highestOffer?.amount || "0").mul(
+                    oneEthToUsd
+                  )
+                )
+              ),
+              wei: highestOffer?.amount || "0",
+            },
+            highestSale: {
+              usd: this.usdFormatter.format(
+                ethers.utils.formatEther(
+                  ethers.BigNumber.from(highestSale).mul(oneEthToUsd)
+                )
+              ),
+              wei: highestSale,
+            },
+            totalVolume: {
+              usd: this.usdFormatter.format(
+                ethers.utils.formatEther(
+                  ethers.BigNumber.from(totalVolume).mul(oneEthToUsd)
+                )
+              ),
+              wei: totalVolume,
+            },
           },
-          highestSale: {
-            usd: this.usdFormatter.format(
-              ethers.utils.formatEther(
-                ethers.BigNumber.from(highestSale).mul(oneEthToUsd)
-              )
-            ),
-            wei: highestSale,
-          },
-          totalVolume: {
-            usd: this.usdFormatter.format(
-              ethers.utils.formatEther(
-                ethers.BigNumber.from(totalVolume).mul(oneEthToUsd)
-              )
-            ),
-            wei: totalVolume,
-          },
-        },
-        success: true,
-      };
+          success: true,
+        };
+
+        try {
+          await memcached.set(
+            "MarketplaceService:getStats",
+            JSON.stringify(stats)
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      return stats;
     } catch (e) {
       console.log(e);
       Sentry.captureException(e);
@@ -628,6 +686,9 @@ class MarketplaceService {
               "MarketplaceService:stats:totalVolume",
               newTotalVolume
             );
+            await memcached.delete("MarketplaceService:getStats", {
+              noreply: true,
+            });
           } catch (e) {
             console.error(e);
           }
@@ -850,10 +911,9 @@ class MarketplaceService {
           );
           const memcached = getMemcachedClient();
           try {
-            await memcached.set(
-              `Offer:${parsed.args.fid}`,
-              JSON.stringify(updatedOffer)
-            );
+            await memcached.delete(`getBestOffer:${parsed.args.fid}`, {
+              noreply: true,
+            });
           } catch (e) {
             console.error(e);
           }
@@ -925,10 +985,9 @@ class MarketplaceService {
           );
           const memcached = getMemcachedClient();
           try {
-            await memcached.set(
-              `Offer:${parsed.args.fid}`,
-              JSON.stringify(updatedOffer)
-            );
+            await memcached.delete(`getBestOffer:${parsed.args.fid}`, {
+              noreply: true,
+            });
           } catch (e) {
             console.error(e);
           }
@@ -1024,10 +1083,13 @@ class MarketplaceService {
           );
           const memcached = getMemcachedClient();
           try {
-            await memcached.set(
-              `Offer:${parsed.args.fid}`,
-              JSON.stringify(updatedOffer)
-            );
+            await memcached.delete(`getBestOffer:${parsed.args.fid}`, {
+              noreply: true,
+            });
+
+            await memcached.delete(`Listing:${fid}`, {
+              noreply: true,
+            });
           } catch (e) {
             console.error(e);
           }
@@ -1088,7 +1150,12 @@ class MarketplaceService {
       canceledAt: null,
     };
     if (fid) {
-      query.fid = fid;
+      try {
+        const cleanFid = parseInt(fid, 10);
+        query.fid = isNaN(cleanFid) ? null : cleanFid;
+      } catch (e) {
+        // skip
+      }
     }
     if (buyerAddress) {
       query.buyerAddress = buyerAddress;
