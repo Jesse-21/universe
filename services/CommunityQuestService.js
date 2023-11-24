@@ -32,17 +32,14 @@ class CommunityQuestService extends QuestService {
     });
     if (communityQuestAccount?.rewardClaimed) return false; // already claimed
 
-    const canClaim = await this._canCompleteValidNFTQuest(
-      quest,
-      { requirement },
-      context
-    );
-
     if (requirement?.type.includes("VALID_NFT")) {
+      const canClaim = await this._canCompleteValidNFTQuest(
+        quest,
+        { requirement },
+        context
+      );
       return canClaim;
     }
-
-    if (!canClaim) return false;
 
     if (requirement?.type.includes("FARCASTER_")) {
       await context.account.populate?.("addresses");
