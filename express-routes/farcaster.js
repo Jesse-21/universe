@@ -1021,6 +1021,17 @@ const getMarketplaceV1Offer = async (req, res) => {
   }
 };
 
+const getMarketplaceV1BestOffer = async (req, res) => {
+  try {
+    const MarketplaceService = new _MarketplaceService();
+    const offer = await MarketplaceService.getBestOffer(req.query);
+    return res.json({ result: { offer } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
 app.post(
   "/v2/marketplace/listings/complete",
   [heavyLimiter],
@@ -1037,6 +1048,11 @@ app.get(
 );
 app.get("/v2/marketplace/offers", [lightLimiter], getMarketplaceV1Offers);
 app.get("/v2/marketplace/offer", [lightLimiter], getMarketplaceV1Offer);
+app.get(
+  "/v2/marketplace/best-offer",
+  [lightLimiter],
+  getMarketplaceV1BestOffer
+);
 
 app.post(
   "/v2/marketplace/listings/buy",

@@ -32,6 +32,9 @@ const questRequirementSchema = mongoose.Schema({
       "VALID_NFT_3",
       "VALID_NFT_5",
       "SHARE",
+      "FARMARKET_LISTING_FIRST",
+      "FARMARKET_BUY_FIRST",
+      "FARMARKET_OFFER_FIRST",
       "MULTICHOICE_SINGLE_QUIZ", // one question multi choice
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc

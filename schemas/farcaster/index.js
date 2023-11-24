@@ -316,6 +316,14 @@ listingLogSchema.index({
   fid: 1,
 });
 
+listingLogSchema.index({
+  from: 1,
+  eventType: 1,
+});
+listingLogSchema.index({
+  eventType: 1,
+});
+
 module.exports = {
   hubSubscriptionsSchema,
   messagesSchema,

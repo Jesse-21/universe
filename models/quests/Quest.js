@@ -48,7 +48,6 @@ class QuestClass {
       { $skip: parseInt(offset, 10) },
       { $limit: parseInt(limit, 10) },
     ]);
-
     return quests;
   }
 }

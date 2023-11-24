@@ -112,15 +112,30 @@ class MarketplaceService {
         fid,
       }).sort({ amount: -1 });
 
-      try {
-        await memcached.set(`getBestOffer:${fid}`, JSON.stringify(offer));
-      } catch (e) {
-        console.error(e);
+      if (offer) {
+        try {
+          await memcached.set(`getBestOffer:${fid}`, JSON.stringify(offer));
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
     if (!offer) return null;
-    return offer;
+
+    const [user, usdWei] = await Promise.all([
+      this.fetchUserData(fid),
+      this.ethToUsd(offer.amount),
+    ]);
+
+    const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
+
+    return {
+      ...JSON.parse(JSON.stringify(offer)),
+      usd,
+      user,
+    };
   }
+
   async getListing({ fid }) {
     const memcached = getMemcachedClient();
     let listing;
@@ -140,10 +155,12 @@ class MarketplaceService {
       };
       listing = await Listings.findOne(query);
       listing = listing ? listing._doc : null;
-      try {
-        await memcached.set(`Listing:${fid}`, JSON.stringify(listing));
-      } catch (e) {
-        console.error(e);
+      if (listing) {
+        try {
+          await memcached.set(`Listing:${fid}`, JSON.stringify(listing));
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
     if (!listing) return null;
@@ -156,7 +173,7 @@ class MarketplaceService {
     const usd = this.usdFormatter.format(ethers.utils.formatEther(usdWei));
 
     return {
-      ...listing,
+      ...JSON.parse(JSON.stringify(listing)),
       usd,
       user,
     };
