@@ -183,13 +183,13 @@ class CommunityQuestService extends QuestService {
       return "CHECKED_IN";
     }
 
-    const quest = await Quest.findById(communityQuest.quest);
-    const canCompleteQuest = await this.canCompleteQuest(
-      quest,
-      { communityId: communityQuest.community },
-      context
-    );
-    if (canCompleteQuest) return "CAN_COMPLETE";
+    // const quest = await Quest.findById(communityQuest.quest);
+    // const canCompleteQuest = await this.canCompleteQuest(
+    //   quest,
+    //   { communityId: communityQuest.community },
+    //   context
+    // );
+    // if (canCompleteQuest) return "CAN_COMPLETE";
     return "IN_PROGRESS";
   }
 
