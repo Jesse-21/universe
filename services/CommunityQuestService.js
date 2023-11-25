@@ -16,7 +16,6 @@ const FARQUEST_FID = "12741";
 class CommunityQuestService extends QuestService {
   /**
    * Check if a communityQuest can claim the reward
-   * @TODO THIS IS A HACK AND SHOULD BE REFACTORED OR DEPRECATED
    * @returns Promise<Boolean>
    * */
   async canClaimReward(communityQuest, { questData = [] }, context) {
@@ -183,13 +182,6 @@ class CommunityQuestService extends QuestService {
       return "CHECKED_IN";
     }
 
-    // const quest = await Quest.findById(communityQuest.quest);
-    // const canCompleteQuest = await this.canCompleteQuest(
-    //   quest,
-    //   { communityId: communityQuest.community },
-    //   context
-    // );
-    // if (canCompleteQuest) return "CAN_COMPLETE";
     return "IN_PROGRESS";
   }
 
