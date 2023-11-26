@@ -25,7 +25,9 @@ class FarcasterServiceV2 {
       external: profile.external,
     };
   }
-  async getProfilesByAddress(address) {
+  async getProfilesByAddress(addressRaw) {
+    const address = addressRaw?.toLowerCase();
+    if (!address) return [];
     const cleanProfile = (farcaster) => ({
       ...this._cleanProfile(farcaster),
       address,
@@ -53,6 +55,7 @@ class FarcasterServiceV2 {
   }
 
   async getProfileByUsername(username) {
+    if (!username) return null;
     const farcaster = await getFarcasterUserByUsername(username);
     if (!farcaster) return null;
     const address = await getConnectedAddressForFid(farcaster.fid);

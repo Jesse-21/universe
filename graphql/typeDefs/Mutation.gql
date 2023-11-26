@@ -411,9 +411,6 @@ type Mutation {
     address: String # address to revoke role to
   ): AccountCommunityRoleMutationResponse # only owner or admins of community
   claimRole(roleId: ID!): AccountCommunityRoleMutationResponse # only authenticated account
-  #
-  # CommunityQuest mutations, require auth
-  completeQuest(questId: ID!, communityId: ID!): CommunityQuestMutationResponse # need auth
   claimReward(
     questId: ID!
     communityId: ID!

@@ -115,34 +115,6 @@ class QuestService extends QuestRewardService {
       return false;
     }
   }
-  /**
-   * Check if the quest can be completed by an account
-   * @TODO add more than one requirement
-   * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
-   * @returns Promise<Boolean>
-   * */
-  // * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
-  async canCompleteQuest(quest, { communityId }, context) {
-    if (!quest || !context.account) return false;
-    const requirement = quest.requirements?.[0];
-    if (!requirement) return true;
-    if (
-      requirement.type.includes("FARCASTER") ||
-      requirement.type.includes("VALID_NFT")
-    )
-      return true;
-    switch (requirement.type) {
-      case "COMMUNITY_PARTICIPATION":
-        return await this._canCompleteCommunityParticipationQuest(
-          quest,
-          { requirement, communityId },
-          context
-        );
-      default:
-        return false;
-    }
-  }
-  // * @TODO THIS IS GOING TO BE DEPRECATED FOR PRE-REQUESITES, DO NOT USE ANYMORE
 
   /**
    * Create Quest Rewards or use existing Assets

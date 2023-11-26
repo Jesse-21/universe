@@ -2,7 +2,7 @@ const { Notification } = require("../../../models/Notification");
 const { getGraphQLRateLimiter } = require("graphql-rate-limit");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 1_000;
+const RATE_LIMIT_MAX = 10_000;
 const {
   unauthorizedErrorOrAccount,
 } = require("../../../helpers/auth-middleware");

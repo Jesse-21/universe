@@ -207,27 +207,12 @@ class CommunityQuestMutationService extends CommunityQuestService {
       { communityId, questId },
       context
     );
-    if (
-      status !== "CAN_COMPLETE" &&
-      status !== "CHECKED_IN" &&
-      status !== "CAN_CLAIM_REWARD"
-    ) {
-      throw new Error(
-        `Your account cannot complete the quest status=${status}`
-      );
+    if (status === "CAN_CLAIM_REWARD") {
+      await CommunityQuestAccount.findOrCreate({
+        accountId: context.account._id,
+        communityQuestId: existing._id,
+      });
     }
-
-    if (status == "CHECKED_IN" || status == "CAN_CLAIM_REWARD") {
-      // If it is CHECKED_IN or CAN_CLAIM_REWARD, it means the account is past IN_PROGRESS, for idempontency proceed
-      return existing;
-    }
-
-    await CommunityQuestAccount.findOrCreate({
-      accountId: context.account._id,
-      communityQuestId: existing._id,
-    });
-
-    return existing;
   }
 }
 

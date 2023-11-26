@@ -174,11 +174,11 @@ class CommunityQuestService extends QuestService {
     if (canClaimReward) return "CAN_CLAIM_REWARD";
 
     // if account already completed the quest and cannot claim reward
-    const exist = await CommunityQuestAccount.exists({
+    const found = await CommunityQuestAccount.exists({
       communityQuest: communityQuest._id,
       account: context.account._id,
     });
-    if (exist) {
+    if (found && found.rewardClaimed) {
       return "CHECKED_IN";
     }
 
