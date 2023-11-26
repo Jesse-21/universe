@@ -88,7 +88,7 @@ const resolvers = {
     updateAccountThreadLastSeen: async (root, args, context, info) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },
-        { max: 1000, window: "10s" }
+        { max: RATE_LIMIT_MAX, window: "10s" }
       );
       if (errorMessage) throw new Error(errorMessage);
       const auth = await unauthorizedErrorOrAccount(root, args, context);

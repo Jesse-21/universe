@@ -48,7 +48,7 @@ const resolvers = {
     ) => {
       const errorMessage = await rateLimiter(
         { root, args, context, info },
-        { max: 200, window: "10s" }
+        { max: RATE_LIMIT_MAX, window: "10s" }
       );
       if (errorMessage) throw new Error(errorMessage);
       const account = await Account.findByAddressAndChainId({
