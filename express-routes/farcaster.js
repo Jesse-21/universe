@@ -65,7 +65,7 @@ const getLimit = (baseMultiplier) => {
       apiKey = apiKeyCache.get(key);
     } else {
       try {
-        const data = await memcached.get(getHash(`getLimit:${key}`));
+        const data = await memcached.get(getHash(`ApiKey_getLimit:${key}`));
         if (data) {
           apiKey = new ApiKey(JSON.parse(data.value));
           apiKeyCache.set(key, apiKey);
@@ -81,7 +81,7 @@ const getLimit = (baseMultiplier) => {
         apiKeyCache.set(key, apiKey);
         try {
           await memcached.set(
-            getHash(`getLimit:${key}`),
+            getHash(`ApiKey_getLimit:${key}`),
             JSON.stringify(apiKey),
             { lifetime: 60 * 60 } // 1 hour
           );
@@ -101,14 +101,6 @@ const getLimit = (baseMultiplier) => {
     return Math.ceil(baseMultiplier * apiKey.multiplier);
   };
 };
-
-const lightLimiter = rateLimit({
-  windowMs: 1_000,
-  max: getLimit(5),
-  message:
-    "Too many requests or invalid API key! See docs.wield.co for more info.",
-  validate: { limit: false },
-});
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -1038,21 +1030,13 @@ app.post(
   completeMarketplaceV1Listing
 );
 
-app.get("/v2/marketplace/listings", [lightLimiter], getMarketplaceV1Listings);
-app.get("/v2/marketplace/stats", [lightLimiter], getMarketplaceV1Stats);
-app.get("/v2/marketplace/listing", [lightLimiter], getMarketplaceV1Listing);
-app.get(
-  "/v2/marketplace/activities",
-  [lightLimiter],
-  getMarketplaceV1Activities
-);
-app.get("/v2/marketplace/offers", [lightLimiter], getMarketplaceV1Offers);
-app.get("/v2/marketplace/offer", [lightLimiter], getMarketplaceV1Offer);
-app.get(
-  "/v2/marketplace/best-offer",
-  [lightLimiter],
-  getMarketplaceV1BestOffer
-);
+app.get("/v2/marketplace/listings", [limiter], getMarketplaceV1Listings);
+app.get("/v2/marketplace/stats", [limiter], getMarketplaceV1Stats);
+app.get("/v2/marketplace/listing", [limiter], getMarketplaceV1Listing);
+app.get("/v2/marketplace/activities", [limiter], getMarketplaceV1Activities);
+app.get("/v2/marketplace/offers", [limiter], getMarketplaceV1Offers);
+app.get("/v2/marketplace/offer", [limiter], getMarketplaceV1Offer);
+app.get("/v2/marketplace/best-offer", [limiter], getMarketplaceV1BestOffer);
 
 app.post(
   "/v2/marketplace/listings/buy",
