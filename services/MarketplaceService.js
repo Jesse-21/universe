@@ -887,12 +887,13 @@ class MarketplaceService {
     );
 
     let updatedOffer = null;
+
     for (let log of receipt.logs) {
       try {
         const parsed = eventInterface.parseLog(log);
 
         if (parsed.name === "OfferMade") {
-          const fid = parsed.args.fid.toNumber();
+          const fid = parsed.args.fid.toString();
 
           const query = {
             fid,
@@ -1123,8 +1124,14 @@ class MarketplaceService {
     return updatedOffer;
   }
 
-  async getActivities({ eventType, fid, from, limit = 20 }) {
-    const query = {};
+  async getActivities({ eventType, fid, from, limit = 20, cursor }) {
+    const [offset, lastId] = cursor ? cursor.split("-") : [Date.now(), null];
+
+    const query = {
+      createdAt: { $lt: offset },
+      id: { $lt: lastId || Number.MAX_SAFE_INTEGER },
+    };
+
     if (eventType && eventType !== "all") {
       query.eventType = eventType;
       if (eventType === "Bought") {
@@ -1159,7 +1166,15 @@ class MarketplaceService {
         };
       })
     );
-    return decorated;
+
+    let next = null;
+    if (activities.length === limit) {
+      next = `${activities[activities.length - 1].createdAt.getTime()}-${
+        activities[activities.length - 1].id
+      }`;
+    }
+
+    return [decorated, next];
   }
 
   async getOffers({ fid, buyerAddress }) {

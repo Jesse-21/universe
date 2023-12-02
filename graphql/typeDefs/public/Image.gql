@@ -7,4 +7,5 @@ type Image {
   verificationExternalUrl: String
   description: String
   metadata: [KeyValueFields]
+  layers: [Layer]
 }

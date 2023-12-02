@@ -21,14 +21,14 @@ class AccountInventoryClass {
     }
     const $sort =
       sort[0] === "-" ? { [sort.slice(1)]: -1, _id: 1 } : { [sort]: 1 };
-    const accountCommunities = await this.aggregate([
+    const accountInventory = await this.aggregate([
       { $match: matchQuery },
       { $sort: $sort },
       { $skip: parseInt(offset, 10) },
       { $limit: parseInt(limit, 10) },
     ]);
 
-    return accountCommunities;
+    return accountInventory;
   }
 
   static async createOrUpdate({

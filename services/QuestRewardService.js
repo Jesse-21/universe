@@ -32,6 +32,7 @@ class QuestRewardService {
             name: rewardData.name,
             metadata: rewardData.metadata,
             description: rewardData.description,
+            layers: rewardData.layers,
           });
           break;
         }
@@ -55,6 +56,7 @@ class QuestRewardService {
             name: rewardData.name,
             metadata: rewardData.metadata,
             description: rewardData.description,
+            layers: rewardData.layers,
           });
           break;
         }

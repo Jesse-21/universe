@@ -65,7 +65,9 @@ const getLimit = (baseMultiplier) => {
       apiKey = apiKeyCache.get(key);
     } else {
       try {
-        const data = await memcached.get(getHash(`ApiKey_getLimit:${key}`));
+        const data = await memcached.get(
+          getHash(`FarcasterApiKey_getLimit:${key}`)
+        );
         if (data) {
           apiKey = new ApiKey(JSON.parse(data.value));
           apiKeyCache.set(key, apiKey);
@@ -81,7 +83,7 @@ const getLimit = (baseMultiplier) => {
         apiKeyCache.set(key, apiKey);
         try {
           await memcached.set(
-            getHash(`ApiKey_getLimit:${key}`),
+            getHash(`FarcasterApiKey_getLimit:${key}`),
             JSON.stringify(apiKey),
             { lifetime: 60 * 60 } // 1 hour
           );
@@ -983,8 +985,10 @@ const getMarketplaceV1Stats = async (req, res) => {
 const getMarketplaceV1Activities = async (req, res) => {
   try {
     const MarketplaceService = new _MarketplaceService();
-    const activities = await MarketplaceService.getActivities(req.query);
-    return res.json({ result: { activities } });
+    const [activities, next] = await MarketplaceService.getActivities(
+      req.query
+    );
+    return res.json({ result: { activities, next } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
