@@ -800,6 +800,10 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
       apiKey: prod().NODE_URL, // force use prod for BEB collection
       chain: prod().NODE_NETWORK, // force use prod for BEB collection
     });
+    const OptimismAlchemyService = new _AlchemyService({
+      apiKey: prod().OPTIMISM_NODE_URL, // force use prod for OP BEB collection
+      chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for OP BEB collection
+    });
 
     let isHolder = null;
 
@@ -816,6 +820,10 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
         wallet: address,
         contractAddress: prod().REGISTRAR_ADDRESS,
       });
+      isHolder ||= await OptimismAlchemyService.isHolderOfCollection({
+        wallet: address,
+        contractAddress: prod().OPTIMISM_REGISTRAR_ADDRESS,
+      });
       try {
         await memcached.set(
           `getAddressPasses_isHolder:${address}`,
@@ -831,11 +839,18 @@ app.get("/v2/get-address-passes", limiter, async (req, res) => {
 
     let passes;
     if (isHolder) {
-      const data = await AlchemyService.getNFTs({
-        owner: address,
-        contractAddresses: [prod().REGISTRAR_ADDRESS],
-      });
-      passes = (data["ownedNfts"] || [])
+      const [data, optimismData] = await Promise.all([
+        AlchemyService.getNFTs({
+          owner: address,
+          contractAddresses: [prod().REGISTRAR_ADDRESS],
+        }),
+        OptimismAlchemyService.getNFTs({
+          owner: address,
+          contractAddresses: [prod().OPTIMISM_REGISTRAR_ADDRESS],
+        }),
+      ]);
+      passes = (data?.ownedNfts || [])
+        .concat(optimismData?.ownedNfts || [])
         .map((nft) => {
           let title = nft["title"];
           // Lets set passes as .cast

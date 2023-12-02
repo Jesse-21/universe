@@ -77,6 +77,11 @@ const schema = mongoose.Schema(
     imageUrl: {
       type: String,
     },
+    requirementJoinOperator: {
+      type: String,
+      enum: ["AND", "OR"],
+      default: "OR",
+    },
     /** Array of requirement */
     requirements: [questRequirementSchema],
     /** Array of rewards */

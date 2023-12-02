@@ -74,9 +74,17 @@ const resolvers = {
           apiKey: prod().NODE_URL, // force use prod for BEB collection
           chain: prod().NODE_NETWORK, // force use prod for BEB collection
         });
-        const isOwner = await AlchemyService.isHolderOfCollection({
+        const OptimismAlchemyService = new _AlchemyService({
+          apiKey: prod().OPTIMISM_NODE_URL, // force use prod for OP BEB collection
+          chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for OP BEB collection
+        });
+        let isOwner = await AlchemyService.isHolderOfCollection({
           wallet: args.address,
           contractAddress: prod().REGISTRAR_ADDRESS,
+        });
+        isOwner ||= await OptimismAlchemyService.isHolderOfCollection({
+          wallet: args.address,
+          contractAddress: prod().OPTIMISM_REGISTRAR_ADDRESS,
         });
         if (!isOwner) {
           return {
@@ -136,9 +144,17 @@ const resolvers = {
           apiKey: prod().NODE_URL, // force use prod for BEB collection
           chain: prod().NODE_NETWORK, // force use prod for BEB collection
         });
-        const isOwner = await AlchemyService.isHolderOfCollection({
+        const OptimismAlchemyService = new _AlchemyService({
+          apiKey: prod().OPTIMISM_NODE_URL, // force use prod for OP BEB collection
+          chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for OP BEB collection
+        });
+        let isOwner = await AlchemyService.isHolderOfCollection({
           wallet: args.address,
           contractAddress: prod().REGISTRAR_ADDRESS,
+        });
+        isOwner ||= await OptimismAlchemyService.isHolderOfCollection({
+          wallet: args.address,
+          contractAddress: prod().OPTIMISM_REGISTRAR_ADDRESS,
         });
         if (!isOwner) {
           return {

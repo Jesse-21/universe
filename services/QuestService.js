@@ -93,12 +93,17 @@ class QuestService extends QuestRewardService {
       count = 1,
       attributeType = null,
       attributeValue = null,
+      chain = "eth-mainnet",
     } = dataMapping;
     if (!contractAddress) return false;
+    const apiKeys = {
+      "eth-mainnet": prod().NODE_URL,
+      "opt-mainnet": process.env.OPTIMISM_NODE_URL,
+    };
 
     const AlchemyService = new _AlchemyService({
-      apiKey: prod().NODE_URL,
-      chain: prod().NODE_NETWORK,
+      apiKey: apiKeys[chain],
+      chain,
     });
 
     try {

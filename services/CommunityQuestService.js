@@ -14,23 +14,11 @@ const { ListingLogs } = require("../models/farcaster");
 const FARQUEST_FID = "12741";
 
 class CommunityQuestService extends QuestService {
-  /**
-   * Check if a communityQuest can claim the reward
-   * @returns Promise<Boolean>
-   * */
-  async canClaimReward(communityQuest, { questData = [] }, context) {
-    if (!communityQuest) return false;
-    if (communityQuest.isArchived) return false;
-
-    const quest = await Quest.findById(communityQuest.quest);
-    if (!quest || (quest.startsAt && quest.startsAt > new Date())) return false;
-    const requirement = quest?.requirements?.[0];
-    const communityQuestAccount = await CommunityQuestAccount.findOne({
-      communityQuest: communityQuest._id,
-      account: context.account?._id || context.accountId,
-    });
-    if (communityQuestAccount?.rewardClaimed) return false; // already claimed
-
+  async canSatisfyRequirement(
+    communityQuest,
+    { requirement, quest, questData },
+    context
+  ) {
     if (requirement?.type.includes("VALID_NFT")) {
       const canClaim = await this._canCompleteValidNFTQuest(
         quest,
@@ -154,6 +142,43 @@ class CommunityQuestService extends QuestService {
         return false;
       }
     }
+  }
+
+  /**
+   * Check if a communityQuest can claim the reward
+   * @returns Promise<Boolean>
+   * */
+  async canClaimReward(communityQuest, { questData = [] }, context) {
+    if (!communityQuest) return false;
+    if (communityQuest.isArchived) return false;
+
+    const quest = await Quest.findById(communityQuest.quest);
+    if (!quest || (quest.startsAt && quest.startsAt > new Date())) return false;
+
+    const communityQuestAccount = await CommunityQuestAccount.findOne({
+      communityQuest: communityQuest._id,
+      account: context.account?._id || context.accountId,
+    });
+    if (communityQuestAccount?.rewardClaimed) return false; // already claimed
+    if (!quest.requirements || quest.requirements.length === 0) return true;
+
+    const canSatisfyRequirements = await Promise.all(
+      quest.requirements.map((requirement) =>
+        this.canSatisfyRequirement(
+          communityQuest,
+          { requirement, quest, questData },
+          context
+        )
+      )
+    );
+    const joinOperator = quest.requirementJoinOperator || "OR";
+    if (joinOperator === "OR") {
+      return canSatisfyRequirements.some((r) => r);
+    }
+    if (joinOperator === "AND") {
+      return canSatisfyRequirements.every((r) => r);
+    }
+    return false;
   }
 
   /**
