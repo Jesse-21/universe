@@ -3,7 +3,7 @@
 <img src="./.misc/header.png" width="300" />
 
 Universe is an implementation of a Wield Host. Universes are open-source hosts
-for [Wield, a protocol making crypto exploration fun](https://wield.co).
+for [Wield, making crypto exploration fun](https://wield.co).
 
 This is an early work that is subject to heavy changes, see our
 [Github Issues](https://github.com/wieldlabs/dimension/issues) if you wish to
