@@ -1,9 +1,9 @@
 {
   "name": "universe",
-  "version": "2.3.12",
+  "version": "2.3.13",
   "main": "README.md",
   "license": "AGPL-3.0",
-  "repository": "git@github.com:wieldprotocol/universe.git",
+  "repository": "git@github.com:wieldlabs/universe.git",
   "author": "Beb, Inc. <gm@wield.co>",
   "scripts": {
     "start": "node ./index.js",

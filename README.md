@@ -6,8 +6,8 @@ Universe is an implementation of a Wield Host. Universes are open-source hosts
 for [Wield, a protocol making crypto exploration fun](https://wield.co).
 
 This is an early work that is subject to heavy changes, see our
-[Github Issues](https://github.com/wieldprotocol/dimension/issues) if you wish
-to contribute.
+[Github Issues](https://github.com/wieldlabs/dimension/issues) if you wish to
+contribute.
 
 **See our developer documents at [`docs.wield.co`](https://docs.wield.co).**
 
@@ -22,7 +22,7 @@ as `ARG` parameters.
    preference ([Railway](https://railway.app),
    [Heroku](https://www.heroku.com/), etc).
 3. Once you have a hosted url, you can set this path in the BEBverse
-   [resolver smart contracts](https://github.com/wieldprotocol/contracts). For
+   [resolver smart contracts](https://github.com/wieldlabs/contracts). For
    example, `foo.cast` would resolve to your host at
    `example-load-balancer-1234567890.us-west-2.elb.amazonaws.com`. See our
    [self-hosting guide](https://docs.wield.co/selfhosting#configuring-the-resolver-contract)
@@ -30,16 +30,16 @@ as `ARG` parameters.
 
 ## Contribution Guidelines
 
-The **wieldprotocol/universe** repo follows the
+The **wieldlabs/universe** repo follows the
 [conventional commits guidelines](https://www.conventionalcommits.org/en/v1.0.0/#summary),
 please be sure to respect them when committing.
 
 When opening a Pull Request and you are not already a core contributor to
-[@wieldprotocol](https://github.com/wieldprotocol), be sure to explain your pull
-request in greater detail so there's less churn when reviewing and we can get
-your changes landed ASAP, thank you!
+[@wieldlabs](https://github.com/wieldlabs), be sure to explain your pull request
+in greater detail so there's less churn when reviewing and we can get your
+changes landed ASAP, thank you!
 
-## Developing in the wieldprotocol/universe repo
+## Developing in the wieldlabs/universe repo
 
 Welcome to the setup guide for Universe! To start, you'll need
 [node.js](https://github.com/nvm-sh/nvm),

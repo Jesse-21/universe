@@ -19,7 +19,7 @@ const verifyTwitter = async (url, text) => {
 
   const html = data.html;
 
-  return html.includes("@wieldprotocol");
+  return html.includes("@wieldlabs");
 };
 
 module.exports = {
