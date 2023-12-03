@@ -16,7 +16,7 @@ const {
   Storage,
 } = require("../models/farcaster");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
-const { config } = require("../helpers/registrar");
+const { config, prod } = require("../helpers/registrar");
 const {
   getHexTokenIdFromLabel,
 } = require("../helpers/get-token-id-from-label");
@@ -78,19 +78,30 @@ const postMessage = async ({
       message.data.userDataBody.type === UserDataType.USER_DATA_TYPE_USERNAME
     ) {
       const AlchemyService = new _AlchemyService({
-        apiKey: config().NODE_URL, // force use prod for BEB collection
-        chain: config().NODE_NETWORK, // force use prod for BEB collection
+        apiKey: prod().NODE_URL, // force use prod for BEB collection
+        chain: prod().NODE_NETWORK, // force use prod for BEB collection
+      });
+      const OptimismAlchemyService = new _AlchemyService({
+        apiKey: prod().OPTIMISM_NODE_URL, // force use prod for OP BEB collection
+        chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for OP BEB collection
       });
       const username = Buffer.from(message.data.userDataBody.value)
         .toString("ascii")
         .replace(".beb", "")
         .replace(".cast", "");
       const usernameTokenId = getHexTokenIdFromLabel(username);
-      const data = await AlchemyService.getNFTs({
-        owner: externalFid,
-        contractAddresses: [config().REGISTRAR_ADDRESS],
-      });
-      const validPasses = (data["ownedNfts"] || [])
+      const [data, optimismData] = await Promise.all([
+        AlchemyService.getNFTs({
+          owner: externalFid,
+          contractAddresses: [prod().REGISTRAR_ADDRESS],
+        }),
+        OptimismAlchemyService.getNFTs({
+          owner: externalFid,
+          contractAddresses: [prod().OPTIMISM_REGISTRAR_ADDRESS],
+        }),
+      ]);
+      const validPasses = (data?.ownedNfts || [])
+        .concat(optimismData?.ownedNfts || [])
         .map((nft) => {
           return nft["id"]?.["tokenId"];
         })
