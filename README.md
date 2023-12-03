@@ -9,8 +9,7 @@ This is an early work that is subject to heavy changes, see our
 [Github Issues](https://github.com/wieldprotocol/dimension/issues) if you wish
 to contribute.
 
-**See our developer documents at
-[`Wield Dimension GraphQL APIs`](https://docs.wield.co/developers).**
+**See our developer documents at [`docs.wield.co`](https://docs.wield.co).**
 
 ## Self-hosting Your Universe
 
