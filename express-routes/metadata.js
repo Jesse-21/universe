@@ -186,7 +186,8 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
 
     let body = (await d3).select(fakeDom.window.document).select("body");
 
-    const RegistrarService = new _RegistrarService();
+    const optimism = rawDomain.startsWith("op_");
+    const RegistrarService = new _RegistrarService(optimism);
     const expiresAt = await RegistrarService.expiresAt(rawDomain);
 
     let length = [...rawDomain].length;
@@ -262,7 +263,11 @@ app.get("/uri/:uri", lightLimiter, async (req, res) => {
         },
         {
           trait_type: "Category",
-          value: rawDomain.length < 10 ? "Premium Renewal" : "Free Renewal",
+          value: rawDomain.startsWith("op_")
+            ? "Optimism Renewal"
+            : rawDomain.length < 10
+            ? "Premium Renewal"
+            : "Free Renewal",
         },
         {
           trait_type: "Character Set",

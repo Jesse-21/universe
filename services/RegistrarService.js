@@ -26,38 +26,65 @@ const {
 const { Community } = require("../models/Community");
 
 class RegistrarService {
-  constructor() {
-    const AlchemyService = new _AlchemyService({
-      apiKey: prod().NODE_URL, // force use prod for ENS
-      chain: prod().NODE_NETWORK, // force use prod for ENS
-    });
-    const alchemyProvider = getProvider({
-      network: config().NODE_NETWORK,
-      node: config().NODE_URL,
-    });
+  constructor(optimism = false) {
+    if (!optimism) {
+      const AlchemyService = new _AlchemyService({
+        apiKey: prod().NODE_URL, // force use prod for ENS
+        chain: prod().NODE_NETWORK, // force use prod for ENS
+      });
+      const alchemyProvider = getProvider({
+        network: config().NODE_NETWORK,
+        node: config().NODE_URL,
+      });
 
-    const controller = new ethers.Contract(
-      config().BETA_CONTROLLER_ADDRESS,
-      config().BETA_CONTROLLER_ABI,
-      alchemyProvider
-    );
-    const registrar = new ethers.Contract(
-      config().REGISTRAR_ADDRESS,
-      config().REGISTRAR_ABI,
-      alchemyProvider
-    );
+      const controller = new ethers.Contract(
+        config().BETA_CONTROLLER_ADDRESS,
+        config().BETA_CONTROLLER_ABI,
+        alchemyProvider
+      );
+      const registrar = new ethers.Contract(
+        config().REGISTRAR_ADDRESS,
+        config().REGISTRAR_ABI,
+        alchemyProvider
+      );
 
-    this.AlchemyService = AlchemyService;
-    this.alchemyProvider = alchemyProvider;
-    this.controller = controller;
-    this.registrar = registrar;
+      this.AlchemyService = AlchemyService;
+      this.alchemyProvider = alchemyProvider;
+      this.controller = controller;
+      this.registrar = registrar;
+    } else {
+      const AlchemyService = new _AlchemyService({
+        apiKey: prod().OPTIMISM_NODE_URL, // force use prod for ENS
+        chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for ENS
+      });
+      const alchemyProvider = getProvider({
+        network: prod().OPTIMISM_NODE_NETWORK,
+        node: prod().OPTIMISM_NODE_URL,
+      });
+
+      const controller = new ethers.Contract(
+        prod().OPTIMISM_CONTROLLER_ADDRESS,
+        prod().OPTIMISM_CONTROLLER_ABI,
+        alchemyProvider
+      );
+      const registrar = new ethers.Contract(
+        prod().OPTIMISM_REGISTRAR_ADDRESS,
+        prod().REGISTRAR_ABI,
+        alchemyProvider
+      );
+
+      this.AlchemyService = AlchemyService;
+      this.alchemyProvider = alchemyProvider;
+      this.controller = controller;
+      this.registrar = registrar;
+    }
   }
 
   /**
    * Get owner of NFT tokenId
    * @returns {Promise<string>} - address of owner
    */
-  async getOwner(domain, tld = "beb") {
+  async getOwner(domain, _tld = "beb") {
     if (!domain) return null;
     const tokenId = this.getTokenIdFromLabel(domain);
     try {
