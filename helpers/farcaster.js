@@ -208,6 +208,7 @@ const getFarcasterUserByFid = async (fid) => {
   };
 
   let registeredAt = null;
+  let found = {};
   for (const userData of allUserData) {
     if (userData.external) user.external = true;
     registeredAt = registeredAt || userData.createdAt;
@@ -218,7 +219,6 @@ const getFarcasterUserByFid = async (fid) => {
     const hexString = userData.value.startsWith("0x")
       ? userData.value.slice(2)
       : userData.value;
-    const found = {};
 
     const convertedData = Buffer.from(hexString, "hex").toString("utf8");
     switch (userData.type) {
@@ -233,6 +233,7 @@ const getFarcasterUserByFid = async (fid) => {
           user.displayName = convertedData;
           found.displayName = true;
         }
+
         break;
       case UserDataType.USER_DATA_TYPE_PFP:
         if (!found.pfp) {
