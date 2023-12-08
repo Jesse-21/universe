@@ -587,7 +587,7 @@ app.get(
         },
       });
       if (!lastSeen) {
-        lastSeen = new Date(0);
+        lastSeen = new Date();
       }
       const unseenCount = await getFarcasterUnseenNotificationsCount({
         lastSeen,
