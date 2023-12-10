@@ -8,11 +8,13 @@ const { Account } = require("../models/Account");
 const { AccountInvite } = require("../models/AccountInvite");
 const { verifyTwitter } = require("../helpers/verify-social");
 const rateLimit = require("express-rate-limit");
+const { getFarcasterUserByFid } = require("../helpers/farcaster");
+const { Fids } = require("../models/farcaster");
 
 // Rate limiting middleware
 const heavyLimiter = rateLimit({
   windowMs: 5_000, // 5s
-  max: 1, // limit each IP to 100 requests per windowMs
+  max: 10_000, // limit each IP to 100 requests per windowMs
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
@@ -179,6 +181,76 @@ app.get("/need-invite", heavyLimiter, async (req, res) => {
     return res.json({
       code: 200,
       success: true,
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.json({
+      code: 500,
+      success: false,
+      message: e.message,
+    });
+  }
+});
+
+const filteredUser = async (fid) => {
+  if (!fid) return null;
+  const CacheService = new _CacheService();
+  // return fname only if user is valid
+  const user = await getFarcasterUserByFid(fid);
+  // check if user has already been filtered
+  const alreadyExists = await CacheService.get({
+    key: "RetrievedRecentUserQuery",
+    params: {
+      fid: user.fid,
+    },
+  });
+  if (alreadyExists) return null;
+
+  if (!user.username || !user.displayName) return null;
+
+  // if user is valid, set cache
+  await CacheService.set({
+    key: "RetrievedRecentUserQuery",
+    params: {
+      fid: user.fid,
+    },
+    value: 1,
+    expiresAt: null,
+  });
+
+  return user.username;
+};
+
+app.get("/recent-users", heavyLimiter, async (req, res) => {
+  try {
+    // get all recent Fids by createdAt, limit 1000
+    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(1000);
+    // iterate through each fid one by one until we find three, filteredUser is not indeponent
+    // if we find three, return
+    // if we don't find three, return empty array
+    const users = [];
+    for (let i = 0; i < fids.length; i++) {
+      const user = await filteredUser(fids[i].fid);
+      if (user) {
+        users.push(user);
+      }
+      if (users.length === 3) {
+        break;
+      }
+    }
+    if (users.length < 3) {
+      Sentry.captureMessage("Could not find three users!");
+      return res.json({
+        code: 200,
+        success: true,
+        users: [],
+      });
+    }
+    return res.json({
+      code: 200,
+      success: true,
+      users,
     });
   } catch (e) {
     Sentry.captureException(e);
