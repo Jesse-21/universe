@@ -207,7 +207,7 @@ const filteredUser = async (fid) => {
   });
   if (alreadyExists) return null;
 
-  if (!user.username || !user.displayName) return null;
+  if (!user.username || !user.displayName || user.external) return null;
 
   // if user is valid, set cache
   await CacheService.set({
