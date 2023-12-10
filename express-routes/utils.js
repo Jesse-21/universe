@@ -223,6 +223,8 @@ const filteredUser = async (fid) => {
 };
 
 app.get("/recent-users", heavyLimiter, async (req, res) => {
+  const NEEDED_USERS = 5;
+  const MINIMUM_USERS = 3;
   try {
     // get all recent Fids by createdAt, limit 1000
     const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(1000);
@@ -235,12 +237,12 @@ app.get("/recent-users", heavyLimiter, async (req, res) => {
       if (user) {
         users.push(user);
       }
-      if (users.length === 3) {
+      if (users.length === NEEDED_USERS) {
         break;
       }
     }
-    if (users.length < 3) {
-      Sentry.captureMessage("Could not find three users!");
+    if (users.length < MINIMUM_USERS) {
+      Sentry.captureMessage(`Could not find at least ${MINIMUM_USERS} users!`);
       return res.json({
         code: 200,
         success: true,
