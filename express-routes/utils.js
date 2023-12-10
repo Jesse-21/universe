@@ -237,7 +237,7 @@ app.get("/recent-users", heavyLimiter, async (req, res) => {
       if (user) {
         users.push(user);
       }
-      if (users.length === NEEDED_USERS) {
+      if (users.length >= NEEDED_USERS) {
         break;
       }
     }
