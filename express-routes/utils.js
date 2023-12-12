@@ -223,7 +223,7 @@ const filteredUser = async (fid) => {
 };
 
 app.get("/recent-users", heavyLimiter, async (req, res) => {
-  const NEEDED_USERS = 3;
+  const NEEDED_USERS = 5;
   const MINIMUM_USERS = 3;
   try {
     const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(2500);
