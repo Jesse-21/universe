@@ -223,14 +223,11 @@ const filteredUser = async (fid) => {
 };
 
 app.get("/recent-users", heavyLimiter, async (req, res) => {
-  const NEEDED_USERS = 5;
+  const NEEDED_USERS = 3;
   const MINIMUM_USERS = 3;
   try {
-    // get all recent Fids by createdAt, limit 1000
-    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(1000);
-    // iterate through each fid one by one until we find three, filteredUser is not indeponent
-    // if we find three, return
-    // if we don't find three, return empty array
+    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(2500);
+    fids.sort(() => Math.random() - 0.5);
     const users = [];
     for (let i = 0; i < fids.length; i++) {
       const user = await filteredUser(fids[i].fid);
