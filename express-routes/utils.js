@@ -195,29 +195,14 @@ app.get("/need-invite", heavyLimiter, async (req, res) => {
 
 const filteredUser = async (fid) => {
   if (!fid) return null;
-  const CacheService = new _CacheService();
-  // return fname only if user is valid
   const user = await getFarcasterUserByFid(fid);
-  // check if user has already been filtered
-  const alreadyExists = await CacheService.get({
-    key: "RetrievedRecentUserQuery",
-    params: {
-      fid: user.fid,
-    },
-  });
-  if (alreadyExists) return null;
-
-  if (!user.username || !user.displayName || user.external) return null;
-
-  // if user is valid, set cache
-  await CacheService.set({
-    key: "RetrievedRecentUserQuery",
-    params: {
-      fid: user.fid,
-    },
-    value: 1,
-    expiresAt: null,
-  });
+  if (
+    !user.username ||
+    !user.displayName ||
+    user.external ||
+    user.followerCount < 3
+  )
+    return null;
 
   return user.username;
 };
@@ -226,7 +211,7 @@ app.get("/recent-users", heavyLimiter, async (req, res) => {
   const NEEDED_USERS = 5;
   const MINIMUM_USERS = 3;
   try {
-    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(2500);
+    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(500);
     fids.sort(() => Math.random() - 0.5);
     const users = [];
     for (let i = 0; i < fids.length; i++) {

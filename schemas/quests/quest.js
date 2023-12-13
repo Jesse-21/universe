@@ -29,6 +29,7 @@ const questRequirementSchema = mongoose.Schema({
       "FARCASTER_LIKES_500",
       "FARCASTER_FARQUEST_TAGGED",
       "VALID_NFT",
+      "TOTAL_NFT",
       "VALID_NFT_3",
       "VALID_NFT_5",
       "SHARE",

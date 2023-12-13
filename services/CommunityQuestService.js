@@ -92,6 +92,14 @@ class CommunityQuestService extends QuestService {
     }
 
     switch (requirement?.type) {
+      case "TOTAL_NFT": {
+        const canClaim = await this._canCompleteTotalNFTQuest(
+          quest,
+          { requirement },
+          context
+        );
+        return canClaim;
+      }
       case "COMMUNITY_PARTICIPATION": {
         const requiredAmount =
           requirement.data?.find(

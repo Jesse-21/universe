@@ -192,6 +192,7 @@ class AlchemyService {
     count = 1,
     attributeType,
     attributeValue,
+    returnCount = false,
   }) {
     if (!address || !contractAddresses) return false;
     try {
@@ -216,9 +217,10 @@ class AlchemyService {
         });
         totalCount = filtered?.length;
       }
-      // const found = result?.ownedNfts?.[0];
-      // if (count <= 1) return !!found;
-      return totalCount >= count;
+      if (!returnCount) {
+        return totalCount >= count;
+      }
+      return totalCount;
     } catch (e) {
       Sentry.captureException(e, "AlchemyService.getOwnersForToken");
       return false;

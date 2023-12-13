@@ -122,6 +122,61 @@ class QuestService extends QuestRewardService {
   }
 
   /**
+   * Check if a TOTAL_NFT quest can be completed by an account
+   * @returns Promise<Boolean>
+   * */
+  async _canCompleteTotalNFTQuest(quest, { requirement }, context) {
+    const dataMapping = {};
+    requirement?.data?.forEach((dataItem) => {
+      if (dataItem?.key) {
+        dataMapping[dataItem.key] = dataItem.value;
+      }
+    });
+
+    const {
+      contractAddress: contractAddresses,
+      count: totalRequiredCount = 1,
+      attributeType = null,
+      attributeValue = null,
+    } = dataMapping;
+    if (!contractAddresses) return false;
+    const apiKeys = {
+      "eth-mainnet": prod().NODE_URL,
+      "opt-mainnet": process.env.OPTIMISM_NODE_URL,
+    };
+
+    try {
+      const addresses = contractAddresses.split(",");
+      await context.account?.populate?.("addresses");
+      let totalOwnedCount = 0;
+
+      const counts = await Promise.all(
+        addresses.map(async (address) => {
+          const [chain, contractAddress] = address.split(":");
+          const AlchemyService = new _AlchemyService({
+            apiKey: apiKeys[chain],
+            chain,
+          });
+          const c = await AlchemyService.verifyOwnership({
+            address: context.account.addresses?.[0]?.address,
+            contractAddresses: [contractAddress],
+            attributeType,
+            attributeValue,
+            returnCount: true,
+          });
+          return c;
+        })
+      );
+      totalOwnedCount = counts.reduce((a, b) => a + b, 0);
+
+      return totalOwnedCount >= totalRequiredCount;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  }
+
+  /**
    * Create Quest Rewards or use existing Assets
    * @returns Promise<QuestRewards>
    * */
