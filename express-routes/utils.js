@@ -200,7 +200,8 @@ const filteredUser = async (fid) => {
     !user.username ||
     !user.displayName ||
     user.external ||
-    user.followerCount < 3
+    user.followerCount < 1 ||
+    user.username.includes("-")
   )
     return null;
 
@@ -211,7 +212,7 @@ app.get("/recent-users", heavyLimiter, async (req, res) => {
   const NEEDED_USERS = 3;
   const MINIMUM_USERS = 3;
   try {
-    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(500);
+    const fids = await Fids.find({}).sort({ createdAt: -1 }).limit(750);
     fids.sort(() => Math.random() - 0.5);
     const users = [];
     for (let i = 0; i < fids.length; i++) {
