@@ -37,7 +37,7 @@ function extractAndReplaceMentions(
 
   splits.forEach((split, i) => {
     if (split.startsWith("@")) {
-      const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_]+(\.[a-z]{2,})*)/g;
+      const mentionRegex = /(?<!\]\()@([a-zA-Z0-9_\-]+(\.[a-z]{2,})*)/g;
       const match = mentionRegex.exec(split);
       const username = match[1];
 
@@ -82,7 +82,7 @@ const makeMessage = async ({
   try {
     switch (messageType) {
       case 1:
-        rawMessage = await makeReactionAddRpc(
+        rawMessage = await makeCastAddRpc(
           body,
           {
             fid: parseInt(fid),

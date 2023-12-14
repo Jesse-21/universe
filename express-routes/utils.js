@@ -200,8 +200,7 @@ const filteredUser = async (fid) => {
     !user.username ||
     !user.displayName ||
     user.external ||
-    user.followerCount < 1 ||
-    user.username.includes("-")
+    user.followerCount < 1
   )
     return null;
 
