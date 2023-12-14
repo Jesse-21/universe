@@ -15,6 +15,7 @@ class FarcasterServiceV2 {
   _cleanProfile(profile = {}) {
     return {
       _id: profile.fid,
+      fid: profile.fid,
       username: profile.username,
       displayName: profile.displayName,
       farcasterAddress: profile.custodyAddress, // profile.address is not the same as connectedAddress!
