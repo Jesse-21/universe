@@ -148,8 +148,8 @@ const fidsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 fidsSchema.index({ fid: 1 });
-fidsSchema.index({ fid: 1, deletedAt: 1 });
-fidsSchema.index({ custodyAddress: 1, deletedAt: 1 });
+fidsSchema.index({ custodyAddress: 1 });
+fidsSchema.index({ createdAt: 1 });
 
 const fnamesSchema = new mongoose.Schema(
   {

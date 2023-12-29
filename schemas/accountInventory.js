@@ -14,6 +14,10 @@ const schema = mongoose.Schema({
     index: true,
   },
   quantity: { type: Number, default: 1 },
+  lastBlockHash: { type: String },
 });
+
+schema.index({ lastBlockHash: 1, rewardType: 1, account: 1 });
+schema.index({ lastBlockHash: 1, rewardType: 1 });
 
 module.exports = { schema };

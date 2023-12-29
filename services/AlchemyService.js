@@ -24,6 +24,9 @@ class AlchemyService {
   getNFTBaseRoute() {
     return `https://${this.chain}.g.alchemy.com/nft/v2/${this.apiKey}`;
   }
+  getNftV3BaseRoute() {
+    return `https://${this.chain}.g.alchemy.com/nft/v3/${this.apiKey}`;
+  }
 
   /**
    * @docs https://docs.alchemy.com/alchemy/enhanced-apis/nft-api/getnftmetadata
@@ -79,6 +82,34 @@ class AlchemyService {
     } catch (e) {
       Sentry.captureException(e);
       throw new Error(`AlchemyService.getNFTMetadata error, ${e.message}`);
+    }
+  }
+
+  /**
+   * @docs https://docs.alchemy.com/alchemy/enhanced-apis/nft-api/getnftmetadata
+   * @returns Promise<{NFTMetadata}>
+   */
+  async getNFTsV3({ owner, pageKey, contractAddresses, withMetadata }) {
+    const opts = {
+      timeout: TIMEOUT_MS,
+    };
+    const route = `${this.getNftV3BaseRoute()}/getNFTsForOwner`;
+    const params = new URLSearchParams();
+    if (owner) params.append("owner", owner);
+    if (pageKey) params.append("pageKey", pageKey);
+    if (withMetadata) params.append("withMetadata", withMetadata);
+    if (contractAddresses && contractAddresses.length) {
+      contractAddresses.forEach((address) => {
+        params.append("contractAddresses[]", address);
+      });
+    }
+
+    try {
+      const { data } = await axios.get(route, { params, ...opts });
+      return data;
+    } catch (e) {
+      Sentry.captureException(e);
+      throw new Error(`AlchemyService.getNFTsV3 error, ${e.message}`);
     }
   }
   /**

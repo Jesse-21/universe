@@ -36,6 +36,7 @@ app.post("/:referralCode", limiter, async (req, res) => {
       },
       value: `${referralCode}:${hash}`,
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 36), // 36 hour cache to prevent overwrites
+      // Always make this key expire, sometimes Alchemy is down and we need to retry!
     });
     return res.json({
       code: 200,

@@ -13,6 +13,7 @@ const { router: utilsRouter } = require("./express-routes/utils");
 const { router: communityRouter } = require("./express-routes/community");
 const { router: metadataRouter } = require("./express-routes/metadata");
 const { router: farcasterRouter } = require("./express-routes/farcaster");
+const { router: walletRouter } = require("./express-routes/wallet");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
@@ -148,6 +149,7 @@ const httpServer = http.createServer(app);
   app.use("/score", scoreRouter);
   app.use("/referral", referralRouter);
   app.use("/farcaster", farcasterRouter);
+  app.use("/wallet", walletRouter);
   app.use("/apikey", apiKeyRouter);
 
   require("yargs").command(

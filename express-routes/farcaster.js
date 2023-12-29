@@ -569,6 +569,62 @@ app.get("/v2/user-by-username", [limiter, authContext], async (req, res) => {
   }
 });
 
+app.get("/v2/farquester", [limiter], async (req, res) => {
+  try {
+    const CacheService = new _CacheService();
+    const imageUrl = await CacheService.get({
+      key: `FARQUEST_CHARACTER`,
+      params: {
+        address: req.query.address,
+      },
+    });
+
+    return res.json({
+      result: imageUrl ? { imageUrl } : {},
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.post("/v2/farquester", [limiter], async (req, res) => {
+  try {
+    const CacheService = new _CacheService();
+    const imageUrl = req.body.imageUrl;
+
+    if (!imageUrl || !req.body.address) {
+      return res.status(400).json({
+        error: "Bad Request - imageUrl is required",
+      });
+    }
+
+    await CacheService.set({
+      key: `FARQUEST_CHARACTER`,
+      params: {
+        address: req.body.address,
+      },
+      value: imageUrl,
+      expiresAt: null, // or set an expiration time if necessary
+    });
+
+    return res.json({
+      result: { success: true },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get(
   "/v2/unseen-notifications-count",
   [authContext, limiter],
