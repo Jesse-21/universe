@@ -1,6 +1,7 @@
 const { Service: _AlchemyService } = require("../services/AlchemyService");
-const { config, prod } = require("../helpers/registrar");
+const { prod } = require("../helpers/registrar");
 const { Nft } = require("../models/wallet/Nft");
+const { Contract } = require("../models/wallet/Contract");
 
 const chainToApiKey = {
   1: [prod().NODE_URL, prod().NODE_NETWORK],
@@ -18,44 +19,59 @@ async function makeNftRequest({ pageKey, chain, walletAddress }) {
     apiKey: nodeUrl,
     chain: nodeNetwork,
   });
+  const data = await AlchemyService.getNFTsV3({
+    owner: walletAddress,
+    pageKey,
+  });
+  return data;
 }
 
-async function processAndUpdateNFTs({ response }) {
+async function processAndUpdateNFTs({ response, chainId }) {
   if (!response || !response.ownedNfts) {
     throw new Error("Invalid response structure");
   }
 
   for (const nftData of response.ownedNfts) {
+    const contract = await Contract.findOneAndUpdate(
+      { address: nftData.contract.address, chainId },
+      {
+        address: nftData.contract.address,
+        contractDeployer: nftData.contract.contractDeployer,
+        deployedBlockNumber: nftData.contract.deployedBlockNumber,
+        name: nftData.contract.name,
+        symbol: nftData.contract.symbol,
+        tokenType: nftData.contract.tokenType,
+        isSpam: nftData.contract.isSpam,
+        metadata: {
+          ...nftData.contract.openSeaMetadata,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
     const updateData = {
-      walletAddress: walletAddress,
-      contractAddress: nftData.contract.address,
+      contract: contract._id,
       tokenId: nftData.tokenId,
       tokenType: nftData.tokenType,
-      name: nftData.contract.name,
-      symbol: nftData.contract.symbol,
+      name: nftData.metadata?.name,
+      description: nftData.metadata?.description,
       image: {
         ...nftData.image,
       },
-
-      metadata: {
-        name: nftData.contract.name,
-        symbol: nftData.contract.symbol,
-        imageUrl: nftData.image.originalUrl,
-        // ...other relevant metadata fields
-      },
+      attributes: nftData.attributes?.attributes,
       lastUpdated: new Date(nftData.timeLastUpdated),
     };
 
     await Nft.findOneAndUpdate(
-      { walletAddress, tokenId: nftData.tokenId },
+      { contract: contract._id, tokenId: nftData.tokenId },
       updateData,
       { upsert: true, new: true }
     );
   }
 
   // Handle pagination
-  if (response.pageKey) {
-    const nextPageResponse = await makeNftRequest(response.pageKey);
-    await processAndUpdateNFTs(nextPageResponse, walletAddress);
-  }
+  //   if (response.pageKey) {
+  //     const nextPageResponse = await makeNftRequest(response.pageKey);
+  //     await processAndUpdateNFTs(nextPageResponse, walletAddress);
+  //   }
 }

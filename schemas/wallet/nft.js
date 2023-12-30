@@ -17,27 +17,34 @@ const imageSchema = mongoose.Schema({
 /**
  * A vector 3D with x, y, z at 2 decimal precision
  */
-const schema = mongoose.Schema({
-  contract: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Contract",
-    index: true,
+const schema = mongoose.Schema(
+  {
+    contract: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Contract",
+      index: true,
+    },
+    tokenId: String,
+    tokenType: {
+      type: String,
+      enum: ["ERC721", "ERC1155"],
+    },
+    name: String,
+    description: String,
+    image: imageSchema,
+    attributes: [attributeSchema],
+    timeLastUpdated: Date,
+    balance: String,
+    acquiredAt: {
+      blockTimestamp: Date,
+      blockNumber: Number,
+    },
   },
-  tokenId: String,
-  tokenType: {
-    type: String,
-    enum: ["ERC721", "ERC1155"],
-  },
-  name: String,
-  description: String,
-  image: imageSchema,
-  attributes: [attributeSchema],
-  timeLastUpdated: Date,
-  balance: String,
-  acquiredAt: {
-    blockTimestamp: Date,
-    blockNumber: Number,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
+
+schema.index({ contract: 1, tokenId: 1 });
 
 module.exports = { schema };
