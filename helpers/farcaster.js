@@ -15,6 +15,7 @@ const {
   Listings,
   Storage,
 } = require("../models/farcaster");
+const { Score } = require("../models/Score");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { config, prod } = require("../helpers/registrar");
 const {
@@ -1509,6 +1510,24 @@ const getFarcasterStorageByFid = async (fid) => {
   });
 };
 
+const getLeaderboard = async ({ scoreType, limit, context }) => {
+  const leaderboard = await Score.getLeaderboard(scoreType, limit);
+  const populated = await Promise.all(
+    leaderboard.map(async (entry) => {
+      const profile = await getFarcasterUserAndLinksByFid({
+        fid: entry.account.recoverers?.[0]?.id,
+        context,
+      });
+      return {
+        ...entry,
+        profile,
+      };
+    })
+  );
+
+  return populated;
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -1537,4 +1556,5 @@ module.exports = {
   GLOBAL_SCORE_THRESHOLD_CHANNEL,
   getFarcasterFidByCustodyAddress,
   getFarcasterStorageByFid,
+  getLeaderboard,
 };

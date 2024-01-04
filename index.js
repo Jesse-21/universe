@@ -8,6 +8,7 @@ const { GraphQLFileLoader } = require("@graphql-tools/graphql-file-loader");
 
 const { connectDB } = require("./connectdb");
 const { router: imageRouter } = require("./express-routes/image");
+const { router: authRouter } = require("./express-routes/auth");
 const { router: referralRouter } = require("./express-routes/referral");
 const { router: utilsRouter } = require("./express-routes/utils");
 const { router: communityRouter } = require("./express-routes/community");
@@ -18,7 +19,6 @@ const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
 const { router: apiKeyRouter } = require("./express-routes/apikey");
-const { router: scoreRouter } = require("./express-routes/score");
 
 const { router: ensRouter } = require("./express-routes/ens");
 
@@ -146,11 +146,11 @@ const httpServer = http.createServer(app);
   app.use("/metadata", metadataRouter);
   app.use("/utils", utilsRouter);
   app.use("/ens/", ensRouter);
-  app.use("/score", scoreRouter);
   app.use("/referral", referralRouter);
   app.use("/farcaster", farcasterRouter);
   app.use("/wallet", walletRouter);
   app.use("/apikey", apiKeyRouter);
+  app.use("/auth", authRouter);
 
   require("yargs").command(
     "$0",

@@ -1,6 +1,7 @@
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { prod } = require("../helpers/registrar");
 const { Nft } = require("../models/wallet/Nft");
+const { AccountInventory } = require("../models/AccountInventory");
 const { Contract } = require("../models/wallet/Contract");
 
 const chainToApiKey = {
@@ -26,7 +27,7 @@ async function makeNftRequest({ pageKey, chain, walletAddress }) {
   return data;
 }
 
-async function processAndUpdateNFTs({ response, chainId }) {
+async function processAndUpdateNFTs({ response, chainId, accountId }) {
   if (!response || !response.ownedNfts) {
     throw new Error("Invalid response structure");
   }
@@ -62,9 +63,23 @@ async function processAndUpdateNFTs({ response, chainId }) {
       lastUpdated: new Date(nftData.timeLastUpdated),
     };
 
-    await Nft.findOneAndUpdate(
+    const newNft = await Nft.findOneAndUpdate(
       { contract: contract._id, tokenId: nftData.tokenId },
       updateData,
+      { upsert: true, new: true }
+    );
+    const accountInventory = await AccountInventory.findOneAndUpdate(
+      {
+        account: accountId,
+        rewardId: newNft._id,
+        rewardType: "NFT",
+      },
+      {
+        account: accountId,
+        rewardId: newNft._id,
+        rewardType: "NFT",
+        lastBlockHash: response.lastBlockHash,
+      },
       { upsert: true, new: true }
     );
   }
@@ -75,3 +90,7 @@ async function processAndUpdateNFTs({ response, chainId }) {
   //     await processAndUpdateNFTs(nextPageResponse, walletAddress);
   //   }
 }
+
+// 1. loop through all supported chains and update assets
+// 2. delete all account inventory item that does not have the correct lastBlockHash, means they are e.g. transferred
+async function getAssets() {}

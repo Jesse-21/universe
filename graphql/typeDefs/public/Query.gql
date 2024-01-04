@@ -79,6 +79,7 @@ type QuestQuery {
   getQuests(limit: Int, offset: Int, filters: QuestFilter): [Quest]
 }
 type CommunityQuestQuery {
+  getLeaderboard(communityId: ID!, limit: Int): [Score]
   getCommunityQuestStatus(questId: ID!, communityId: ID!): CommunityQuestStatus
   getCommunityQuestStatusByAddress(
     questId: ID!

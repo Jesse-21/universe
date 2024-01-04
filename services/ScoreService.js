@@ -1,15 +1,11 @@
 // Disable due to expensive overhead
 // const tf = require("@tensorflow/tfjs-node");
 const { Service: _CacheService } = require("../services/cache/CacheService");
+const { Score, padWithZeros } = require("../models/Score");
 const {
   validateAndConvertAddress,
 } = require("../helpers/validate-and-convert-address");
 class ScoreService {
-  static async _getScore(model, inputData) {
-    const prediction = model.predict(tf.tensor2d([inputData])).dataSync();
-    return prediction[0];
-  }
-
   static async getScore(data, { scoreType = "beb" }) {
     return 0;
     // const inputData = [
@@ -72,15 +68,12 @@ class ScoreService {
 
     let finalScore = score;
     if (modifier) {
-      const existingScore = await CacheService.get({
-        key: SCORE_KEY,
-        params: {
-          address: cleanAddress,
-          scoreType: scoreType,
-        },
+      const existingScore = await this.getCommunityScore({
+        address: cleanAddress,
+        bebdomain: scoreType,
       });
       if (existingScore) {
-        finalScore = existingScore + modifier;
+        finalScore = parseInt(existingScore) + modifier;
       } else {
         finalScore = score + modifier;
       }
@@ -91,6 +84,20 @@ class ScoreService {
       scoreType: scoreType,
       score: finalScore,
     });
+    await Score.updateOne(
+      {
+        address: cleanAddress,
+        scoreType: scoreType,
+      },
+      {
+        address: cleanAddress,
+        scoreType: scoreType,
+        score: padWithZeros(finalScore.toString()),
+      },
+      {
+        upsert: true,
+      }
+    );
     return await CacheService.set({
       key: SCORE_KEY,
       params: {
@@ -105,6 +112,11 @@ class ScoreService {
   async getCommunityScore({ address, bebdomain }) {
     const CacheService = new _CacheService();
     const cleanAddress = validateAndConvertAddress(address);
+    const score = await Score.findOne({
+      address: cleanAddress,
+      scoreType: bebdomain,
+    });
+    if (score) return parseInt(score.score);
 
     const SCORE_KEY = "BebScoreService";
     const existingScore = await CacheService.get({

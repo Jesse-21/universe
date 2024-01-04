@@ -38,6 +38,7 @@ const {
   postMessage,
   searchFarcasterUserByMatch,
   getFarcasterStorageByFid,
+  getLeaderboard,
 } = require("../helpers/farcaster");
 
 const {
@@ -477,6 +478,27 @@ app.get("/v2/user-by-custody-address", [limiter], async (req, res) => {
 
     return res.json({
       result: { user },
+      source: "v2",
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/v2/leaderboard", [limiter, authContext], async (req, res) => {
+  try {
+    const leaderboard = await getLeaderboard({
+      scoreType: req.query.scoreType,
+      limit: req.query.limit,
+      context: req.context,
+    });
+
+    return res.json({
+      result: { leaderboard },
       source: "v2",
     });
   } catch (e) {

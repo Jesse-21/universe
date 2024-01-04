@@ -73,6 +73,29 @@ class CacheService extends NormalizeCacheService {
     return null;
   }
 
+  async _getAfterExpiredDate({ key, params, afterDate }) {
+    const memcached = getMemcachedClient();
+    try {
+      const data = await memcached.get(
+        getHash(this.normalize({ key, params }))
+      );
+      if (data) {
+        return JSON.parse(data.value).value;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    const normalizedKey = this.normalize({ key, params });
+    const found = await KeyValueCache.findOne({
+      key: normalizedKey,
+    });
+    const notExpired = found?.expiresAt > afterDate || !found?.expiresAt;
+    if (found && notExpired) {
+      return JSON.parse(found.value).value;
+    }
+    return null;
+  }
+
   /**
    * Get value from cache if it exists and is not expired.
    * Else, set the value in the cache with callback fn and return the value.

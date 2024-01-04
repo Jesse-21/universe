@@ -7,6 +7,7 @@ const { resolvers: RichEmbed } = require("./resolvers/RichEmbed");
 const { resolvers: Post } = require("./resolvers/Post");
 const { resolvers: AccountSection } = require("./resolvers/AccountSection");
 const { resolvers: AccountThread } = require("./resolvers/AccountThread");
+const { resolvers: Score } = require("./resolvers/Score");
 const { resolvers: Thread } = require("./resolvers/Thread");
 const { resolvers: Notification } = require("./resolvers/Notification");
 const { resolvers: AccountReaction } = require("./resolvers/AccountReaction");
@@ -50,6 +51,7 @@ const resolvers = merge(
   AccountCommunityRole,
   Thread,
   Query,
+  Score,
   RichContent,
   AccountReaction,
   Notification,

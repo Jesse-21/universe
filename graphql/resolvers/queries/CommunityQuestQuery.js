@@ -8,13 +8,10 @@ const {
 const {
   Service: CommunityQuestService,
 } = require("../../../services/CommunityQuestService");
-const {
-  Service: _AlchemyService,
-} = require("../../../services/AlchemyService");
 const { CommunityQuest } = require("../../../models/quests/CommunityQuest");
 const { Account } = require("../../../models/Account");
 const { CommunityReward } = require("../../../models/quests/CommunityReward");
-const { prod } = require("../../../helpers/registrar");
+const { Score } = require("../../../models/Score");
 
 const resolvers = {
   CommunityQuestQuery: {
@@ -39,6 +36,9 @@ const resolvers = {
         },
         context
       );
+    },
+    getLeaderboard: async (_, { communityId, limit }) => {
+      return await Score.getLeaderboard(communityId, limit);
     },
     checkIfCommunityQuestClaimedByAddress: async (
       root,
