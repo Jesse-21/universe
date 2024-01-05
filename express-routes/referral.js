@@ -17,7 +17,7 @@ const REFERRAL_KEY = "ReferralService";
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000, // 3s
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: 10_000, // Need to implement IP based rate limiting (due to amazon load balancer)
   message: "Too many requests, please try again later.",
 });
 

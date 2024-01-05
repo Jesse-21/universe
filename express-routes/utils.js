@@ -14,7 +14,7 @@ const { Fids } = require("../models/farcaster");
 // Rate limiting middleware
 const heavyLimiter = rateLimit({
   windowMs: 5_000, // 5s
-  max: 10_000, // limit each IP to 100 requests per windowMs
+  max: 10_000,
   message: "Too many requests, please try again later.",
   handler: (req, res, next) => {
     res.status(429).send("Too many requests, please try again later.");
