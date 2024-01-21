@@ -88,6 +88,8 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * */
   async _claimReward(communityQuest, { communityId }, context) {
     const quest = await Quest.findById(communityQuest.quest);
+    const community = await Community.findById(communityId).select("bebdomain");
+
     if (!quest?.rewards?.length)
       throw new Error("No rewards found for this quest");
 
@@ -95,7 +97,7 @@ class CommunityQuestMutationService extends CommunityQuestService {
       quest.rewards.map(async (reward) => {
         const r = await this._claimRewardByType(
           reward,
-          { communityId },
+          { communityId, scoreType: community?.bebdomain },
           context
         );
         return r;

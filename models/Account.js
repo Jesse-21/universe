@@ -52,6 +52,19 @@ class AccountClass {
     if (existing) throw new Error("An account exists with this username.");
     return existing;
   }
+  static async _validwieldTagCheck(account, wieldTag) {
+    const regex = /^[a-z0-9_]{1,16}$/;
+    const valid = regex.test(wieldTag);
+    if (!valid) throw new Error("Invalid wieldTag");
+
+    if (account.wieldTag === wieldTag) return true;
+
+    const existing = await Account.exists({
+      wieldTag: wieldTag,
+    });
+    if (existing) throw new Error("An account exists with this wieldTag.");
+    return existing;
+  }
   /** @returns Error or true */
   static async _existingEmailCheck(account, email) {
     if (account.email === email) return true;
@@ -315,6 +328,7 @@ class AccountClass {
       "email",
       "location",
       "username",
+      "wieldTag",
       "profileImageId",
       "bio",
       "isOnboarded",
@@ -326,7 +340,11 @@ class AccountClass {
     if (_fields.profileImageId)
       await Account._profileImageIdExistCheck(_fields.profileImageId);
     if (_fields.email) await Account._existingEmailCheck(this, _fields.email);
-
+    if (_fields.wieldTag)
+      await Account._validwieldTagCheck(this, _fields.wieldTag);
+    if (fields.wieldTag !== undefined) {
+      this.wieldTag = _fields.wieldTag;
+    }
     if (_fields.username !== undefined) {
       this.username = _fields.username;
       this.usernameLowercase = _fields.username.toLowerCase();

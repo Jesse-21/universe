@@ -111,7 +111,7 @@ app.post("/v1/update", [limiter, authContext], async (req, res) => {
     const {
       email,
       location,
-      username,
+      wieldTag,
       profileImageId,
       bio,
       isOnboarded,
@@ -120,7 +120,7 @@ app.post("/v1/update", [limiter, authContext], async (req, res) => {
     const updatedAccount = await account.updateMe({
       email,
       location,
-      username,
+      wieldTag,
       profileImageId,
       bio,
       isOnboarded,
