@@ -48,10 +48,11 @@ class AuthService {
    * Get an account's message to sign with nonce
    * @returns Promise<Account, AccountNonce>
    */
-  async getMessageToSign({ address, chainId }) {
+  async getMessageToSign({ address, chainId, creationOrigin = "EOA" }) {
     const account = await Account.findOrCreateByAddressAndChainId({
       address,
       chainId,
+      creationOrigin,
     });
     if (!account) throw new Error("Account not found");
     if (account.deleted) throw new Error("Account is deleted");
@@ -191,6 +192,7 @@ class AuthService {
       const account = await Account.findOrCreateByAddressAndChainId({
         address: custodyAddress,
         chainId,
+        creationOrigin: "WARPCAST",
       });
 
       if (account?.deleted) throw new Error("Account is deleted");

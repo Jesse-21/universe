@@ -10,6 +10,7 @@ const {
 
 const { Service: QuestService } = require("./QuestService");
 const { ListingLogs } = require("../models/farcaster");
+const { getMemcachedClient } = require("../connectmemcached");
 
 const FARQUEST_FID = "12741";
 
@@ -92,6 +93,9 @@ class CommunityQuestService extends QuestService {
     }
 
     switch (requirement?.type) {
+      case "AUTO_CLAIM": {
+        return true;
+      }
       case "TOTAL_NFT": {
         const canClaim = await this._canCompleteTotalNFTQuest(
           quest,
@@ -116,7 +120,7 @@ class CommunityQuestService extends QuestService {
         return answer.toLowerCase() === correctAnswer?.toLowerCase();
       }
       case "FARMARKET_LISTING_FIRST": {
-        if (!context.account || context.isExternal) return false;
+        if (!context.account) return false;
         await context.account.populate?.("addresses");
 
         const hasListing = await ListingLogs.exists({
@@ -126,7 +130,7 @@ class CommunityQuestService extends QuestService {
         return !!hasListing;
       }
       case "FARMARKET_BUY_FIRST": {
-        if (!context.account || context.isExternal) return false;
+        if (!context.account) return false;
         await context.account.populate?.("addresses");
 
         const hasBuy = await ListingLogs.exists({
@@ -137,7 +141,7 @@ class CommunityQuestService extends QuestService {
       }
 
       case "FARMARKET_OFFER_FIRST": {
-        if (!context.account || context.isExternal) return false;
+        if (!context.account) return false;
         await context.account.populate?.("addresses");
 
         const hasOffer = await ListingLogs.exists({
@@ -207,7 +211,7 @@ class CommunityQuestService extends QuestService {
     if (canClaimReward) return "CAN_CLAIM_REWARD";
 
     // if account already completed the quest and cannot claim reward
-    const found = await CommunityQuestAccount.exists({
+    const found = await CommunityQuestAccount.findOne({
       communityQuest: communityQuest._id,
       account: context.account._id,
     });
@@ -220,12 +224,31 @@ class CommunityQuestService extends QuestService {
 
   async checkIfCommunityQuestClaimedByAddress(communityQuest, _, context) {
     if (!communityQuest) return false;
+    const accountId = context.account?._id || context.accountId;
+
+    const memCached = getMemcachedClient();
+
+    try {
+      const cacheKey = `CommunityQuestService:checkIfCommunityQuestClaimedByAddress${communityQuest._id}:${accountId}`;
+      const cached = await memCached.get(cacheKey);
+      if (cached) return true; // if cached then it is claimed
+    } catch (e) {
+      console.log(e);
+    }
     // if account already completed the quest and cannot claim reward
     const communityQuestAccount = await CommunityQuestAccount.findOne({
       communityQuest: communityQuest._id,
-      account: context.account?._id || context.accountId,
+      account: accountId,
     });
-    if (communityQuestAccount?.rewardClaimed) return true;
+    if (communityQuestAccount?.rewardClaimed) {
+      try {
+        const cacheKey = `CommunityQuestService:checkIfCommunityQuestClaimedByAddress${communityQuest._id}:${accountId}`;
+        await memCached.set(cacheKey, "true"); // cache for 7 days
+      } catch (e) {
+        console.log(e);
+      }
+      return true;
+    }
     return false;
   }
 }

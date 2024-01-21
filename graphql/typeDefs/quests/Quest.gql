@@ -29,6 +29,7 @@ enum QuestRequirementType {
   FARMARKET_LISTING_FIRST
   FARMARKET_BUY_FIRST
   FARMARKET_OFFER_FIRST
+  AUTO_CLAIM
 }
 enum QuestRewardType {
   ASSET_3D

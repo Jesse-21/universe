@@ -21,6 +21,8 @@ const dev = () => {
     OPTIMISM_NODE_URL: process.env.OPTIMISM_NODE_URL,
     OPTIMISM_REGISTRAR_ADDRESS: "0xd14005cb9b40a1b7104eacdeae36f7fe112fae5f",
     OPTIMISM_NODE_NETWORK: "opt-mainnet",
+    FARCAST_FID: 18548,
+    FARCAST_KEY: process.env.FARCAST_KEY,
   };
 };
 
@@ -38,6 +40,8 @@ const prod = () => {
     BETA_CONTROLLER_ABI: BebRegistryBetaController.abi,
     OPTIMISM_CONTROLLER_ABI: OPBebRegistryBetaController.abi,
     REGISTRAR_ABI: BebRegistrar.abi,
+    FARCAST_FID: 18548,
+    FARCAST_KEY: process.env.FARCAST_KEY,
   };
 };
 

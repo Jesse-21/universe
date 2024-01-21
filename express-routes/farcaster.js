@@ -8,6 +8,9 @@ const {
   Service: _FarcasterHubService,
 } = require("../services/identities/FarcasterHubService");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
+const {
+  Service: _AccountRecovererService,
+} = require("../services/AccountRecovererService");
 const { Account } = require("../models/Account");
 const { ApiKey } = require("../models/ApiKey");
 const axios = require("axios").default;
@@ -39,6 +42,7 @@ const {
   searchFarcasterUserByMatch,
   getFarcasterStorageByFid,
   getLeaderboard,
+  getFidMetadataSignature,
 } = require("../helpers/farcaster");
 
 const {
@@ -770,6 +774,9 @@ const v2PostMessage = async (req, res) => {
     let e = "Internal Server Error";
     if (error?.message?.includes("no storage")) {
       e = "No active storage for this FID, buy a storage unit at far.quest!";
+    } else if (error?.message?.includes("invalid signer")) {
+      e =
+        "Invalid signer! If this error persists, try logging out and logging in again.";
     }
     res.status(500).json({ error: e });
   }
@@ -1164,6 +1171,49 @@ app.post(
   [heavyLimiter],
   approveMarketplaceV1Offer
 );
+
+const getMetadataSignature = async (req, res) => {
+  try {
+    const { publicKey, deadline } = req.query;
+    if (!publicKey || !deadline) {
+      return res.status(400).json({
+        error: "publicKey and deadline are required",
+      });
+    }
+    const signature = await getFidMetadataSignature({
+      publicKey,
+      deadline,
+    });
+    return res.json({ result: { signature } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+app.get("/v2/metadata/signature", [heavyLimiter], getMetadataSignature);
+
+const getSigners = async (req, res) => {
+  try {
+    const { fid, state } = req.query;
+    if (!fid) {
+      return res.status(400).json({
+        error: "fid is required",
+      });
+    }
+    const AccountRecovererService = new _AccountRecovererService();
+    const keys = await AccountRecovererService.getSigners(null, {
+      fid,
+      state,
+    });
+    return res.json({ result: { keys } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+};
+
+app.get("/v2/signers", [heavyLimiter], getSigners);
 
 module.exports = {
   router: app,

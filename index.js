@@ -19,7 +19,7 @@ const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
 const { router: apiKeyRouter } = require("./express-routes/apikey");
-
+const { router: accountRouter } = require("./express-routes/account");
 const { router: ensRouter } = require("./express-routes/ens");
 
 const { requireAuth } = require("./helpers/auth-middleware");
@@ -151,6 +151,7 @@ const httpServer = http.createServer(app);
   app.use("/wallet", walletRouter);
   app.use("/apikey", apiKeyRouter);
   app.use("/auth", authRouter);
+  app.use("/account", accountRouter);
 
   require("yargs").command(
     "$0",

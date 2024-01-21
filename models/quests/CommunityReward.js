@@ -43,7 +43,14 @@ class CommunityRewardClass {
     return communityRewards;
   }
 
-  static async findOrCreate({ communityId, isArchived, reward, score }) {
+  static async findOrCreate({
+    communityId,
+    isArchived,
+    reward,
+    score,
+    type,
+    claimableQuantity = 1,
+  }) {
     /** step1: mandatory sanitize check */
     if (!communityId || !reward) {
       throw new Error("Missing required parameters");
@@ -55,6 +62,8 @@ class CommunityRewardClass {
       isArchived,
       reward,
       score,
+      type,
+      claimableQuantity,
     });
 
     return communityReward;

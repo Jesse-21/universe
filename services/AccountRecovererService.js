@@ -15,6 +15,7 @@ const {
 } = require("../helpers/abi/id-registrar");
 const { getProvider } = require("../helpers/alchemy-provider");
 const { getFlags } = require("../helpers/flags");
+const { getMemcachedClient } = require("../connectmemcached");
 
 class AccountRecovererService {
   _accepableRecovererTypes = [
@@ -166,6 +167,59 @@ class AccountRecovererService {
 
     // state 1 = added, 0 = not added, 2 = removed
     return exist?.state === 1 ? fid : null;
+  }
+
+  /**
+   * Verify Get all signers to a fid
+   * @param {uint258} state 1 = added, 0 = not added, 2 = removed
+   * @param {String} fid FID to verify
+   * @returns Promise<bytes[]>
+   */
+  async getSigners(_, { fid, state = 1 }) {
+    // @TODO add memcache back when we know how to invalidate
+    // const memCached = getMemcachedClient();
+    // try {
+    //   const data = await memCached.get(
+    //     `AccountRecovererService:getSigners:${fid}:${state}`
+    //   );
+
+    //   if (data) {
+    //     return JSON.parse(data.value);
+    //   }
+    // } catch (e) {
+    //   console.error(e);
+    // }
+
+    const alchemyProvider = getProvider({
+      network: 10,
+      node: process.env.OPTIMISM_NODE_URL,
+    });
+
+    const flags = getFlags();
+    const keyAddress = flags.USE_GATEWAYS
+      ? keyGatewayRegistryAddress
+      : keyRegistrarAddress;
+    const keyRegistrar = new ethers.Contract(
+      keyAddress,
+      keyRegistrarAbi,
+      alchemyProvider
+    );
+
+    const keys = await keyRegistrar.keysOf(fid, state);
+    // try {
+    //   await memCached.set(
+    //     `AccountRecovererService:getSigners:${fid}:${state}`,
+    //     JSON.stringify(keys),
+    //     {
+    //       lifetime: 60 * 60, // 1 hour cache
+    //     }
+    //   );
+    // } catch (e) {
+    //   console.error(e);
+    // }
+
+    // state 1 = added, 0 = not added, 2 = removed
+    return keys;
   }
 
   /**

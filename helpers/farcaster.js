@@ -21,7 +21,7 @@ const { config, prod } = require("../helpers/registrar");
 const {
   getHexTokenIdFromLabel,
 } = require("../helpers/get-token-id-from-label");
-
+const { ethers } = require("ethers");
 const { getMemcachedClient, getHash } = require("../connectmemcached");
 const { Message, fromFarcasterTime } = require("@farcaster/hub-nodejs");
 
@@ -1528,6 +1528,69 @@ const getLeaderboard = async ({ scoreType, limit, context }) => {
   return populated;
 };
 
+const makeSignatureParams = ({ publicKey, deadline }) => {
+  if (!publicKey || !deadline) {
+    return {};
+  }
+  const domainData = {
+    name: "Farcaster SignedKeyRequestValidator",
+    version: "1",
+    chainId: 10,
+    verifyingContract: "0x00000000fc700472606ed4fa22623acf62c60553",
+  };
+
+  const types = {
+    SignedKeyRequest: [
+      { name: "requestFid", type: "uint256" },
+      { name: "key", type: "bytes" },
+      { name: "deadline", type: "uint256" },
+    ],
+  };
+
+  const message = {
+    requestFid: ethers.BigNumber.from(config().FARCAST_FID),
+    key: `0x${publicKey}`,
+    deadline: ethers.BigNumber.from(deadline),
+  };
+
+  return {
+    primaryType: "SignedKeyRequest",
+    domain: domainData,
+    types,
+    message,
+  };
+};
+
+const getFidMetadataSignature = async ({ publicKey, deadline }) => {
+  const signMessage = async (params) => {
+    // Read the mnemonic key from the environment variable
+    const mnemonic = config().FARCAST_KEY;
+    if (!mnemonic) {
+      throw new Error("Mnemonic key not found in environment variables");
+    }
+
+    // Create a wallet instance
+    const wallet = ethers.Wallet.fromMnemonic(mnemonic);
+
+    // Define the EIP-712 data to sign
+    const data = {
+      domain: params.domain,
+      types: params.types,
+      message: params.message,
+      primaryType: params.primaryType,
+    };
+
+    // Sign the EIP-712 structured data
+    return await wallet._signTypedData(data.domain, data.types, data.message);
+  };
+
+  const params = makeSignatureParams({ publicKey, deadline });
+  if (!params.message) {
+    throw new Error("Invalid signature params");
+  }
+  return await signMessage(params);
+};
+
 module.exports = {
   getFarcasterUserByFid,
   getFarcasterUserByUsername,
@@ -1557,4 +1620,5 @@ module.exports = {
   getFarcasterFidByCustodyAddress,
   getFarcasterStorageByFid,
   getLeaderboard,
+  getFidMetadataSignature,
 };

@@ -108,6 +108,7 @@ class AccountClass {
     email,
     walletEmail,
     encyrptedWalletJson,
+    creationOrigin,
   }) {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -141,6 +142,7 @@ class AccountClass {
             activities: {},
             walletEmail,
             encyrptedWalletJson,
+            creationOrigin,
           },
         ],
         { session }
@@ -230,9 +232,17 @@ class AccountClass {
    * Find or create an account from address and chain Id
    * @returns Promise<Account>
    */
-  static async findOrCreateByAddressAndChainId({ address, chainId }) {
+  static async findOrCreateByAddressAndChainId({
+    address,
+    chainId,
+    creationOrigin = "UNKNOWN",
+  }) {
     /** this function takes care cases where account exists */
-    return await Account.createFromAddress({ address, chainId });
+    return await Account.createFromAddress({
+      address,
+      chainId,
+      creationOrigin,
+    });
   }
 
   /**

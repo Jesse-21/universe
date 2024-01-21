@@ -420,6 +420,26 @@ const KEY_REGISTRY_ABI = [
   {
     inputs: [
       { internalType: "uint256", name: "fid", type: "uint256" },
+      {
+        internalType: "enum IKeyRegistry.KeyState",
+        name: "state",
+        type: "uint8",
+      },
+    ],
+    name: "keysOf",
+    outputs: [
+      {
+        internalType: "bytes[]",
+        name: "",
+        type: "bytes[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "fid", type: "uint256" },
       { internalType: "bytes", name: "key", type: "bytes" },
     ],
     name: "keyDataOf",

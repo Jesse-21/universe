@@ -86,7 +86,8 @@ const resolvers = {
         community: args.communityId,
         quest: args.questId,
       });
-      return await new CommunityQuestService().getQuestStatus(
+      const Service = new CommunityQuestService();
+      return await Service.getQuestStatus(
         communityQuest,
         {
           communityId: args.communityId,

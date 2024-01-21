@@ -19,6 +19,25 @@ class AccountInventoryClass {
         account: mongoose.Types.ObjectId(filters.account),
       };
     }
+    if (filters.gtQuantity) {
+      matchQuery = {
+        ...matchQuery,
+        quantity: { $gt: filters.gtQuantity },
+      };
+    }
+    if (filters.rewardType) {
+      if (typeof filters.rewardType === "string") {
+        matchQuery = {
+          ...matchQuery,
+          rewardType: filters.rewardType,
+        };
+      } else {
+        matchQuery = {
+          ...matchQuery,
+          rewardType: { $in: filters.rewardType },
+        };
+      }
+    }
     const $sort =
       sort[0] === "-" ? { [sort.slice(1)]: -1, _id: 1 } : { [sort]: 1 };
     const accountInventory = await this.aggregate([

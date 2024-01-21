@@ -37,6 +37,7 @@ const questRequirementSchema = mongoose.Schema({
       "FARMARKET_BUY_FIRST",
       "FARMARKET_OFFER_FIRST",
       "MULTICHOICE_SINGLE_QUIZ", // one question multi choice
+      "AUTO_CLAIM", // auto claimable quest
     ],
   }, // e.g API, COMMUNITY_PARTICIPATION, TWITTER_FOLLOW, etc
   // e.g. { key: "twitterHandle", value: "bebverse" } for TWITTER_FOLLOW

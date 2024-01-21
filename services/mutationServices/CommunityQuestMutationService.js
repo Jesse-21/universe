@@ -38,7 +38,11 @@ class CommunityQuestMutationService extends CommunityQuestService {
    * Create the reward of a Quest for a community
    * @returns Promise<CommunityAsset[]>
    * */
-  async _claimRewardByType(reward, { communityId }, context) {
+  async _claimRewardByType(
+    reward,
+    { communityId, scoreType: iScoreType },
+    context
+  ) {
     if (reward.type === "ASSET_3D") {
       await CommunityAssetsService.addQuantityOrCreateAsset(null, {
         assetId: reward.rewardId,
@@ -52,9 +56,11 @@ class CommunityQuestMutationService extends CommunityQuestService {
       if (!address) {
         throw new Error("You must be logged in to claim this reward.");
       }
-      // use default scoreType for now
+      // use default scoreType for now if not provided
+
       const scoreType =
-        process.env.NODE_ENV === "development" ? "beta" : "playground";
+        iScoreType ||
+        (process.env.NODE_ENV === "development" ? "beta" : "playground");
       await ScoreService.setScore({
         address: address,
         scoreType,
@@ -161,9 +167,13 @@ class CommunityQuestMutationService extends CommunityQuestService {
 
     const reward = await this._claimRewardByType(
       communityReward.reward,
-      { communityId: communityReward.community },
+      {
+        communityId: communityReward.community,
+        scoreType: community?.bebdomain,
+      },
       context
     );
+
     if (communityReward.type === "EXCHANGE") {
       // deduce the score from the user
       await ScoreService.setScore({

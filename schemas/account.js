@@ -19,6 +19,11 @@ const schema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Image",
     }, // profile image
+    creationOrigin: {
+      type: String,
+      // enum: ["UNKNOWN", "EOA", "WIELD", "WARPCAST"],
+      default: "UNKNOWN",
+    }, // origin from, how the account was created
     activities: accountActivitySchema,
     identities: accountIdentitySchema,
     sections: [
@@ -27,7 +32,7 @@ const schema = mongoose.Schema(
         ref: "AccountSection",
         index: true,
       },
-    ], // the professional experiences section
+    ],
     addresses: [
       {
         type: mongoose.Schema.Types.ObjectId,

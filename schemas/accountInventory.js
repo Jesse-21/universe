@@ -10,7 +10,7 @@ const schema = mongoose.Schema({
   rewardId: { type: mongoose.Types.ObjectId, index: true },
   rewardType: {
     type: String,
-    enum: ["ASSET_3D", "SCORE", "IMAGE", "NFT"],
+    enum: ["ASSET_3D", "SCORE", "IMAGE", "NFT", "TOKEN"],
     index: true,
   },
   quantity: { type: Number, default: 1 },
@@ -19,5 +19,9 @@ const schema = mongoose.Schema({
 
 schema.index({ lastBlockHash: 1, rewardType: 1, account: 1 });
 schema.index({ lastBlockHash: 1, rewardType: 1 });
+schema.index({ lastBlockHash: 1, rewardType: 1, quantity: 1 });
+schema.index({ rewardType: 1, quantity: 1 });
+schema.index({ rewardType: 1, account: 1 });
+schema.index({ rewardType: 1, account: 1, quantity: 1 });
 
 module.exports = { schema };

@@ -215,26 +215,54 @@ class MarketplaceService {
     cursor = "",
     filters = {},
   }) {
+    const memCached = getMemcachedClient();
+    let listings;
+
+    try {
+      const data = await memCached.get(
+        `MarketplaceService:getOnlyBuyNowListings:${sort}:${limit}:${cursor}`
+      );
+
+      if (data) {
+        listings = JSON.parse(data.value).map(
+          (listing) => new Listings(listing)
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
     const [_offset, lastId] = cursor ? cursor.split("-") : ["0", null];
     const offset = parseInt(_offset);
 
-    const query = {
-      // fid:
-      //   sort === "fid"
-      //     ? { $gt: offset || 0 }
-      //     : { $lt: offset || Number.MAX_SAFE_INTEGER },
-      id:
-        sort[0] !== "-"
-          ? { $lt: lastId || Number.MAX_SAFE_INTEGER }
-          : { $gt: lastId || 0 },
-      deadline: { $gt: Math.floor(Date.now() / 1000) },
-      canceledAt: null,
-    };
+    if (!listings) {
+      const query = {
+        // fid:
+        //   sort === "fid"
+        //     ? { $gt: offset || 0 }
+        //     : { $lt: offset || Number.MAX_SAFE_INTEGER },
+        id:
+          sort[0] !== "-"
+            ? { $lt: lastId || Number.MAX_SAFE_INTEGER }
+            : { $gt: lastId || 0 },
+        deadline: { $gt: Math.floor(Date.now() / 1000) },
+        canceledAt: null,
+      };
 
-    const listings = await Listings.find(query)
-      .limit(limit)
-      .skip(offset)
-      .sort(sort + " _id");
+      listings = await Listings.find(query)
+        .limit(limit)
+        .skip(offset)
+        .sort(sort + " _id");
+      try {
+        if (cursor) {
+          await memCached.set(
+            `MarketplaceService:getOnlyBuyNowListings:${sort}:${limit}:${cursor}`,
+            JSON.stringify(listings)
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
 
     let extraData = await Promise.all(
       listings.map(async (listing) => {

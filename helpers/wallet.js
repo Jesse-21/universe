@@ -1,6 +1,6 @@
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { prod } = require("../helpers/registrar");
-const { Nft } = require("../models/wallet/Nft");
+const { Token } = require("../models/wallet/Token");
 const { AccountInventory } = require("../models/AccountInventory");
 const { Contract } = require("../models/wallet/Contract");
 
@@ -63,7 +63,7 @@ async function processAndUpdateNFTs({ response, chainId, accountId }) {
       lastUpdated: new Date(nftData.timeLastUpdated),
     };
 
-    const newNft = await Nft.findOneAndUpdate(
+    const newNft = await Token.findOneAndUpdate(
       { contract: contract._id, tokenId: nftData.tokenId },
       updateData,
       { upsert: true, new: true }

@@ -24,10 +24,14 @@ const schema = mongoose.Schema(
       ref: "Contract",
       index: true,
     },
+    contractAddress: {
+      type: String,
+      index: true,
+    },
     tokenId: String,
     tokenType: {
       type: String,
-      enum: ["ERC721", "ERC1155"],
+      enum: ["ERC721", "ERC1155", "ERC20"],
     },
     name: String,
     description: String,
@@ -46,5 +50,6 @@ const schema = mongoose.Schema(
 );
 
 schema.index({ contract: 1, tokenId: 1 });
+schema.index({ contractAddress: 1, tokenId: 1 });
 
 module.exports = { schema };
