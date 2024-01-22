@@ -311,7 +311,6 @@ class MarketplaceService {
         console.error(e);
       }
     }
-    console.log("latestFid", count);
     return count;
   }
 
@@ -595,12 +594,14 @@ class MarketplaceService {
           highestSaleRaw,
           totalVolumeRaw,
           oneEthToUsd,
+          lastFid,
         ] = await Promise.all([
           Listings.findOne({ canceledAt: null }).sort({ minFee: 1 }),
           Offers.findOne({ canceledAt: null }).sort({ amount: -1 }),
           memcached.get("MarketplaceService:stats:highestSale"),
           memcached.get("MarketplaceService:stats:totalVolume"),
           this.ethToUsd(1),
+          this.latestFid(),
         ]);
 
         const highestSale = highestSaleRaw?.value || "0";
@@ -615,6 +616,9 @@ class MarketplaceService {
                 )
               ),
               wei: floorListing.minFee,
+            },
+            lastFid: {
+              value: `#${lastFid}` || "0",
             },
             highestOffer: {
               usd: this.usdFormatter.format(

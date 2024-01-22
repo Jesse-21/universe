@@ -15,6 +15,7 @@ const { router: communityRouter } = require("./express-routes/community");
 const { router: metadataRouter } = require("./express-routes/metadata");
 const { router: farcasterRouter } = require("./express-routes/farcaster");
 const { router: walletRouter } = require("./express-routes/wallet");
+const { router: webhookRouter } = require("./express-routes/webhook");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
@@ -152,6 +153,7 @@ const httpServer = http.createServer(app);
   app.use("/apikey", apiKeyRouter);
   app.use("/auth", authRouter);
   app.use("/account", accountRouter);
+  app.use("/webhook", webhookRouter);
 
   require("yargs").command(
     "$0",

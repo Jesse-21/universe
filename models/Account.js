@@ -62,7 +62,8 @@ class AccountClass {
     const existing = await Account.exists({
       wieldTag: wieldTag,
     });
-    if (existing) throw new Error("An account exists with this wieldTag.");
+    if (existing)
+      throw new Error("An account exists with this wieldTag. Try another one.");
     return existing;
   }
   /** @returns Error or true */
