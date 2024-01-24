@@ -1,5 +1,6 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
+const { getMemcachedClient, getHash } = require("../connectmemcached");
 
 // Webhook handler route
 // Example data:
@@ -41,8 +42,40 @@ app.post("/address-activity", async (req, res) => {
     const webhookData = req.body;
     console.log("Webhook received:", webhookData);
 
+    // get all related addresses from the webhookData into a single array, and remove duplicates
+    const allAddresses = webhookData?.event?.activity
+      ?.map((activity) => [
+        activity.fromAddress.toLowerCase(),
+        activity.toAddress.toLowerCase(),
+      ])
+      ?.flat();
+    if (!allAddresses) {
+      const error = new Error("No addresses found");
+      Sentry.captureException(error);
+      return res.status(400).send("No addresses found");
+    }
+    const addresses = [...new Set(allAddresses)];
+
     // Here, you can add your logic to handle the webhook data.
     // For example, updating a database, triggering other processes, etc.
+    // lets delete all relavent memcached entries for the account
+    const memcached = getMemcachedClient();
+    try {
+      await Promise.all(
+        addresses
+          .map((address) => [
+            memcached.delete(
+              getHash(`Wallet_transactions:${1_000}:${null}:${address}`)
+            ),
+            memcached.delete(
+              getHash(`Wallet_assets:${1_000}:${null}:${address}`)
+            ),
+          ])
+          .flat()
+      );
+    } catch (e) {
+      console.error(e);
+    }
 
     // Send a response to acknowledge receipt of the webhook
     res.status(200).send("Webhook received and processed");

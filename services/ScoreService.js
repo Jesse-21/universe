@@ -60,11 +60,50 @@ class ScoreService {
     return record;
   }
 
-  async setScore({ address, scoreType, score = 0, modifier = null }) {
+  /**
+   * Set the highest score an address ever had
+   * @returns {Promise<KeyValueCache>}
+   */
+  async _setHighestScore({ address, scoreType, modifier = 0 }) {
+    if (!modifier || modifier < 0) return;
     const CacheService = new _CacheService();
-    const cleanAddress = validateAndConvertAddress(address);
 
     const SCORE_KEY = "BebScoreService";
+
+    const existingScore = await CacheService.get({
+      key: SCORE_KEY,
+      params: {
+        address: address,
+        scoreType: scoreType,
+      },
+    });
+    if (existingScore) {
+      const highestScore = Math.max(
+        parseInt(existingScore) + modifier,
+        parseInt(existingScore)
+      );
+      return await CacheService.set({
+        key: SCORE_KEY,
+        params: {
+          address: address,
+          scoreType: scoreType,
+        },
+        value: highestScore,
+      });
+    } else {
+      return await CacheService.set({
+        key: SCORE_KEY,
+        params: {
+          address: address,
+          scoreType: scoreType,
+        },
+        value: modifier,
+      });
+    }
+  }
+
+  async setScore({ address, scoreType, score = 0, modifier = null }) {
+    const cleanAddress = validateAndConvertAddress(address);
 
     let finalScore = score;
     if (modifier) {
@@ -84,7 +123,13 @@ class ScoreService {
       scoreType: scoreType,
       score: finalScore,
     });
-    await Score.updateOne(
+    this._setHighestScore({
+      address: cleanAddress,
+      scoreType: scoreType,
+      modifier: modifier,
+    });
+
+    return await Score.updateOne(
       {
         address: cleanAddress,
         scoreType: scoreType,
@@ -98,15 +143,6 @@ class ScoreService {
         upsert: true,
       }
     );
-    return await CacheService.set({
-      key: SCORE_KEY,
-      params: {
-        address: cleanAddress,
-        scoreType: scoreType,
-      },
-      value: finalScore,
-      expiresAt: null,
-    });
   }
 
   async getCommunityScore({ address, bebdomain }) {

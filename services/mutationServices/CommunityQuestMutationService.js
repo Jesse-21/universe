@@ -33,6 +33,17 @@ class CommunityQuestMutationService extends CommunityQuestService {
     }
     return true;
   }
+  _getScoreType(scoreType) {
+    const DEFAULT_TYPE =
+      process.env.NODE_ENV === "development" ? "beta" : "playground";
+    const map = {
+      wield: "wield",
+      playground: DEFAULT_TYPE,
+      bebcaster: DEFAULT_TYPE,
+      sdk: DEFAULT_TYPE,
+    };
+    return map[scoreType] || DEFAULT_TYPE;
+  }
 
   /**
    * Create the reward of a Quest for a community
@@ -58,9 +69,8 @@ class CommunityQuestMutationService extends CommunityQuestService {
       }
       // use default scoreType for now if not provided
 
-      const scoreType =
-        iScoreType ||
-        (process.env.NODE_ENV === "development" ? "beta" : "playground");
+      const scoreType = this._getScoreType(iScoreType);
+
       await ScoreService.setScore({
         address: address,
         scoreType,

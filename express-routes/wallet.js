@@ -5,6 +5,12 @@ const rateLimit = require("express-rate-limit");
 const { Service: _AlchemyService } = require("../services/AlchemyService");
 const { Account } = require("../models/Account");
 const { ApiKey } = require("../models/ApiKey");
+const { Network } = require("alchemy-sdk");
+
+const {
+  getOnchainTransactions,
+  getOnchainAssets,
+} = require("../helpers/wallet");
 
 const { requireAuth } = require("../helpers/auth-middleware");
 const { getMemcachedClient, getHash } = require("../connectmemcached");
@@ -119,17 +125,119 @@ const authContext = async (req, res, next) => {
   next();
 };
 
-/** Refetch chains, save the synced inventory, and return */
+/** Refetch chains, save the synced inventory (with memcached), and return */
 /** Should poll this endpoint to get the most up to date inventory */
 app.get("/v1/assets", [authContext, limiter], async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit || 20);
+    const limit = parseInt(req.query.limit || 1_000);
     const cursor = req.query.cursor || null;
+    const address = req.query.address; // we support viewing other addresses' assets
+
+    const memcached = getMemcachedClient();
+    try {
+      const data = await memcached.get(
+        getHash(`Wallet_transactions:${limit}:${cursor}:${address}`)
+      );
+      if (data) {
+        return res.json({
+          source: "v1",
+          transactions: JSON.parse(data.value),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const networks = [
+      Network.ETH_MAINNET,
+      Network.OPT_MAINNET,
+      Network.BASE_MAINNET,
+      Network.MATIC_MAINNET,
+    ];
+
+    const assets = await Promise.all(
+      networks.map((network) => getOnchainAssets(address, network))
+    );
+    // map network to transactions in hashmap
+    const assetsMap = {};
+    assets.forEach((networkAssets, i) => {
+      assetsMap[networks[i]] = networkAssets;
+    });
+
+    try {
+      await memcached.set(
+        getHash(`Wallet_assets:${limit}:${cursor}:${address}`),
+        JSON.stringify(assetsMap),
+        { lifetime: 60 * 60 } // 1 hour
+      );
+    } catch (e) {
+      console.error(e);
+    }
 
     return res.json({
-      // result: { casts },
-      // next,
-      source: "v2",
+      source: "v1",
+      assets: assetsMap,
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+/** Refetch chains, query transactions on all chains (with cache into memcached), and return */
+app.get("/v1/transactions", [authContext, limiter], async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || 1_000);
+    const cursor = req.query.cursor || null;
+    const address = req.query.address; // we support viewing other addresses' transactions
+
+    const memcached = getMemcachedClient();
+    try {
+      const data = await memcached.get(
+        getHash(`Wallet_transactions:${limit}:${cursor}:${address}`)
+      );
+      if (data) {
+        return res.json({
+          source: "v1",
+          transactions: JSON.parse(data.value),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const networks = [
+      Network.ETH_MAINNET,
+      Network.OPT_MAINNET,
+      Network.BASE_MAINNET,
+      Network.MATIC_MAINNET,
+    ];
+
+    const transactions = await Promise.all(
+      networks.map((network) => getOnchainTransactions(address, network))
+    );
+    // map network to transactions in hashmap
+    const transactionsMap = {};
+    transactions.forEach((networkTransactions, i) => {
+      transactionsMap[networks[i]] = networkTransactions;
+    });
+
+    try {
+      await memcached.set(
+        getHash(`Wallet_transactions:${limit}:${cursor}:${address}`),
+        JSON.stringify(transactionsMap),
+        { lifetime: 60 * 60 } // 1 hour
+      );
+    } catch (e) {
+      console.error(e);
+    }
+
+    return res.json({
+      source: "v1",
+      transactions: transactionsMap,
     });
   } catch (e) {
     Sentry.captureException(e);

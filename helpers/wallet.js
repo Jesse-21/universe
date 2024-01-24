@@ -3,6 +3,7 @@ const { prod } = require("../helpers/registrar");
 const { Token } = require("../models/wallet/Token");
 const { AccountInventory } = require("../models/AccountInventory");
 const { Contract } = require("../models/wallet/Contract");
+const { Alchemy, Network, WebhookType } = require("alchemy-sdk");
 
 const chainToApiKey = {
   1: [prod().NODE_URL, prod().NODE_NETWORK],
@@ -93,4 +94,37 @@ async function processAndUpdateNFTs({ response, chainId, accountId }) {
 
 // 1. loop through all supported chains and update assets
 // 2. delete all account inventory item that does not have the correct lastBlockHash, means they are e.g. transferred
-async function getAssets() {}
+async function getAccountAssets() {}
+
+// get all tokens owned by a wallet
+async function getOnchainAssets(address, network) {
+  const config = {
+    apiKey: prod().NODE_URL,
+    network,
+  };
+  const alchemy = new Alchemy(config);
+  const response = await alchemy.core.getTokenBalances(address);
+  return response.tokenBalances;
+}
+
+async function getOnchainTransactions(
+  toAddress,
+  network,
+  category = ["external", "erc20", "erc721", "erc1155"],
+  fromBlock = "0x0"
+) {
+  const config = {
+    apiKey: prod().NODE_URL,
+    network,
+  };
+  const alchemy = new Alchemy(config);
+  const response = await alchemy.core.getAssetTransfers({
+    fromBlock,
+    toAddress,
+    excludeZeroValue: true,
+    category,
+  });
+  return response.transfers;
+}
+
+module.exports = { getAccountAssets, getOnchainAssets, getOnchainTransactions };

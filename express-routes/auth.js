@@ -7,6 +7,7 @@ const {
   authContext,
   limiter,
 } = require("../helpers/express-middleware");
+const { AccountInvite } = require("../models/AccountInvite");
 
 // POST route for authentication by signature
 app.post("/v1/auth-by-signature", heavyLimiter, async (req, res) => {
@@ -36,7 +37,7 @@ app.post("/v1/auth-by-signature", heavyLimiter, async (req, res) => {
 
 // GET route for getAccountSigninMessage
 app.get("/v1/get-account-signin-message", heavyLimiter, async (req, res) => {
-  const { address, chainId = 1 } = req.query;
+  const { address, chainId = 1, creationOrigin } = req.query;
   if (!address) {
     return res.json({
       code: 500,
@@ -49,6 +50,7 @@ app.get("/v1/get-account-signin-message", heavyLimiter, async (req, res) => {
     const signature = await AuthService.getMessageToSign({
       address,
       chainId,
+      creationOrigin,
     });
 
     res.status(201).json({
@@ -75,13 +77,21 @@ app.get("/v1/get-current-account", [limiter, authContext], async (req, res) => {
     if (!account) {
       throw new Error("Account not found");
     }
-    await account.populate("addresses profileImage");
+    const [, invite] = await Promise.all([
+      await account.populate("addresses profileImage"),
+      await AccountInvite.findOrCreate({
+        accountId: account._id,
+      }),
+    ]);
 
     res.status(201).json({
       code: "201",
       success: true,
       message: "Success",
-      account,
+      account: {
+        ...account.toObject(),
+        invite,
+      },
     });
   } catch (e) {
     Sentry.captureException(e);
