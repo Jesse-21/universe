@@ -97,7 +97,7 @@ async function processAndUpdateNFTs({ response, chainId, accountId }) {
 async function getAccountAssets() {}
 
 // get all tokens owned by a wallet
-async function getOnchainAssets(address, network) {
+async function getOnchainAssets(address, network, cursor = null) {
   const config = {
     apiKey: prod().NODE_URL,
     network,
@@ -110,6 +110,7 @@ async function getOnchainAssets(address, network) {
 async function getOnchainTransactions(
   toAddress,
   network,
+  cursor = null,
   category = ["external", "erc20", "erc721", "erc1155"],
   fromBlock = "0x0"
 ) {
@@ -127,4 +128,25 @@ async function getOnchainTransactions(
   return response.transfers;
 }
 
-module.exports = { getAccountAssets, getOnchainAssets, getOnchainTransactions };
+const DEFAULT_NETWORKS = [
+  Network.ETH_MAINNET,
+  Network.OPT_MAINNET,
+  Network.BASE_MAINNET,
+  Network.MATIC_MAINNET,
+];
+
+const DEFAULT_CURSORS = [null, null, null, null];
+
+const DEFAULT_LIMIT = 1_000;
+
+const SKIP_CURSOR = "skip";
+
+module.exports = {
+  getAccountAssets,
+  getOnchainAssets,
+  getOnchainTransactions,
+  DEFAULT_NETWORKS,
+  DEFAULT_LIMIT,
+  DEFAULT_CURSORS,
+  SKIP_CURSOR,
+};

@@ -1,6 +1,11 @@
 const app = require("express").Router();
 const Sentry = require("@sentry/node");
 const { getMemcachedClient, getHash } = require("../connectmemcached");
+const {
+  DEFAULT_NETWORKS,
+  DEFAULT_LIMIT,
+  DEFAULT_CURSORS,
+} = require("../helpers/wallet");
 
 // Webhook handler route
 // Example data:
@@ -65,10 +70,14 @@ app.post("/address-activity", async (req, res) => {
         addresses
           .map((address) => [
             memcached.delete(
-              getHash(`Wallet_transactions:${1_000}:${null}:${address}`)
+              getHash(
+                `Wallet_transactions:${DEFAULT_LIMIT}:${DEFAULT_NETWORKS}:${DEFAULT_CURSORS}:${address}`
+              )
             ),
             memcached.delete(
-              getHash(`Wallet_assets:${1_000}:${null}:${address}`)
+              getHash(
+                `Wallet_assets:${DEFAULT_LIMIT}:${DEFAULT_NETWORKS}:${DEFAULT_CURSORS}:${address}`
+              )
             ),
           ])
           .flat()
