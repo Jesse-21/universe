@@ -213,7 +213,10 @@ app.get("/v1/transactions", [authContext, limiter], async (req, res) => {
       networks.map((network, i) =>
         cursors[i] === SKIP_CURSOR
           ? []
-          : getOnchainTransactions(address, network, cursors[i], limit)
+          : getOnchainTransactions(address, network, {
+              cursor: cursors[i],
+              limit,
+            })
       )
     );
     // map network to transactions in hashmap

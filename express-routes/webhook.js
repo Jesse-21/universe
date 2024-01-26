@@ -74,12 +74,17 @@ app.post("/address-activity", async (req, res) => {
             DEFAULT_NETWORKS.map((network) => [
               memcached.delete(
                 getHash(
-                  `Wallet_transactions:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}`
+                  `Wallet_getOnchainTransactions:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}`
                 )
               ),
               memcached.delete(
                 getHash(
-                  `Wallet_tokens:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}:${DEFAULT_FILTER_NO_SYMBOL}`
+                  `Wallet_getOnchainNFTs:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}`
+                )
+              ),
+              memcached.delete(
+                getHash(
+                  `Wallet_getOnchainTokens:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}:${DEFAULT_FILTER_NO_SYMBOL}`
                 )
               ),
             ])

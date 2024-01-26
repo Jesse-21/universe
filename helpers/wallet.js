@@ -20,7 +20,7 @@ async function getOnchainNFTs(
   const memcached = getMemcachedClient();
   try {
     const data = await memcached.get(
-      getHash(`Wallet_getOnchainNFTs:${network}:${address}`)
+      getHash(`Wallet_getOnchainNFTs:${limit}:${network}:${cursor}:${address}`)
     );
     if (data) {
       return JSON.parse(data.value);
@@ -43,9 +43,17 @@ async function getOnchainNFTs(
   }
   const response = await alchemy.nft.getNftsForOwner(address, params);
 
+  response.ownedNfts = response.ownedNfts.map((nft) => {
+    // lets drop the originalUrl for SVG NFTs
+    const image = nft.image;
+    delete image.originalUrl;
+    delete nft.raw;
+    return nft;
+  });
+
   try {
     await memcached.set(
-      getHash(`Wallet_getOnchainNFTs:${network}:${address}`),
+      getHash(`Wallet_getOnchainNFTs:${limit}:${network}:${cursor}:${address}`),
       JSON.stringify(response),
       { lifetime: 24 * 60 * 60 } // 24 hours
     );
@@ -161,10 +169,12 @@ async function getOnchainTokens(
 async function getOnchainTransactions(
   address,
   network,
-  cursor = null,
-  category = ["external", "erc20", "erc721", "erc1155"],
-  fromBlock = "0x0",
-  limit = DEFAULT_LIMIT
+  {
+    cursor = null,
+    category = ["external", "erc20", "erc721", "erc1155"],
+    fromBlock = "0x0",
+    limit = DEFAULT_LIMIT,
+  }
 ) {
   const config = {
     apiKey: prod().NODE_URL,
@@ -228,7 +238,7 @@ const DEFAULT_CURSORS = [
 ];
 
 const DEFAULT_LIMIT = 100;
-const DEFAULT_NFT_LIMIT = 10;
+const DEFAULT_NFT_LIMIT = 100;
 
 const SKIP_CURSOR = "skip";
 
