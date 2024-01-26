@@ -13,12 +13,77 @@ const {
 const CacheService = new _CacheService();
 
 const REFERRAL_KEY = "ReferralService";
+const REFERRAL_KEY_V2 = "ReferralServiceV2";
 
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 3_000, // 3s
   max: 10_000, // Need to implement IP based rate limiting (due to amazon load balancer)
   message: "Too many requests, please try again later.",
+});
+
+// Generic endpoint to verify referral code.
+app.get("/v2/:referralCode/verify", limiter, async (req, res) => {
+  try {
+    const referralCode = req.params.referralCode;
+
+    if (!referralCode) {
+      throw new Error("Missing required params");
+    }
+    const accountInviteCode = await AccountInvite.findOne({
+      code: referralCode,
+    });
+    if (!accountInviteCode) {
+      return res.json({
+        code: 500,
+        success: false,
+        message: "Invalid referral code",
+      });
+    }
+
+    return res.json({
+      code: 200,
+      success: true,
+    });
+  } catch (e) {
+    console.error(e);
+    Sentry.captureException(e);
+    return res.json({
+      code: 500,
+      success: false,
+      message: e.message,
+    });
+  }
+});
+
+// Generic endpoint to create referral code.
+app.post("/v2/:referralCode", limiter, async (req, res) => {
+  try {
+    const referralCode = req.params.referralCode;
+    const address = req.body.address;
+    if (!referralCode || !address) {
+      throw new Error("Missing required params");
+    }
+    await CacheService.set({
+      key: REFERRAL_KEY_V2,
+      params: {
+        address: validateAndConvertAddress(address),
+      },
+      value: `${referralCode}`,
+    });
+    return res.json({
+      code: 200,
+      success: true,
+    });
+  } catch (e) {
+    console.error(e);
+    Sentry.captureException(e);
+    return res.json({
+      code: 500,
+      success: false,
+      message: e.message,
+    });
+  }
 });
 
 app.post("/:referralCode", limiter, async (req, res) => {

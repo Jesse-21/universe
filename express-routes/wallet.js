@@ -8,10 +8,12 @@ const { ApiKey } = require("../models/ApiKey");
 const { Network } = require("alchemy-sdk");
 
 const {
+  getOnchainNFTs,
   getOnchainTransactions,
-  getOnchainAssets,
+  getOnchainTokens,
   DEFAULT_NETWORKS,
   DEFAULT_LIMIT,
+  DEFAULT_NFT_LIMIT,
   DEFAULT_CURSORS,
   SKIP_CURSOR,
 } = require("../helpers/wallet");
@@ -129,35 +131,54 @@ const authContext = async (req, res, next) => {
   next();
 };
 
+app.get("/v1/nfts", [authContext, heavyLimiter], async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || DEFAULT_NFT_LIMIT); // If you don't use the default limit, check webhook.js for clearing memcached!
+    const networks = req.query.networks || DEFAULT_NETWORKS; // If you don't use the default networks, check webhook.js for clearing memcached!
+    const cursors = req.query.cursors || DEFAULT_CURSORS; // we also support the 'skip' cursor
+
+    const address = req.query.address; // we support viewing other addresses' transactions
+
+    const transactions = await Promise.all(
+      networks.map((network, i) =>
+        cursors[i] === SKIP_CURSOR
+          ? []
+          : getOnchainNFTs(address, network, cursors[i], limit)
+      )
+    );
+    // map network to transactions in hashmap
+    const transactionsMap = {};
+    transactions.forEach((networkTransactions, i) => {
+      transactionsMap[networks[i]] = networkTransactions;
+    });
+
+    return res.json({
+      source: "v1",
+      transactions: transactionsMap,
+    });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
 /** Refetch chains, save the synced inventory (with memcached), and return */
 /** Should poll this endpoint to get the most up to date inventory */
-app.get("/v1/assets", [authContext, limiter], async (req, res) => {
+app.get("/v1/tokens", [authContext, limiter], async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit || DEFAULT_LIMIT); // If you don't use the default limit, check webhook.js for clearing memcached!
+    const _limit = parseInt(req.query.limit || DEFAULT_LIMIT); // Not used by alchemy ATM. If you don't use the default limit, check webhook.js for clearing memcached!
     const cursors = req.query.cursors || DEFAULT_CURSORS; // we also support the 'skip' cursor
     const networks = req.query.networks || DEFAULT_NETWORKS; // If you don't use the default networks, check webhook.js for clearing memcached!
     const address = req.query.address; // we support viewing other addresses' assets
-
-    const memcached = getMemcachedClient();
-    try {
-      const data = await memcached.get(
-        getHash(`Wallet_assets:${limit}:${networks}:${cursors}:${address}`)
-      );
-      if (data) {
-        return res.json({
-          source: "v1",
-          transactions: JSON.parse(data.value),
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
 
     const assets = await Promise.all(
       networks.map((network, i) =>
         cursors[i] === SKIP_CURSOR
           ? []
-          : getOnchainAssets(address, network, cursors[i])
+          : getOnchainTokens(address, network, cursors[i])
       )
     );
     // map network to transactions in hashmap
@@ -165,16 +186,6 @@ app.get("/v1/assets", [authContext, limiter], async (req, res) => {
     assets.forEach((networkAssets, i) => {
       assetsMap[networks[i]] = networkAssets;
     });
-
-    try {
-      await memcached.set(
-        getHash(`Wallet_assets:${limit}:${networks}:${cursors}:${address}`),
-        JSON.stringify(assetsMap),
-        { lifetime: 60 * 60 } // 1 hour
-      );
-    } catch (e) {
-      console.error(e);
-    }
 
     return res.json({
       source: "v1",
@@ -198,28 +209,11 @@ app.get("/v1/transactions", [authContext, limiter], async (req, res) => {
 
     const address = req.query.address; // we support viewing other addresses' transactions
 
-    const memcached = getMemcachedClient();
-    try {
-      const data = await memcached.get(
-        getHash(
-          `Wallet_transactions:${limit}:${networks}:${cursors}:${address}`
-        )
-      );
-      if (data) {
-        return res.json({
-          source: "v1",
-          transactions: JSON.parse(data.value),
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
     const transactions = await Promise.all(
       networks.map((network, i) =>
         cursors[i] === SKIP_CURSOR
           ? []
-          : getOnchainTransactions(address, network, cursors[i])
+          : getOnchainTransactions(address, network, cursors[i], limit)
       )
     );
     // map network to transactions in hashmap
@@ -227,18 +221,6 @@ app.get("/v1/transactions", [authContext, limiter], async (req, res) => {
     transactions.forEach((networkTransactions, i) => {
       transactionsMap[networks[i]] = networkTransactions;
     });
-
-    try {
-      await memcached.set(
-        getHash(
-          `Wallet_transactions:${limit}:${networks}:${cursors}:${address}`
-        ),
-        JSON.stringify(transactionsMap),
-        { lifetime: 60 * 60 } // 1 hour
-      );
-    } catch (e) {
-      console.error(e);
-    }
 
     return res.json({
       source: "v1",

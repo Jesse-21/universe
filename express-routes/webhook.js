@@ -5,6 +5,7 @@ const {
   DEFAULT_NETWORKS,
   DEFAULT_LIMIT,
   DEFAULT_CURSORS,
+  DEFAULT_FILTER_NO_SYMBOL,
 } = require("../helpers/wallet");
 
 // Webhook handler route
@@ -64,22 +65,25 @@ app.post("/address-activity", async (req, res) => {
     // Here, you can add your logic to handle the webhook data.
     // For example, updating a database, triggering other processes, etc.
     // lets delete all relavent memcached entries for the account
+    // we need to span all DEFAULT_NETWORKS and DEFAULT_CURSORS
     const memcached = getMemcachedClient();
     try {
       await Promise.all(
         addresses
-          .map((address) => [
-            memcached.delete(
-              getHash(
-                `Wallet_transactions:${DEFAULT_LIMIT}:${DEFAULT_NETWORKS}:${DEFAULT_CURSORS}:${address}`
-              )
-            ),
-            memcached.delete(
-              getHash(
-                `Wallet_assets:${DEFAULT_LIMIT}:${DEFAULT_NETWORKS}:${DEFAULT_CURSORS}:${address}`
-              )
-            ),
-          ])
+          .map((address) =>
+            DEFAULT_NETWORKS.map((network) => [
+              memcached.delete(
+                getHash(
+                  `Wallet_transactions:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}`
+                )
+              ),
+              memcached.delete(
+                getHash(
+                  `Wallet_tokens:${DEFAULT_LIMIT}:${network}:${DEFAULT_CURSORS[0]}:${address}:${DEFAULT_FILTER_NO_SYMBOL}`
+                )
+              ),
+            ])
+          )
           .flat()
       );
     } catch (e) {

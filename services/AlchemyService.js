@@ -86,7 +86,7 @@ class AlchemyService {
   }
 
   /**
-   * @docs https://docs.alchemy.com/alchemy/enhanced-apis/nft-api/getnftmetadata
+   * @docs https://docs.alchemy.com/reference/getnftsforowner-v3
    * @returns Promise<{NFTMetadata}>
    */
   async getNFTsV3({ owner, pageKey, contractAddresses, withMetadata }) {
