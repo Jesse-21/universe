@@ -7,6 +7,7 @@ const { resolvers: RichEmbed } = require("./resolvers/RichEmbed");
 const { resolvers: Post } = require("./resolvers/Post");
 const { resolvers: AccountSection } = require("./resolvers/AccountSection");
 const { resolvers: AccountThread } = require("./resolvers/AccountThread");
+const { resolvers: Score } = require("./resolvers/Score");
 const { resolvers: Thread } = require("./resolvers/Thread");
 const { resolvers: Notification } = require("./resolvers/Notification");
 const { resolvers: AccountReaction } = require("./resolvers/AccountReaction");
@@ -37,6 +38,9 @@ const { resolvers: QuestsResolvers } = require("./resolvers/queries");
 const {
   resolvers: CommunityResolvers,
 } = require("./resolvers/community/index.js");
+const {
+  resolvers: AccountInventory,
+} = require("./resolvers/AccountInventory.js");
 
 /** main resolvers */
 const resolvers = merge(
@@ -47,6 +51,7 @@ const resolvers = merge(
   AccountCommunityRole,
   Thread,
   Query,
+  Score,
   RichContent,
   AccountReaction,
   Notification,
@@ -59,6 +64,7 @@ const resolvers = merge(
   Quest,
   ChannelResolvers,
   ChannelRecipientResolvers,
+  AccountInventory,
   /** Community Resolvers */
   CommunityResolvers,
   /** mutation resolvers */

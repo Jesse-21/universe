@@ -1,13 +1,15 @@
 const jwt = require("jsonwebtoken");
 
-const generateNewAccessTokenFromAccount = (account) => {
+const generateNewAccessTokenFromAccount = (account, extra = {}) => {
   if (!account || !account._id) throw new Error("Invalid Account");
+
   return new Promise((resolve, reject) => {
     jwt.sign(
       {
         payload: {
           id: account._id,
           address: account.addresses[0].address,
+          ...extra,
         },
       },
       process.env.JWT_SECRET,

@@ -1,6 +1,8 @@
 const { Account } = require("../models/Account");
 const { Community } = require("../models/Community");
 const { Farcaster } = require("../models/Identities/Farcaster");
+const { UserData, UserDataType } = require("../models/farcaster");
+const { getFarcasterUserByFid } = require("../helpers/farcaster");
 const filter = require("../helpers/filter");
 
 const { isAddress, isENS } = require("../helpers/validate-and-convert-address");
@@ -9,10 +11,76 @@ const {
 } = require("../helpers/get-address-from-ens");
 
 class SearchService {
+  // Utility function to convert username search string to hex regex pattern
+  _getUsernameHexPattern(searchString) {
+    const hexSearchString = Buffer.from(searchString, "ascii").toString("hex");
+    return new RegExp(`^0x.*${hexSearchString}.*`, "i");
+  }
+
+  async searchFarcasterUserByUsername(searchString) {
+    // Convert the search string to its hex representation
+    const hexSearchString = Buffer.from(searchString, "ascii").toString("hex");
+
+    // Start by searching for an exact match
+    let users = await UserData.find({
+      value: `0x${hexSearchString}`,
+      type: UserDataType.USER_DATA_TYPE_USERNAME,
+      deletedAt: null,
+    })
+      .sort("-updatedAt")
+      .limit(5);
+
+    // If we didn't find 5 users or want to add more inexact matches
+    if (users.length < 5) {
+      // Create a regex pattern that searches for this hex string with the "0x" prefix
+      const pattern = new RegExp(`^0x${hexSearchString}.*`, "i");
+
+      // Find additional users with the pattern
+      const regexUsers = await UserData.find({
+        value: pattern,
+        type: UserDataType.USER_DATA_TYPE_USERNAME,
+        deletedAt: null,
+      })
+        .sort("-updatedAt")
+        .limit(5 - users.length); // limit to the number of users needed to reach 5
+
+      users = users.concat(regexUsers);
+    }
+    if (users && users.length > 0) {
+      // an array of Account, derived from signer address
+      let uniqueIds = {};
+      for (let i = 0; i < users.length; i++) {
+        try {
+          const farcasterIdentity = await getFarcasterUserByFid(users[i].fid);
+          const account = await Account.findOrCreateByAddressAndChainId({
+            address: farcasterIdentity.custodyAddress,
+            chainId: 1,
+          });
+          if (uniqueIds[account._id]) continue;
+          uniqueIds[account._id] = {
+            ...account.toObject(),
+            identities: {
+              farcaster: {
+                ...farcasterIdentity,
+              },
+            },
+          };
+        } catch (e) {
+          console.log(e);
+          continue;
+        }
+      }
+      return Object.values(uniqueIds);
+    }
+
+    return [];
+  }
+
   /**
    * Find all accounts by username or identity username such as Farcaster
    * @TODO add limit
    */
+
   async searchAccountByIdentity(query) {
     const farcasterWithAccounts = await Farcaster.find({
       $or: [
@@ -50,6 +118,16 @@ class SearchService {
         .sort("-updatedAt")
         .limit(5);
       accounts = accounts.filter((account) => !account.deleted);
+      const farcasterAccounts = await this.searchFarcasterUserByUsername(query);
+      if (farcasterAccounts) {
+        // filter by unique accounts
+        // const ids = {};
+        // const combined = [...accounts, ...farcasterAccounts];
+        // combined.forEach((a) => {
+        //   ids[a._id] = a;
+        // });
+        accounts = [...accounts, ...farcasterAccounts];
+      }
     }
     return accounts;
   }
@@ -59,10 +137,10 @@ class SearchService {
     const communities = await Community.find({
       $or: [
         {
-          bebdomain: { $regex: query, $options: "i" },
+          bebdomain: { $regex: query.trim(), $options: "i" },
         },
         {
-          name: { $regex: query, $options: "i" },
+          name: { $regex: query.trim(), $options: "i" },
         },
       ],
     })

@@ -1,12 +1,24 @@
+type Pfp {
+  url: String
+  verified: Boolean
+}
+
+type HubRichContent {
+  text: String
+  mentions: [String]
+}
+
 type FarcasterIdentity {
-  _id: ID
-  directoryUrl: String
-  avatarUrl: String
+  fid: ID
+  followingCount: Int
+  followerCount: Int
+  pfp: Pfp
+  bio: HubRichContent
+  external: Boolean
   username: String
   displayName: String
-  account: Account
-  farcasterAddress: String
 }
+
 type ENSIdentity {
   _id: ID
   account: Account

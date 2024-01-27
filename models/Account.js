@@ -20,6 +20,8 @@ const {
 
 const { Service: ContentService } = require("../services/ContentService");
 
+const { getMemcachedClient } = require("../connectmemcached");
+
 const Sentry = require("@sentry/node");
 
 class AccountClass {
@@ -50,6 +52,20 @@ class AccountClass {
     if (existing) throw new Error("An account exists with this username.");
     return existing;
   }
+  static async _validwieldTagCheck(account, wieldTag) {
+    const regex = /^[a-z0-9_]{1,16}$/;
+    const valid = regex.test(wieldTag);
+    if (!valid) throw new Error("Invalid wieldTag");
+
+    if (account.wieldTag === wieldTag) return true;
+
+    const existing = await Account.exists({
+      wieldTag: wieldTag,
+    });
+    if (existing)
+      throw new Error("An account exists with this wieldTag. Try another one.");
+    return existing;
+  }
   /** @returns Error or true */
   static async _existingEmailCheck(account, email) {
     if (account.email === email) return true;
@@ -63,43 +79,121 @@ class AccountClass {
     if (!existing) throw new Error("Invalid Image Id");
     return true;
   }
+
+  /**
+   * Create an account with encrypted wallet json and signature
+   * @TODO we need to verify the validity of the email
+   * @returns Promise<Account>
+   */
+  static async createFromEncryptedWalletJson({
+    email,
+    encyrptedWalletJson,
+    chainId,
+  }) {
+    try {
+      const walletDecrypted = JSON.parse(encyrptedWalletJson);
+      const address = "0x" + walletDecrypted.address;
+
+      const existing = await this.findOne({
+        walletEmail: email,
+      });
+      if (existing) return existing;
+      const account = await this.createFromAddress({
+        address: address,
+        chainId,
+        walletEmail: email,
+        encyrptedWalletJson: encyrptedWalletJson,
+      });
+
+      return account;
+    } catch (e) {
+      console.log(e);
+      throw new Error(e.message);
+    }
+  }
+
   /**
    * Create an account from address
    * @returns Promise<Account>
    */
-  static async createFromAddress({ address: rawAddress, chainId, email }) {
-    if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
-      throw new Error("Invalid chain id");
-    }
-    const address = validateAndConvertAddress(rawAddress);
+  static async createFromAddress({
+    address: rawAddress,
+    chainId,
+    email,
+    walletEmail,
+    encyrptedWalletJson,
+    creationOrigin,
+  }) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      if (!get(ChainHelpers, `chainTable[${chainId}]`)) {
+        throw new Error("Invalid chain id");
+      }
+      const address = validateAndConvertAddress(rawAddress, chainId);
 
-    const existing = await this.findByAddressAndChainId({
-      address,
-      chainId,
-    });
-    if (existing?.deleted) throw new Error("Account is deleted");
-    if (existing) return existing;
-    const createdNonce = await AccountNonce.create({});
-    const createdExp = await AccountExp.create({});
-    const createdAddress = await AccountAddress.create({
-      address,
-      chain: {
+      const existing = await this.findByAddressAndChainId({
+        address,
         chainId,
-        name: ChainHelpers.mapChainIdToName(chainId),
-      },
-    });
-    const createdAccount = await this.create({
-      email,
-      addresses: [createdAddress._id],
-      activities: {},
-    });
-    createdAddress.account = createdAccount._id;
-    createdNonce.account = createdAccount._id;
-    createdExp.account = createdAccount._id;
-    await createdAddress.save();
-    await createdNonce.save();
-    await createdExp.save();
-    return createdAccount;
+      });
+      if (existing?.deleted) throw new Error("Account is deleted");
+      if (existing) return existing;
+
+      const createdNonceTmp = new AccountNonce();
+      const createdExpTmp = new AccountExp();
+      const createdAddressTmp = new AccountAddress({
+        address,
+        chain: {
+          chainId,
+          name: ChainHelpers.mapChainIdToName(chainId),
+        },
+      });
+      const [createdAccount] = await this.create(
+        [
+          {
+            email,
+            addresses: [createdAddressTmp._id],
+            activities: {},
+            walletEmail,
+            encyrptedWalletJson,
+            creationOrigin,
+          },
+        ],
+        { session }
+      );
+      createdAddressTmp.account = createdAccount._id;
+      createdNonceTmp.account = createdAccount._id;
+      createdExpTmp.account = createdAccount._id;
+
+      await createdAddressTmp.save({ session });
+      await createdNonceTmp.save({ session });
+      await createdExpTmp.save({ session });
+
+      try {
+        await this.findByAddressAndChainId({
+          address,
+          chainId,
+        });
+      } catch (e) {
+        // This means we created a duplicate account
+        // This is a rare case, but it can happen
+        // We should delete the account we just created
+        // and return the existing account
+        await createdAccount.delete({ session });
+        await createdAddressTmp.delete({ session });
+        await createdNonceTmp.delete({ session });
+        await createdExpTmp.delete({ session });
+        throw e;
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+      return createdAccount;
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error; // re-throw the error to be handled by the calling function
+    }
   }
 
   /**
@@ -107,34 +201,62 @@ class AccountClass {
    * @returns Promise<Account | null>
    */
   static async findByAddressAndChainId({ address: rawAddress, chainId }) {
-    let address;
+    const memcached = getMemcachedClient();
+    const address = validateAndConvertAddress(rawAddress, chainId);
+
+    let accountId;
+
     try {
-      address = validateAndConvertAddress(rawAddress);
+      const data = await memcached.get(
+        `Account:findByAddressAndChainId:${chainId}:${address}`
+      );
+      if (data) {
+        accountId = data.value;
+      }
     } catch (e) {
-      Sentry.captureException(e);
       console.error(e);
-      return null;
     }
 
-    const accountAddress = await AccountAddress.aggregate([
-      {
-        $match: {
-          $and: [{ "chain.chainId": chainId }, { address }],
-        },
-      },
-    ]);
+    if (!accountId) {
+      const accountAddress = await AccountAddress.findOne({ address });
 
-    if (!accountAddress || !accountAddress.length) return null;
-    return this.findById(get(accountAddress, "[0].account"));
+      accountId = accountAddress?.account;
+      if (!accountId) {
+        return null;
+      }
+      try {
+        await memcached.set(
+          `Account:findByAddressAndChainId:${chainId}:${address}`,
+          accountId.toString()
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    const account = await this.findById(accountId);
+    if (!account) {
+      throw new Error(
+        `AccountAddress has a null account for address ${address} and chainId ${chainId}!`
+      );
+    }
+    return account;
   }
 
   /**
    * Find or create an account from address and chain Id
    * @returns Promise<Account>
    */
-  static async findOrCreateByAddressAndChainId({ address, chainId }) {
+  static async findOrCreateByAddressAndChainId({
+    address,
+    chainId,
+    creationOrigin = "UNKNOWN",
+  }) {
     /** this function takes care cases where account exists */
-    return Account.createFromAddress({ address, chainId });
+    return await Account.createFromAddress({
+      address,
+      chainId,
+      creationOrigin,
+    });
   }
 
   /**
@@ -190,11 +312,24 @@ class AccountClass {
     return { account, accountNonce, accessToken };
   }
 
+  /**
+   * add an encrypted json wallet to an existing account
+   * @returns Promise<Account>
+   */
+  async addEncryptedWalletJson(encyrptedWalletJson) {
+    if (this.encyrptedWalletJson) {
+      throw new Error("Account already has an encrypted wallet json");
+    }
+    this.encyrptedWalletJson = encyrptedWalletJson;
+    return await this.save();
+  }
+
   async updateMe(fields) {
     const _fields = pick(fields, [
       "email",
       "location",
       "username",
+      "wieldTag",
       "profileImageId",
       "bio",
       "isOnboarded",
@@ -206,7 +341,11 @@ class AccountClass {
     if (_fields.profileImageId)
       await Account._profileImageIdExistCheck(_fields.profileImageId);
     if (_fields.email) await Account._existingEmailCheck(this, _fields.email);
-
+    if (_fields.wieldTag)
+      await Account._validwieldTagCheck(this, _fields.wieldTag);
+    if (fields.wieldTag !== undefined) {
+      this.wieldTag = _fields.wieldTag;
+    }
     if (_fields.username !== undefined) {
       this.username = _fields.username;
       this.usernameLowercase = _fields.username.toLowerCase();

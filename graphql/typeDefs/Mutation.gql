@@ -173,11 +173,38 @@ type CommunityAssetMutationResponse implements MutationResponse {
   communityAsset: CommunityAsset
   communityAssetMetadata: CommunityAssetMetadata
 }
+type PaymasterMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  maxPriorityFeePerGas: String
+  preVerificationGas: String
+  callGasLimit: String
+  verificationGasLimit: String
+  paymasterAndData: String
+  maxFeePerGas: String
+  initCode: String
+  sender: String
+  nonce: String
+  callData: String
+}
+
 type WithCountMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
   count: Int
+}
+enum PaymasterRequestType {
+  CREATE_BACKPACK
+  SPONSORED_ITEM
+}
+enum AuthType {
+  PASSKEY
+  SIGNATURE
+  MAGIC_LINK
+  WARPCAST
+  FID
 }
 
 type Mutation {
@@ -187,10 +214,26 @@ type Mutation {
     chainId: Int!
     email: String
   ): AccountMutationResponse
+  addRecoverer(
+    address: String
+    encyrptedWalletJson: String
+    id: String
+    signature: String
+    type: String
+  ): AccountMutationResponse
+  addEncryptedWalletJson(encyrptedWalletJson: String!): AccountMutationResponse
+  authByEncryptedWalletJson(
+    encyrptedWalletJson: String!
+    email: String!
+    chainId: Int!
+    signature: String!
+  ): AuthBySignatureResponse
   authBySignature(
     address: String!
     chainId: Int!
     signature: String!
+    type: AuthType
+    id: String # for magic link, warpcast...
   ): AuthBySignatureResponse
   updateCurrentAccount(
     email: String
@@ -306,6 +349,12 @@ type Mutation {
     bannerImageId: String
     bio: ContentInput
   ): CommunityMutationResponse # only owner or admins of community
+  editCommunityAddressScore(
+    bebdomain: String!
+    address: String!
+    score: Int
+    modifier: Int
+  ): CommunityMutationResponse # only owner or admins of community
   registerCommunity(bebdomain: String!, tld: String): CommunityMutationResponse
 
   # Channel mutations, require auth
@@ -362,13 +411,21 @@ type Mutation {
     address: String # address to revoke role to
   ): AccountCommunityRoleMutationResponse # only owner or admins of community
   claimRole(roleId: ID!): AccountCommunityRoleMutationResponse # only authenticated account
-  #
-  # CommunityQuest mutations, require auth
-  completeQuest(questId: ID!, communityId: ID!): CommunityQuestMutationResponse # need auth
   claimReward(
     questId: ID!
     communityId: ID!
-  ): CommunityQuestWithAssetsMutationResponse # only owner or admins of community
+    questData: [QuestInput]
+  ): CommunityQuestWithAssetsMutationResponse
+  claimRewardByAddress(
+    questId: ID!
+    communityId: ID!
+    address: String!
+    questData: [QuestInput]
+  ): CommunityQuestWithAssetsMutationResponse # anyone can claim reward
+  claimCommunityRewardByAddress(
+    communityRewardId: ID!
+    address: String!
+  ): CommunityQuestWithAssetsMutationResponse # anyone can claim CommunityReward
   #
   # CommunityAsset mutations, require auth
   editCommunityAsset(
@@ -381,4 +438,11 @@ type Mutation {
   # CommunityRoom mutations, requires auth
   getPeers(communityId: ID!): CommunityRoomMutationResponse
   setPeer(communityId: ID!, peerId: String): CommunityRoomMutationResponse
+  # Paymaster mutations, requires auth
+  requestGasAndPaymasterAndData(
+    type: PaymasterRequestType!
+    typeId: ID
+    params: String
+    userOp: RequestPaymasterInput
+  ): PaymasterMutationResponse
 }

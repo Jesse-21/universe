@@ -1,11 +1,11 @@
 const dev = {
-  COOKIE_DOMAIN: ".bebhq.net",
+  COOKIE_DOMAIN: ".localhost",
   URL_PREFIX: "http://",
   URL_SUFFIX: ":3000",
 };
 
 const prod = {
-  COOKIE_DOMAIN: ".beb.xyz",
+  COOKIE_DOMAIN: ".wield.co",
   URL_PREFIX: "https://",
   URL_SUFFIX: "",
 };

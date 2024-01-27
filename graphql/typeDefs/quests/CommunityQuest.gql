@@ -7,6 +7,14 @@ type CommunityQuest {
   completedCount: Int # number of accounts that have completed the quest
 }
 
+type CommunityReward {
+  _id: ID
+  community: Community
+  isArchived: Boolean
+  reward: QuestReward
+  score: Int
+}
+
 enum CommunityQuestStatus {
   COMPLETED
   IN_PROGRESS

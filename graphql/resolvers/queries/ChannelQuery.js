@@ -6,7 +6,7 @@ const {
 const { Channel } = require("../../../models/Channel");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 250;
+const RATE_LIMIT_MAX = 10_000;
 const {
   unauthorizedErrorOrAccount,
 } = require("../../../helpers/auth-middleware");

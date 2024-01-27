@@ -6,6 +6,8 @@ const resolvers = {
       switch (parent.type) {
         case "ASSET_3D":
           return "Asset3DUnion";
+        case "IMAGE":
+          return "ImageUnion";
         default:
           return "Asset3DUnion";
       }
@@ -20,6 +22,12 @@ const resolvers = {
           _id: parent.rewardId,
           type: parent.type,
           asset3D: reward,
+        };
+      } else if (parent.type === "IMAGE") {
+        return {
+          _id: parent.rewardId,
+          type: parent.type,
+          image: reward,
         };
       } else {
         return null;

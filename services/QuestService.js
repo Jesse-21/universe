@@ -1,11 +1,13 @@
 const { Service: _ContentService } = require("./ContentService");
 const { Service: QuestRewardService } = require("./QuestRewardService");
 const { Service: _IndexerRuleService } = require("./IndexerRuleService");
+const { Service: _AlchemyService } = require("./AlchemyService");
 
 const { Quest } = require("../models/quests/Quest");
+const { CommunityQuest } = require("../models/quests/CommunityQuest");
 const { AccountAddress } = require("../models/AccountAddress");
 const { IndexerRule } = require("../models/IndexerRule");
-const { Asset3D } = require("../models/assets/Asset3D");
+const { prod } = require("../helpers/registrar");
 
 class QuestService extends QuestRewardService {
   requiredDataByRequirementType(type) {
@@ -14,18 +16,15 @@ class QuestService extends QuestRewardService {
         // @params indexer rule id determines the rule to check when an account checks in
         // @params requiredParticipationCount determines the number of accounts check in needed to complete the quest
         return ["richBlockId", "requiredParticipationCount"];
+      case "MULTICHOICE_SINGLE_QUIZ":
+        return ["question", "answers", "correctAnswer"];
       default:
         return [];
     }
   }
 
   async getQuestReward(questReward) {
-    switch (questReward.type) {
-      case "ASSET_3D":
-        return await Asset3D.findById(questReward.rewardId);
-      default:
-        return null;
-    }
+    return this.getQuestRewardItem(questReward);
   }
 
   checkRequirementDataOrError({ type, data }) {
@@ -75,24 +74,105 @@ class QuestService extends QuestRewardService {
       return false;
     }
   }
+
   /**
-   * Check if the quest can be completed by an account
-   * @TODO add more than one requirement
+   * Check if a VALID_NFT quest can be completed by an account
+   * Under the hood this uses the same logic as claim role
    * @returns Promise<Boolean>
    * */
-  async canCompleteQuest(quest, { communityId }, context) {
-    if (!quest || !context.account) return false;
-    const requirement = quest.requirements?.[0];
-    if (!requirement) return true;
-    switch (requirement.type) {
-      case "COMMUNITY_PARTICIPATION":
-        return await this._canCompleteCommunityParticipationQuest(
-          quest,
-          { requirement, communityId },
-          context
-        );
-      default:
-        return false;
+  async _canCompleteValidNFTQuest(quest, { requirement }, context) {
+    const dataMapping = {};
+    requirement?.data?.forEach((dataItem) => {
+      if (dataItem?.key) {
+        dataMapping[dataItem.key] = dataItem.value;
+      }
+    });
+
+    const {
+      contractAddress,
+      count = 1,
+      attributeType = null,
+      attributeValue = null,
+      chain = "eth-mainnet",
+    } = dataMapping;
+    if (!contractAddress) return false;
+    const apiKeys = {
+      "eth-mainnet": prod().NODE_URL,
+      "opt-mainnet": process.env.OPTIMISM_NODE_URL,
+    };
+
+    const AlchemyService = new _AlchemyService({
+      apiKey: apiKeys[chain],
+      chain,
+    });
+
+    try {
+      await context.account?.populate?.("addresses");
+      const isOwner = await AlchemyService.verifyOwnership({
+        address: context.account.addresses?.[0]?.address,
+        contractAddresses: [contractAddress],
+        count,
+        attributeType,
+        attributeValue,
+      });
+      return isOwner;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a TOTAL_NFT quest can be completed by an account
+   * @returns Promise<Boolean>
+   * */
+  async _canCompleteTotalNFTQuest(quest, { requirement }, context) {
+    const dataMapping = {};
+    requirement?.data?.forEach((dataItem) => {
+      if (dataItem?.key) {
+        dataMapping[dataItem.key] = dataItem.value;
+      }
+    });
+
+    const {
+      contractAddress: contractAddresses,
+      count: totalRequiredCount = 1,
+      attributeType = null,
+      attributeValue = null,
+    } = dataMapping;
+    if (!contractAddresses) return false;
+    const apiKeys = {
+      "eth-mainnet": prod().NODE_URL,
+      "opt-mainnet": process.env.OPTIMISM_NODE_URL,
+    };
+
+    try {
+      const addresses = contractAddresses.split(",");
+      await context.account?.populate?.("addresses");
+      let totalOwnedCount = 0;
+
+      const counts = await Promise.all(
+        addresses.map(async (address) => {
+          const [chain, contractAddress] = address.split(":");
+          const AlchemyService = new _AlchemyService({
+            apiKey: apiKeys[chain],
+            chain,
+          });
+          const c = await AlchemyService.verifyOwnership({
+            address: context.account.addresses?.[0]?.address,
+            contractAddresses: [contractAddress],
+            attributeType,
+            attributeValue,
+            returnCount: true,
+          });
+          return c;
+        })
+      );
+      totalOwnedCount = counts.reduce((a, b) => a + b, 0);
+
+      return totalOwnedCount >= totalRequiredCount;
+    } catch (e) {
+      console.log(e);
+      return false;
     }
   }
 
@@ -110,6 +190,7 @@ class QuestService extends QuestRewardService {
             rewardId: reward.rewardId,
             quantity: reward.quantity,
             title: reward.title,
+            isSponsored: reward.isSponsored,
           };
         } else {
           const rewardItem = await this.createQuestRewardItem({
@@ -121,11 +202,12 @@ class QuestService extends QuestRewardService {
             rewardId: rewardItem?._id,
             quantity: reward.quantity,
             title: reward.title,
+            isSponsored: reward.isSponsored,
           };
         }
       })
     );
-    return questRewards?.filter((reward) => !!reward?.rewardId);
+    return questRewards;
   }
 
   /**
@@ -165,6 +247,9 @@ class QuestService extends QuestRewardService {
     imageUrl,
     requirements = [],
     rewards = [],
+    community,
+    startsAt,
+    endsAt,
   } = {}) {
     const ContentService = new _ContentService();
     const content = ContentService.makeContent({
@@ -177,12 +262,20 @@ class QuestService extends QuestRewardService {
       description: content,
       imageUrl,
       schedule,
+      community,
+      startsAt,
+      endsAt,
     });
     quest.requirements = await this.createQuestRequirements({
       requirements,
     });
     quest.rewards = await this.createQuestRewards({ rewards });
-    return await quest.save();
+    await quest.save();
+    await CommunityQuest.findOrCreate({
+      communityId: community,
+      questId: quest._id,
+    });
+    return quest;
   }
 }
 

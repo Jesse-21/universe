@@ -3,6 +3,11 @@ input RichContentBlockInput {
   blockId: ID!
 }
 
+input QuestInput {
+  key: String
+  value: String
+}
+
 input ContentInput {
   raw: String
   json: String
@@ -28,6 +33,13 @@ input PositionInput {
   x: Int
   y: Int
   z: Int
+}
+
+input RequestPaymasterInput {
+  initCode: String
+  sender: String
+  nonce: String
+  callData: String
 }
 
 input IndexerRuleNFTInput {

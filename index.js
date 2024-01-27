@@ -8,14 +8,19 @@ const { GraphQLFileLoader } = require("@graphql-tools/graphql-file-loader");
 
 const { connectDB } = require("./connectdb");
 const { router: imageRouter } = require("./express-routes/image");
+const { router: authRouter } = require("./express-routes/auth");
+const { router: referralRouter } = require("./express-routes/referral");
 const { router: utilsRouter } = require("./express-routes/utils");
 const { router: communityRouter } = require("./express-routes/community");
 const { router: metadataRouter } = require("./express-routes/metadata");
+const { router: farcasterRouter } = require("./express-routes/farcaster");
+const { router: walletRouter } = require("./express-routes/wallet");
+const { router: webhookRouter } = require("./express-routes/webhook");
 const {
   router: publicProfileRouter,
 } = require("./express-routes/ens-or-address");
-const { router: scoreRouter } = require("./express-routes/score");
-
+const { router: apiKeyRouter } = require("./express-routes/apikey");
+const { router: accountRouter } = require("./express-routes/account");
 const { router: ensRouter } = require("./express-routes/ens");
 
 const { requireAuth } = require("./helpers/auth-middleware");
@@ -46,26 +51,21 @@ const typeDefs = loadSchemaSync(
 const { createDataLoaders } = require("./graphql/dataloaders");
 
 const app = express();
-const httpServer = http.createServer(app);
+// https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues
+app.set("trust proxy", process.env.TRUST_PROXY_OVERRIDE || 2); // increase based on how many proxies are in front of the server
 
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    tracesSampleRate: 1.0,
-  });
-}
+const httpServer = http.createServer(app);
 
 (async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    introspection: true,
+    introspection: process.env.NODE_ENV === "development",
     cache: "bounded",
     csrfPrevention: true,
-    formatError: (e) => {
-      Sentry.captureException(e);
-      console.error(e);
+    formatError: (_formattedError, error) => {
+      Sentry.captureException(error);
+      console.error(error);
       return new Error("Internal server error");
     },
     plugins: [
@@ -95,6 +95,7 @@ if (process.env.SENTRY_DSN) {
           return {
             ...context,
             accountId: data.payload.id,
+            isExternal: data.payload.isExternal,
           };
         } catch (e) {
           try {
@@ -116,12 +117,17 @@ if (process.env.SENTRY_DSN) {
   app.get("/", (_req, res) => {
     res.json({
       message:
-        "Welcome to a BEB Dimensions Host running github.com/bebverse/universe, see /graphql for the API!",
+        "Welcome to a Wield Dimensions Host running github.com/wieldlabs/universe, see /graphql for the API!",
     });
   });
 
-  app.get("/health", (_req, res) => {
-    res.status(200).send("Okay!");
+  app.get("/health", async (_req, res) => {
+    try {
+      await connectDB();
+      res.status(200).send("Okay!");
+    } catch (e) {
+      res.status(500).send("Error!");
+    }
   });
 
   app.use(express.json());
@@ -129,7 +135,7 @@ if (process.env.SENTRY_DSN) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage"
+      "Origin, X-Requested-With, Content-Type, sentry-trace, Accept, Authorization, baggage, API-KEY, signer"
     );
 
     next();
@@ -141,7 +147,13 @@ if (process.env.SENTRY_DSN) {
   app.use("/metadata", metadataRouter);
   app.use("/utils", utilsRouter);
   app.use("/ens/", ensRouter);
-  app.use("/score", scoreRouter);
+  app.use("/referral", referralRouter);
+  app.use("/farcaster", farcasterRouter);
+  app.use("/wallet", walletRouter);
+  app.use("/apikey", apiKeyRouter);
+  app.use("/auth", authRouter);
+  app.use("/account", accountRouter);
+  app.use("/webhook", webhookRouter);
 
   require("yargs").command(
     "$0",
@@ -161,6 +173,14 @@ if (process.env.SENTRY_DSN) {
     async (argv) => {
       dotenv.config({ path: argv.env });
       process.env.MODE = argv.selfHosted ? "self-hosted" : "default";
+
+      if (process.env.SENTRY_DSN) {
+        Sentry.init({
+          dsn: process.env.SENTRY_DSN,
+          environment: process.env.NODE_ENV || "development",
+          tracesSampleRate: 1.0,
+        });
+      }
 
       let REQUIRED_ENV_VARS = ["JWT_SECRET", "MONGO_URL", "NODE_ENV"];
 

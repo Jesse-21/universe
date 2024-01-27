@@ -10,11 +10,11 @@ const { getRandomUint256 } = require("../helpers/get-random-uint256");
 const schema = mongoose.Schema(
   {
     /** nonce for account sign in */
-    nonce: { type: String, default: `${crypto.randomInt(1, 10000)}` },
+    nonce: { type: String, default: () => `${crypto.randomInt(1, 10000)}` },
     /** nonce for account transaction */
     transactionNonce: {
       type: String,
-      default: `${getRandomUint256()}`,
+      default: () => `${getRandomUint256()}`,
     },
     account: {
       type: mongoose.Schema.Types.ObjectId,

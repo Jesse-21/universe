@@ -1,14 +1,18 @@
 const mongoose = require("mongoose");
 const { Service: AccountService } = require("../AccountService");
 const {
-  Service: FarcasterServiceV2,
-} = require("../identities/FarcasterServiceV2");
+  Service: FarcasterHubService,
+} = require("../identities/FarcasterHubService");
 const { AccountCommunity } = require("../../models/AccountCommunity");
+const { AccountNonce } = require("../../models/AccountNonce");
 const { AccountCommunityRole } = require("../../models/AccountCommunityRole");
-
+const { Service: _CacheService } = require("../cache/CacheService");
+const { config: walletConfig } = require("../../helpers/constants/wallet");
+const { ethers } = require("ethers");
 const {
   resolveEnsDataFromAddress,
 } = require("../../helpers/resolve-ens-data-from-address");
+const { isDeployedContract } = require("../../helpers/is-deployed-contract");
 
 class AccountQueryService extends AccountService {
   /**
@@ -40,15 +44,94 @@ class AccountQueryService extends AccountService {
 
     return !!domainHolderRole;
   }
+
+  async backpackClaimed(account) {
+    const CacheService = new _CacheService();
+    const config = walletConfig();
+    // const cached = await CacheService.get({
+    //   key: `BackpackClaimed`,
+    //   params: {
+    //     account: account._id,
+    //   },
+    // });
+    // if (cached) return cached;
+    const _backpackAddress = await this.backpackAddress(account);
+    if (!_backpackAddress) return false;
+    const isClaimed = await isDeployedContract(_backpackAddress, {
+      network: config.CHAIN_ID,
+      apiKey: config.API_KEY,
+    });
+    if (isClaimed) {
+      CacheService.set({
+        key: `BackpackClaimed`,
+        params: {
+          account: account._id,
+        },
+        value: isClaimed,
+        expiresAt: null,
+      });
+    }
+    return isClaimed;
+  }
+
+  async backpackAddress(account) {
+    try {
+      const populated = await account?.populate?.("addresses");
+      const ownerAddress = populated?.addresses?.[0]?.address;
+
+      if (!account || !ownerAddress) return null;
+      const CacheService = new _CacheService();
+      // const cached = await CacheService.get({
+      //   key: `BackpackAddress`,
+      //   params: {
+      //     account: account._id,
+      //   },
+      // });
+      // if (cached) return cached;
+
+      const config = walletConfig();
+      const provider = new ethers.providers.AlchemyProvider(
+        config.CHAIN_ID,
+        config.API_KEY
+      );
+
+      const accountFactoryContract = new ethers.Contract(
+        config.FACTORY_CONTRACT_ADDRESS,
+        config.FACTORY_ABI,
+        provider
+      );
+      const accountNonce = await AccountNonce.findOne({
+        account: account._id,
+      });
+      const salt = accountNonce.salt;
+
+      const create2Address = await accountFactoryContract.getAddress(
+        ownerAddress,
+        salt
+      );
+      CacheService.set({
+        key: `BackpackAddress`,
+        params: {
+          account: account._id,
+        },
+        value: create2Address,
+        expiresAt: null,
+      });
+
+      return create2Address;
+    } catch (e) {
+      return null;
+    }
+  }
   identities(account) {
     try {
-      const FarcasterService = new FarcasterServiceV2();
+      const FarcasterService = new FarcasterHubService();
       return {
         _id: account._id,
-        farcaster: async () => {
-          await account.populate("addresses");
-          const profile = await FarcasterService.getProfileByAddress(
-            account.addresses[0].address
+        farcaster: async (args = {}, context) => {
+          const profile = await FarcasterService.getProfileByAccount(
+            account,
+            context.isExternal
           );
           return profile;
         },

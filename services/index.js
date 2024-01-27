@@ -16,6 +16,9 @@ const {
 } = require("./AccountCommunityRoleService");
 const { Service: AccountService } = require("./AccountService");
 const { Service: PostService } = require("./PostService");
+const {
+  Service: AccountRecovererService,
+} = require("./AccountRecovererService");
 
 module.exports = {
   NotificationService: new NotificationService(),
@@ -32,4 +35,5 @@ module.exports = {
   AccountService: new AccountService(),
   ChannelService: new ChannelService(),
   PostService: new PostService(),
+  AccountRecovererService: new AccountRecovererService(),
 };

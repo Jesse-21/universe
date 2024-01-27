@@ -1,59 +1,69 @@
 const axios = require("axios").default;
 
+const {
+  getFarcasterUserByUsername,
+  getFarcasterUserByConnectedAddress,
+  getFidByCustodyAddress,
+  getFarcasterUserByFid,
+  getConnectedAddressForFid,
+} = require("../../helpers/farcaster");
+
 class FarcasterServiceV2 {
   /**
    * clean up API profile to our farcaster schema
    * at schemas/identities/farcaster.js */
   _cleanProfile(profile = {}) {
     return {
-      _id: profile.id,
-      avatarUrl: profile.avatarUrl,
+      _id: profile.fid,
+      fid: profile.fid,
       username: profile.username,
       displayName: profile.displayName,
-      farcasterAddress: profile.address,
-      bio: profile.bio,
+      farcasterAddress: profile.custodyAddress, // profile.address is not the same as connectedAddress!
+      followers: profile.followerCount,
+      following: profile.followingCount,
+      registeredAt: profile.registeredAt,
+      bio: profile.bio?.text,
+      external: profile.external,
     };
   }
-  async getProfileByAddress(address) {
-    try {
-      const { data: apiCallData } = await axios.get(
-        "https://searchcaster.xyz/api/profiles",
-        {
-          params: {
-            connected_address: address,
-          },
-          timeout: 5000,
-        }
-      );
+  async getProfilesByAddress(addressRaw) {
+    const address = addressRaw?.toLowerCase();
+    if (!address) return [];
+    const cleanProfile = (farcaster) => ({
+      ...this._cleanProfile(farcaster),
+      address,
+    });
 
-      const farcaster = apiCallData?.[0]?.body;
-      if (!farcaster) return null;
-      return this._cleanProfile(farcaster);
-    } catch (e) {
-      return false;
+    let profiles = [];
+
+    let farcaster = await getFarcasterUserByConnectedAddress(address);
+    if (farcaster) {
+      profiles.push(cleanProfile(farcaster));
     }
+    farcaster = await getFarcasterUserByFid(address);
+    if (farcaster) {
+      profiles.push(cleanProfile(farcaster));
+    }
+    let fid = await getFidByCustodyAddress(address);
+    if (fid) {
+      farcaster = await getFarcasterUserByFid(fid);
+      if (farcaster) {
+        profiles.push(cleanProfile(farcaster));
+      }
+    }
+
+    return profiles;
   }
-  async getProfileByUsername(username) {
-    try {
-      const { data: apiCallData } = await axios.get(
-        "https://searchcaster.xyz/api/profiles",
-        {
-          params: {
-            username,
-          },
-          timeout: 5000,
-        }
-      );
 
-      const farcaster = apiCallData?.[0]?.body;
-      if (!farcaster) return null;
-      return {
-        ...this._cleanProfile(farcaster),
-        address: apiCallData?.[0]?.connectedAddress,
-      };
-    } catch (e) {
-      return false;
-    }
+  async getProfileByUsername(username) {
+    if (!username) return null;
+    const farcaster = await getFarcasterUserByUsername(username);
+    if (!farcaster) return null;
+    const address = await getConnectedAddressForFid(farcaster.fid);
+    return {
+      ...this._cleanProfile(farcaster),
+      address,
+    };
   }
 }
 

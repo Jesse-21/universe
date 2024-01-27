@@ -17,7 +17,7 @@ const {
 const CommunityQueryService = new _CommunityQueryService();
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_MAX = 10_000;
 
 const resolvers = {
   Community: {

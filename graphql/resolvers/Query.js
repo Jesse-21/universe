@@ -11,6 +11,7 @@ const { AccountService, PostService } = require("../../services");
 const {
   Service: FarcasterServiceV2,
 } = require("../../services/identities/FarcasterServiceV2");
+const { Service: _ScoreService } = require("../../services/ScoreService");
 
 const {
   resolvers: NotificationQueryResolvers,
@@ -41,7 +42,7 @@ const {
 } = require("../../helpers/get-address-from-ens");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 250;
+const RATE_LIMIT_MAX = 10_000;
 
 const resolvers = {
   Query: {
@@ -201,6 +202,18 @@ const resolvers = {
       );
       if (errorMessage) throw new Error(errorMessage);
       return Community.findAndSort(args);
+    },
+    getCommunityAddressScore: async (root, args, context, info) => {
+      const errorMessage = await rateLimiter(
+        { root, args, context, info },
+        { max: RATE_LIMIT_MAX, window: "10s" }
+      );
+      if (errorMessage) throw new Error(errorMessage);
+      const ScoreService = new _ScoreService();
+      return await ScoreService.getCommunityScore({
+        address: args.address,
+        bebdomain: args.bebdomain,
+      });
     },
     NotificationQuery: () => {
       return NotificationQueryResolvers;

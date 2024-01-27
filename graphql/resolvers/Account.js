@@ -6,6 +6,8 @@ const { AccountRelationship } = require("../../models/AccountRelationship");
 const { AccountThread } = require("../../models/AccountThread");
 const { AccountCommunity } = require("../../models/AccountCommunity");
 const { AccountExp } = require("../../models/AccountExp");
+const { AccountInvite } = require("../../models/AccountInvite");
+const { AccountInventory } = require("../../models/AccountInventory");
 
 const {
   Service: _AccountQueryService,
@@ -15,7 +17,30 @@ const {
   isAuthorizedToAccessResource,
 } = require("../../helpers/auth-middleware");
 
+const AccountQueryService = new _AccountQueryService();
 const resolvers = {
+  AccountAddress: {
+    passKeyId: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "accountAddress"
+      );
+      if (!hasAccess) return null;
+      return parent?.passKeyId;
+    },
+    counter: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "accountAddress"
+      );
+      if (!hasAccess) return null;
+      return parent?.counter;
+    },
+  },
   Account: {
     address: async (parent) => {
       const address = await AccountAddress.findById(
@@ -67,6 +92,14 @@ const resolvers = {
 
       return accountThreads;
     },
+    inventory: async (parent, args) => {
+      const inventoryItems = await AccountInventory.findAndSort({
+        ...args,
+        filters: { account: parent._id },
+      });
+
+      return inventoryItems;
+    },
     email: async (parent, args, context) => {
       const hasAccess = isAuthorizedToAccessResource(
         parent,
@@ -77,15 +110,45 @@ const resolvers = {
       if (!hasAccess) return null;
       return parent?.email;
     },
-    identities: async (parent) => {
-      const AccountQueryService = new _AccountQueryService();
-      return AccountQueryService.identities(parent);
+    walletEmail: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "account"
+      );
+      if (!hasAccess) return null;
+      return parent?.walletEmail;
     },
-    /**
+    encyrptedWalletJson: async (parent, args, context) => {
+      const hasAccess = isAuthorizedToAccessResource(
+        parent,
+        args,
+        context,
+        "account"
+      );
+      if (!hasAccess) return null;
+      return parent?.encyrptedWalletJson;
+    },
+    backpackAddress: async (parent) => {
+      return await AccountQueryService.backpackAddress(parent);
+    },
+    backpackClaimed: async (parent) => {
+      return await AccountQueryService.backpackClaimed(parent);
+    },
+    identities: async (parent, args) => {
+      return AccountQueryService.identities(parent, args);
+    },
+    invite: async (parent) => {
+      const invite = await AccountInvite.findOrCreate({
+        accountId: parent._id,
+      });
+      return invite;
+    },
+    /**,
      * 🚨 Temporary hack resolver to check if account is a domain holder
      */
     hasPremiumRole: async (parent) => {
-      const AccountQueryService = new _AccountQueryService();
       return await AccountQueryService.hasPremiumRole(parent);
     },
   },

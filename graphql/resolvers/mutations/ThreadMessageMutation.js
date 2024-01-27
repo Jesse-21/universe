@@ -9,7 +9,7 @@ const {
 const { NotificationService } = require("../../../services");
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
 
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 10_000;
 
 const resolvers = {
   Mutation: {

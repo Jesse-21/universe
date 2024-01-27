@@ -16,7 +16,7 @@ const schema = mongoose.Schema(
       index: true,
     },
     signature: { type: String }, // the signature by the thread sender
-    nonce: { type: String, default: `${getRandomUint256()}` },
+    nonce: { type: String, default: () => `${getRandomUint256()}` },
     tokenAddress: addressSchema, // default to Matic
     // completed when recipient deny or accept the transaction.
     // if completed and amount left, the 'from' account can withdraw the token

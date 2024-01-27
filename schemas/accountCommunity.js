@@ -33,9 +33,9 @@ const schema = mongoose.Schema(
       index: true,
     },
     // last time account visited community
-    lastSeen: { type: Date, default: new Date(), index: true },
+    lastSeen: { type: Date, default: () => new Date(), index: true },
     // last time account joined community, use to revalidate membership status
-    joinedDate: { type: Date, default: new Date(), index: true },
+    joinedDate: { type: Date, default: () => new Date(), index: true },
   },
   { timestamps: true }
 );

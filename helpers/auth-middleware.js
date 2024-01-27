@@ -53,8 +53,11 @@ const isAuthorizedToAccessResource = (parent, _, context, model) => {
       if (!resourceBelongToAccount) return false;
       break;
     }
+    case "accountAddress":
+      if (parent.account?.toString() !== currentAccountId) return false;
+      break;
     case "accountThread":
-      if (parent.account !== currentAccountId) return false;
+      if (parent.account?.toString() !== currentAccountId) return false;
       break;
     default: {
       const resourceBelongToAccount =

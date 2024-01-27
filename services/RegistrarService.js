@@ -2,6 +2,7 @@ const ethers = require("ethers");
 
 const Sentry = require("@sentry/node");
 const { Service: _AlchemyService } = require("./AlchemyService");
+const { Service: _CacheService } = require("./cache/CacheService");
 const {
   Service: _FarcasterService,
 } = require("./identities/FarcasterServiceV2");
@@ -25,53 +26,84 @@ const {
 const { Community } = require("../models/Community");
 
 class RegistrarService {
-  constructor() {
-    const AlchemyService = new _AlchemyService({
-      apiKey: prod().NODE_URL, // force use prod for ENS
-      chain: prod().NODE_NETWORK, // force use prod for ENS
-    });
-    const alchemyProvider = getProvider({
-      network: config().NODE_NETWORK,
-      node: config().NODE_URL,
-    });
+  constructor(optimism = false) {
+    if (!optimism) {
+      const AlchemyService = new _AlchemyService({
+        apiKey: prod().NODE_URL, // force use prod for ENS
+        chain: prod().NODE_NETWORK, // force use prod for ENS
+      });
+      const alchemyProvider = getProvider({
+        network: config().NODE_NETWORK,
+        node: config().NODE_URL,
+      });
 
-    const controller = new ethers.Contract(
-      config().BETA_CONTROLLER_ADDRESS,
-      config().BETA_CONTROLLER_ABI,
-      alchemyProvider
-    );
-    const registrar = new ethers.Contract(
-      config().REGISTRAR_ADDRESS,
-      config().REGISTRAR_ABI,
-      alchemyProvider
-    );
+      const controller = new ethers.Contract(
+        config().BETA_CONTROLLER_ADDRESS,
+        config().BETA_CONTROLLER_ABI,
+        alchemyProvider
+      );
+      const registrar = new ethers.Contract(
+        config().REGISTRAR_ADDRESS,
+        config().REGISTRAR_ABI,
+        alchemyProvider
+      );
 
-    this.AlchemyService = AlchemyService;
-    this.alchemyProvider = alchemyProvider;
-    this.controller = controller;
-    this.registrar = registrar;
+      this.AlchemyService = AlchemyService;
+      this.alchemyProvider = alchemyProvider;
+      this.controller = controller;
+      this.registrar = registrar;
+    } else {
+      const AlchemyService = new _AlchemyService({
+        apiKey: prod().OPTIMISM_NODE_URL, // force use prod for ENS
+        chain: prod().OPTIMISM_NODE_NETWORK, // force use prod for ENS
+      });
+      const alchemyProvider = getProvider({
+        network: prod().OPTIMISM_NODE_NETWORK,
+        node: prod().OPTIMISM_NODE_URL,
+      });
+
+      const controller = new ethers.Contract(
+        prod().OPTIMISM_CONTROLLER_ADDRESS,
+        prod().OPTIMISM_CONTROLLER_ABI,
+        alchemyProvider
+      );
+      const registrar = new ethers.Contract(
+        prod().OPTIMISM_REGISTRAR_ADDRESS,
+        prod().REGISTRAR_ABI,
+        alchemyProvider
+      );
+
+      this.AlchemyService = AlchemyService;
+      this.alchemyProvider = alchemyProvider;
+      this.controller = controller;
+      this.registrar = registrar;
+    }
   }
 
   /**
    * Get owner of NFT tokenId
    * @returns {Promise<string>} - address of owner
    */
-  async getOwner(domain, tld = "beb") {
+  async getOwner(domain, _tld = "beb") {
     if (!domain) return null;
     const tokenId = this.getTokenIdFromLabel(domain);
     try {
-      if (tld === "eth") {
-        const data = await this.AlchemyService.getOwnersForToken({
-          tokenId,
-          contractAddress: "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+      const CacheService = new _CacheService();
+      const cachedOwner = await CacheService.get({
+        key: `RegistrarService.getOwner`,
+        params: { domain },
+      });
+      if (cachedOwner) return cachedOwner;
+      const owner = await this.registrar.ownerOf(tokenId);
+      if (owner) {
+        CacheService.set({
+          key: `RegistrarService.getOwner`,
+          params: { domain },
+          value: owner,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 15), // 15 minute cache,
         });
-        return data?.owners?.[0];
-      } else if (tld === "fc") {
-        const FarcasterService = new _FarcasterService();
-        const profile = await FarcasterService.getProfileByUsername(domain);
-        return profile?.address;
       }
-      return await this.registrar.ownerOf(tokenId);
+      return owner;
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
@@ -93,11 +125,32 @@ class RegistrarService {
    * Get community expires date
    * @returns {Promise<string>}
    */
-  async expiresAt(bebdomain) {
-    if (!bebdomain) return null;
-    const tokenId = this.getTokenIdFromLabel(bebdomain);
-    const nameDuration = await this.registrar.nameExpires(tokenId);
-    return nameDuration.toString();
+  async expiresAt(domain) {
+    if (!domain) return null;
+    const tokenId = this.getTokenIdFromLabel(domain);
+    try {
+      const CacheService = new _CacheService();
+      const cachedDuration = await CacheService.get({
+        key: `RegistrarService.expiresAt`,
+        params: { domain },
+      });
+      if (cachedDuration) return cachedDuration;
+      const nameDuration = await this.registrar.nameExpires(tokenId);
+      if (nameDuration) {
+        CacheService.set({
+          key: `RegistrarService.expiresAt`,
+          params: { domain },
+          value: nameDuration.toString(),
+          expiresAt: new Date(Date.now() + 1000 * 60 * 1), // 1 minute cache,
+        });
+      }
+      return nameDuration?.toString();
+    } catch (e) {
+      Sentry.captureException(e);
+      console.error(e);
+      // tokenId is not registered
+      return null;
+    }
   }
 
   /**

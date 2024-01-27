@@ -10,7 +10,7 @@ const {
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
 
-const RATE_LIMIT_MAX = 50;
+const RATE_LIMIT_MAX = 10_000;
 
 const resolvers = {
   Mutation: {

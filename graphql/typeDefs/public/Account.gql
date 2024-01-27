@@ -8,6 +8,15 @@ type AccountNonce {
   _id: ID
   nonce: String
   transactionNonce: String
+  salt: String
+}
+type AccountInvite {
+  _id: ID
+  useCount: Int
+  maxUseCount: Int
+  expiresAt: String
+  code: String
+  account: Account
 }
 input AccountThreadsFilterInput {
   isAccepted: Boolean
@@ -17,11 +26,15 @@ type Account {
   email: String
   username: String
   location: String
+  encyrptedWalletJson: String
+  walletEmail: String
   bio: Content
   profileImage: Image
   address: AccountAddress
   relationship(to: ID): AccountRelationship
   nonces: AccountNonce
+  backpackAddress: String
+  backpackClaimed: Boolean
   sections: [AccountSection]
   activities: AccountActivity
   accountExp: AccountExp
@@ -31,6 +44,15 @@ type Account {
     filters: AccountThreadsFilterInput
   ): [AccountThread]
   accountCommunities(limit: Int, offset: Int): [AccountCommunity]
+  inventory(limit: Int, offset: Int): [AccountInventoryItem]
   identities: AccountIdentity
+  invite: AccountInvite
   hasPremiumRole: Boolean # true if account is a beb domain holder AND claimed the role
+}
+type AccountInventoryItem {
+  _id: ID
+  account: Account
+  reward: QuestRewardItem
+  rewardType: QuestRewardType
+  quantity: Int
 }

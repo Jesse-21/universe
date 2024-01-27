@@ -13,7 +13,7 @@ const {
 } = require("../../../services/mutationServices/CommunityMutationService");
 
 const rateLimiter = getGraphQLRateLimiter({ identifyContext: (ctx) => ctx.id });
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 10_000;
 const CommunityMutationService = new _CommunityMutationService();
 
 const resolvers = {
@@ -40,6 +40,40 @@ const resolvers = {
           code: "201",
           success: true,
           message: "Successfully edited community",
+          community,
+        };
+      } catch (e) {
+        Sentry.captureException(e);
+        console.error(e);
+        return {
+          code: "500",
+          success: false,
+          message: e.message,
+        };
+      }
+    },
+    editCommunityAddressScore: async (root, args, context, info) => {
+      try {
+        const errorMessage = await rateLimiter(
+          { root, args, context, info },
+          { max: RATE_LIMIT_MAX, window: "10s" }
+        );
+        if (errorMessage) throw new Error(errorMessage);
+
+        const auth = await unauthorizedErrorOrAccount(root, args, context);
+        if (!auth.account) return auth;
+
+        const community =
+          await CommunityMutationService.editCommunityAddressScoreIfAuthorized(
+            root,
+            args,
+            context
+          );
+
+        return {
+          code: "201",
+          success: true,
+          message: "Successfully edited community address score",
           community,
         };
       } catch (e) {

@@ -9,4 +9,6 @@ const schema = mongoose.Schema({
   uri: { type: String, required: true },
 });
 
+schema.index({ uri: 1 });
+
 module.exports = { schema };

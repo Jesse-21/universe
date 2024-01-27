@@ -5,4 +5,7 @@ type Image {
   isVerified: Boolean
   verificationOrigin: String
   verificationExternalUrl: String
+  description: String
+  metadata: [KeyValueFields]
+  layers: [Layer]
 }
